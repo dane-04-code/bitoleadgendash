@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Surfaces — warm paper, layered subtly */
+    --bg:           42  18% 97%;     /* #faf8f3 — warm paper */
+    --surface:      0    0% 100%;    /* #ffffff */
+    --surface-2:    42  16% 95%;     /* #f4f1ea */
+    --surface-3:    42  14% 91%;     /* #ebe7dc */
+
+    /* Borders — gentle warm lines */
+    --line:         42  10% 84%;     /* #d8d4c7 */
+    --line-strong:  42   8% 72%;     /* #b9b4a3 */
+
+    /* Text — true warm ink */
+    --ink:          200 12%  10%;    /* near-black, slight cool */
+    --ink-2:        200  8%  22%;
+    --ink-dim:      200  6%  42%;
+    --ink-faint:    200  6%  58%;
+
+    /* Accent — deep operational green (forestry / equipment) */
+    --accent:       146 62%  26%;    /* #1a6b3a */
+    --accent-ink:   148 70%  22%;    /* slightly deeper for text */
+    --accent-bg:    146 50%  92%;    /* very pale green wash */
+
+    /* Signal status (light-theme tuned, never neon) */
+    --hot:          358 68% 46%;     /* deep red */
+    --warm:          28 88% 42%;     /* burnt amber */
+    --cold:         210 70% 38%;     /* deep blue */
+    --good:         146 62% 26%;     /* same as accent — coherent */
+
+    /* Mapped tokens for legacy components */
+    --background:        42 18% 97%;
+    --foreground:        200 12% 10%;
+    --card:              0 0% 100%;
+    --card-foreground:   200 12% 10%;
+    --popover:           0 0% 100%;
+    --popover-foreground:200 12% 10%;
+    --primary:           146 62% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary:         42 16% 95%;
+    --secondary-foreground: 200 12% 10%;
+    --muted:             42 14% 91%;
+    --muted-foreground:  200 6% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive:       358 68% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border:            42 10% 84%;
+    --input:             42 10% 84%;
+    --ring:              146 62% 26%;
+    --radius:            0.25rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--line));
+  }
+
+  html {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    background: hsl(var(--bg));
+    color: hsl(var(--ink));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "ss02", "cv11";
+    color-scheme: light;
+  }
+
+  body {
+    background:
+      /* warm paper base */
+      linear-gradient(to bottom, hsl(var(--bg)), hsl(var(--bg))),
+      /* very faint blueprint grid in dark ink */
+      repeating-linear-gradient(0deg, transparent 0 23px, hsla(200, 12%, 10%, 0.018) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, hsla(200, 12%, 10%, 0.018) 23px 24px);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.22);
+    color: hsl(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 1px solid hsl(var(--accent));
+    outline-offset: 2px;
+  }
+
+  .tabular,
+  th, td,
+  .stat,
+  code, kbd, pre, samp {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .display-number {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+    font-feature-settings: "ss01", "lnum", "tnum";
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+  }
+
+  .display-serif {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+
+  .mono {
+    font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+    font-feature-settings: "ss01", "ss02", "zero", "tnum";
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--ink-faint));
+    font-weight: 500;
+  }
+
+  .rule {
+    border-bottom: 1px solid hsl(var(--line));
+  }
+
+  .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--line-strong));
+    border: 2px solid hsl(var(--bg));
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+
+  .text-ink     { color: hsl(var(--ink)); }
+  .text-ink-2   { color: hsl(var(--ink-2)); }
+  .text-ink-dim { color: hsl(var(--ink-dim)); }
+  .text-ink-faint{ color: hsl(var(--ink-faint)); }
+
+  .bg-surface   { background: hsl(var(--surface)); }
+  .bg-surface-2 { background: hsl(var(--surface-2)); }
+  .bg-surface-3 { background: hsl(var(--surface-3)); }
+
+  .border-line  { border-color: hsl(var(--line)); }
+  .border-line-strong { border-color: hsl(var(--line-strong)); }
+
+  .corner-marks {
+    position: relative;
+  }
+  .corner-marks::before,
+  .corner-marks::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 1px solid hsl(var(--accent));
+    pointer-events: none;
+  }
+  .corner-marks::before {
+    top: -1px; left: -1px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .corner-marks::after {
+    bottom: -1px; right: -1px;
+    border-left: none;
+    border-top: none;
+  }
+}
