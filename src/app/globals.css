@@ -100,17 +100,17 @@
 
 @layer components {
   .display-number {
-    font-family: var(--font-serif), Georgia, serif;
-    font-weight: 400;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
     font-feature-settings: "ss01", "lnum", "tnum";
-    letter-spacing: -0.025em;
-    line-height: 0.95;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
   }
 
   .display-serif {
-    font-family: var(--font-serif), Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
   }
 
   .mono {

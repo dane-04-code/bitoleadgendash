@@ -51,9 +51,13 @@ export type Lead = {
   bito_products: string[] | null;
   source_url: string | null;
   status: LeadStatus;
+  /** Set when a rep records an outreach; null until first contact. */
+  last_contacted_at: string | null;
   created_at: string;
   updated_at: string;
 };
+
+export type RoleFit = "strong" | "borderline" | "junior" | "senior";
 
 export type Contact = {
   id: string;
@@ -64,6 +68,10 @@ export type Contact = {
   phone: string | null;
   linkedin_url: string | null;
   is_primary: boolean;
+  /** True when the email came verified from Apollo, false when pattern-guessed. */
+  email_verified: boolean;
+  /** Hermes role-fit audit result; null until audited. */
+  role_fit: RoleFit | null;
   created_at: string;
 };
 
@@ -126,4 +134,27 @@ export type LeadWithRelations = Lead & {
   outreach?: Outreach[];
   call_briefs?: CallBrief[];
   pipeline_updates?: PipelineUpdate[];
+};
+
+/**
+ * One row of the `leads_with_contacts` view: a lead flattened together with its
+ * single best contact (primary, else strongest role_fit, else oldest) and its
+ * latest outreach draft. Contact/outreach fields are null when none exist.
+ */
+export type LeadWithContacts = Lead & {
+  contact_id: string | null;
+  contact_name: string | null;
+  contact_job_title: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_linkedin_url: string | null;
+  contact_is_primary: boolean | null;
+  contact_email_verified: boolean | null;
+  contact_role_fit: RoleFit | null;
+  outreach_id: string | null;
+  outreach_channel: OutreachChannel | string | null;
+  outreach_subject: string | null;
+  outreach_body: string | null;
+  outreach_used: boolean | null;
+  outreach_created_at: string | null;
 };

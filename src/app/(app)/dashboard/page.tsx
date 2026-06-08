@@ -35,7 +35,7 @@ export default async function DashboardPage() {
         eyebrow="Lead Intelligence Terminal / Inbox"
         title={
           <>
-            Today&apos;s <em className="text-brand-ink">signals</em> across the <span className="italic">GCC</span>.
+            Today&apos;s <span className="text-brand-ink">signals</span> across the GCC.
           </>
         }
         subtitle="Live warehouse-expansion intelligence, ranked. Triage the top of the stack first."
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
             </div>
             <Link
               href={`/leads/${top.id}`}
-              className="text-2xl sm:text-3xl font-medium leading-tight tracking-tight text-ink hover:text-brand-ink transition-colors"
+              className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-ink hover:text-brand-ink transition-colors"
             >
               {top.company_name}
             </Link>

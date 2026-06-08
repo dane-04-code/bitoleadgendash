@@ -79,6 +79,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     bito_products: ["PRO pallet racking", "Conveyor systems", "Mezzanine"],
     source_url: "https://gulfnews.com/business/aramex-dubai-south",
     status: "new",
+    last_contacted_at: null,
     created_at: hoursAgo(2),
     updated_at: hoursAgo(2),
     rep_name: null,
@@ -99,6 +100,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     bito_products: ["Drive-in racking", "Shuttle system", "Cold-spec coatings"],
     source_url: "https://arabnews.com/almarai-coldchain",
     status: "assigned",
+    last_contacted_at: null,
     created_at: hoursAgo(8),
     updated_at: hoursAgo(4),
     rep_name: "Omar Khalifa",
@@ -119,6 +121,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     bito_products: ["Mezzanine", "Pick modules", "Carton flow"],
     source_url: "https://linkedin.com/feed/lulu-rfp",
     status: "contacted",
+    last_contacted_at: hoursAgo(6),
     created_at: hoursAgo(20),
     updated_at: hoursAgo(6),
     rep_name: "Layla Haddad",
@@ -139,6 +142,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     bito_products: ["Selective racking", "VNA systems"],
     source_url: "https://reuters.com/qatar-logistics-hub-c",
     status: "meeting",
+    last_contacted_at: hoursAgo(10),
     created_at: hoursAgo(36),
     updated_at: hoursAgo(10),
     rep_name: "Priya Suresh",
@@ -159,6 +163,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     bito_products: ["Conveyor", "Sortation"],
     source_url: "https://noon.com/careers",
     status: "new",
+    last_contacted_at: null,
     created_at: daysAgo(2),
     updated_at: daysAgo(2),
     rep_name: null,
@@ -178,6 +183,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: "+971 4 286 5000",
     linkedin_url: "https://www.linkedin.com/in/faisal-almarri",
     is_primary: true,
+    email_verified: true,
+    role_fit: "strong",
     created_at: hoursAgo(2),
   },
   {
@@ -189,6 +196,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/reem-hassan-procurement",
     is_primary: false,
+    email_verified: true,
+    role_fit: "borderline",
     created_at: hoursAgo(2),
   },
   {
@@ -200,6 +209,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/karim-idrissi",
     is_primary: false,
+    email_verified: false,
+    role_fit: "strong",
     created_at: hoursAgo(2),
   },
 
@@ -213,6 +224,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: "+966 11 470 0234",
     linkedin_url: "https://www.linkedin.com/in/abdullah-alotaibi-sc",
     is_primary: true,
+    email_verified: true,
+    role_fit: "strong",
     created_at: hoursAgo(8),
   },
   {
@@ -224,6 +237,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/tarek-bensalem",
     is_primary: false,
+    email_verified: false,
+    role_fit: "borderline",
     created_at: hoursAgo(8),
   },
 
@@ -237,6 +252,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: "+971 2 4181 818",
     linkedin_url: "https://www.linkedin.com/in/saeed-variyath",
     is_primary: true,
+    email_verified: true,
+    role_fit: "strong",
     created_at: hoursAgo(20),
   },
   {
@@ -248,6 +265,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/anjali-krishnan-procurement",
     is_primary: false,
+    email_verified: false,
+    role_fit: "borderline",
     created_at: hoursAgo(20),
   },
 
@@ -261,6 +280,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: "+974 4499 8800",
     linkedin_url: "https://www.linkedin.com/in/yousef-alnaimi-qlh",
     is_primary: true,
+    email_verified: true,
+    role_fit: "senior",
     created_at: hoursAgo(36),
   },
   {
@@ -272,6 +293,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/marta-vasilescu-eng",
     is_primary: false,
+    email_verified: true,
+    role_fit: "strong",
     created_at: hoursAgo(36),
   },
 
@@ -285,6 +308,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/hala-mansour-noon",
     is_primary: true,
+    email_verified: false,
+    role_fit: "strong",
     created_at: daysAgo(2),
   },
   {
@@ -296,6 +321,8 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: null,
     linkedin_url: "https://www.linkedin.com/in/bilal-qureshi",
     is_primary: false,
+    email_verified: false,
+    role_fit: "borderline",
     created_at: daysAgo(2),
   },
 ];

@@ -69,7 +69,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             <StatusInline status={lead.status} />
           </div>
 
-          <h1 className="text-[30px] sm:text-[40px] font-medium leading-[1.1] tracking-tight text-ink">
+          <h1 className="text-[30px] sm:text-[40px] font-bold leading-[1.05] tracking-tight text-ink">
             {lead.company_name}
           </h1>
 

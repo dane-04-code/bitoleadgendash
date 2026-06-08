@@ -9,6 +9,7 @@ import {
   Cog,
   LogOut,
   User,
+  UserCog,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const ADMIN_NAV = [
 
 const REP_NAV = [
   { href: "/my", label: "My leads", code: "01", icon: LayoutGrid },
+  { href: "/my/account", label: "Account", code: "02", icon: UserCog },
 ];
 
 export type SidebarUser =
@@ -58,7 +60,9 @@ export function Sidebar({ user }: { user: SidebarUser }) {
           {nav.map((item) => {
             const active =
               pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+              (item.href !== "/dashboard" &&
+                item.href !== "/my" &&
+                pathname.startsWith(item.href));
             const Icon = item.icon;
             return (
               <li key={item.href}>

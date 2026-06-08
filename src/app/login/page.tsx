@@ -44,8 +44,8 @@ export default async function LoginPage({
           <div className="eyebrow mb-5 text-brand-ink">
             Lead Intelligence Terminal
           </div>
-          <h1 className="text-[40px] font-medium leading-[1.1] tracking-tight text-ink">
-            Catch the <em className="text-brand-ink not-italic font-semibold">signal</em> before the warehouse is built.
+          <h1 className="text-[40px] font-bold leading-[1.05] tracking-tight text-ink">
+            Catch the <span className="text-brand-ink">signal</span> before the warehouse is built.
           </h1>
           <p className="text-[14px] text-ink-dim mt-6 leading-relaxed max-w-sm">
             Real-time intelligence on warehouse expansion across the GCC. Triage,
@@ -79,7 +79,7 @@ export default async function LoginPage({
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-sm">
             <div className="eyebrow text-brand-ink mb-3">Restricted Access</div>
-            <h2 className="text-[28px] font-medium tracking-tight leading-[1.1] text-ink mb-3">
+            <h2 className="text-[28px] font-bold tracking-tight leading-[1.05] text-ink mb-3">
               Sign in.
             </h2>
             <p className="text-[13px] text-ink-dim mb-8 leading-relaxed">

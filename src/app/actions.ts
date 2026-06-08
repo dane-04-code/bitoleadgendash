@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { hashPassword } from "@/lib/auth";
+import { getCurrentRepId } from "@/lib/auth";
+import { hashPassword, verifyPasswordHash } from "@/lib/auth";
 import type { LeadStatus } from "@/lib/supabase/types";
 
 export async function assignLeadToRep(formData: FormData) {
@@ -191,5 +192,86 @@ export async function toggleRepActive(repId: string, isActive: boolean) {
     return { ok: false, error: error.message };
   }
   revalidatePath("/reps");
+  return { ok: true };
+}
+
+// ─── Rep self-service ──────────────────────────────────────────────────────
+
+export async function updateMyProfile(formData: FormData) {
+  const repId = await getCurrentRepId();
+  if (!repId) return { ok: false, error: "Not signed in as a rep." };
+
+  const telegram =
+    String(formData.get("telegram_username") || "").trim() || null;
+  const speciality = String(formData.get("speciality") || "").trim() || null;
+  const territory = String(formData.get("territory") || "").trim() || null;
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("reps")
+    .update({
+      telegram_username: telegram,
+      speciality,
+      territory,
+    })
+    .eq("id", repId);
+  if (error) {
+    console.error("updateMyProfile", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/my/account");
+  revalidatePath("/my");
+  return { ok: true };
+}
+
+export async function changeMyPassword(formData: FormData) {
+  const repId = await getCurrentRepId();
+  if (!repId) return { ok: false, error: "Not signed in as a rep." };
+
+  const current = String(formData.get("current_password") || "");
+  const next = String(formData.get("new_password") || "");
+  const confirm = String(formData.get("confirm_password") || "");
+
+  if (!current) return { ok: false, error: "Enter your current password." };
+  if (!next || next.length < 8) {
+    return { ok: false, error: "New password must be at least 8 characters." };
+  }
+  if (next !== confirm) {
+    return { ok: false, error: "New passwords do not match." };
+  }
+  if (next === current) {
+    return { ok: false, error: "New password must differ from the current one." };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { data: rep, error: fetchErr } = await supabase
+    .from("reps")
+    .select("password")
+    .eq("id", repId)
+    .maybeSingle();
+  if (fetchErr || !rep) {
+    console.error("changeMyPassword fetch", fetchErr);
+    return { ok: false, error: "Could not load your account." };
+  }
+  if (!rep.password) {
+    return {
+      ok: false,
+      error: "Your account has no password yet — ask the admin to set one first.",
+    };
+  }
+
+  const ok = await verifyPasswordHash(current, rep.password as string);
+  if (!ok) return { ok: false, error: "Current password is incorrect." };
+
+  const newHash = await hashPassword(next);
+  const { error: updateErr } = await supabase
+    .from("reps")
+    .update({ password: newHash })
+    .eq("id", repId);
+  if (updateErr) {
+    console.error("changeMyPassword update", updateErr);
+    return { ok: false, error: updateErr.message };
+  }
+  revalidatePath("/my/account");
   return { ok: true };
 }
