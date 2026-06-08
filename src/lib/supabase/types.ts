@@ -53,6 +53,10 @@ export type Lead = {
   status: LeadStatus;
   /** Set when a rep records an outreach; null until first contact. */
   last_contacted_at: string | null;
+  /** When true the lead is archived (rejected) and hidden from the default inbox. */
+  do_not_contact: boolean;
+  /** When the source article was last re-verified for freshness; null if never. */
+  last_article_check: string | null;
   created_at: string;
   updated_at: string;
 };

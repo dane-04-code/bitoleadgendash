@@ -80,6 +80,8 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     source_url: "https://gulfnews.com/business/aramex-dubai-south",
     status: "new",
     last_contacted_at: null,
+    do_not_contact: false,
+    last_article_check: hoursAgo(2),
     created_at: hoursAgo(2),
     updated_at: hoursAgo(2),
     rep_name: null,
@@ -101,6 +103,8 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     source_url: "https://arabnews.com/almarai-coldchain",
     status: "assigned",
     last_contacted_at: null,
+    do_not_contact: false,
+    last_article_check: hoursAgo(7),
     created_at: hoursAgo(8),
     updated_at: hoursAgo(4),
     rep_name: "Omar Khalifa",
@@ -122,6 +126,8 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     source_url: "https://linkedin.com/feed/lulu-rfp",
     status: "contacted",
     last_contacted_at: hoursAgo(6),
+    do_not_contact: false,
+    last_article_check: hoursAgo(18),
     created_at: hoursAgo(20),
     updated_at: hoursAgo(6),
     rep_name: "Layla Haddad",
@@ -143,6 +149,8 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     source_url: "https://reuters.com/qatar-logistics-hub-c",
     status: "meeting",
     last_contacted_at: hoursAgo(10),
+    do_not_contact: false,
+    last_article_check: hoursAgo(34),
     created_at: hoursAgo(36),
     updated_at: hoursAgo(10),
     rep_name: "Priya Suresh",
@@ -164,8 +172,58 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     source_url: "https://noon.com/careers",
     status: "new",
     last_contacted_at: null,
+    do_not_contact: false,
+    last_article_check: daysAgo(2),
     created_at: daysAgo(2),
     updated_at: daysAgo(2),
+    rep_name: null,
+  },
+
+  // ── Archived (do_not_contact = true) ───────────────────────────────────────
+  // Rejected on 2026-06-08: source articles were older than 60 days at re-check.
+  {
+    id: "lead-6",
+    company_name: "Gulf Warehousing Company",
+    signal_type: "expansion",
+    signal_source: "Trade Arabia",
+    signal_summary:
+      "GWC flagged a possible Logistics Village expansion, but the source article is now over two months old with no tender or build confirmation since.",
+    location: "Doha, Qatar",
+    industry: "3PL · Logistics",
+    warehouse_size: "Unknown",
+    score: 58,
+    score_reason:
+      "Signal never firmed up; source article predates the 60-day freshness window.",
+    bito_products: ["Selective racking"],
+    source_url: "https://tradearabia.com/gwc-logistics-village",
+    status: "new",
+    last_contacted_at: null,
+    do_not_contact: true,
+    last_article_check: hoursAgo(6),
+    created_at: daysAgo(74),
+    updated_at: hoursAgo(6),
+    rep_name: null,
+  },
+  {
+    id: "lead-7",
+    company_name: "Agility Logistics",
+    signal_type: "press",
+    signal_source: "Zawya",
+    signal_summary:
+      "Older press mention of a Kuwait DC refurbishment. Freshness re-check found the article well past 60 days with no follow-up activity.",
+    location: "Kuwait City, Kuwait",
+    industry: "Logistics & Distribution",
+    warehouse_size: "~18,000 sqm",
+    score: 49,
+    score_reason: "Stale press signal; archived on freshness re-check.",
+    bito_products: ["Mezzanine"],
+    source_url: "https://zawya.com/agility-kuwait-dc",
+    status: "new",
+    last_contacted_at: null,
+    do_not_contact: true,
+    last_article_check: hoursAgo(6),
+    created_at: daysAgo(88),
+    updated_at: hoursAgo(6),
     rep_name: null,
   },
 ];
@@ -517,6 +575,7 @@ export function mockDashboardStats(): DashboardStats {
   let assigned = 0;
   let awaiting = 0;
   for (const l of MOCK_LEADS) {
+    if (l.do_not_contact) continue; // archived leads don't count toward active stats
     if (new Date(l.created_at).getTime() >= startMs) totalToday += 1;
     if (l.score >= 80) hot += 1;
     if (l.status !== "new" && l.status !== "dead") assigned += 1;

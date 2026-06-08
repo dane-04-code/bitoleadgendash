@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getDashboardStats, getLeadInbox, getActiveReps } from "@/lib/queries";
+import {
+  getDashboardStats,
+  getLeadInbox,
+  getActiveReps,
+  getArchivedLeadCount,
+} from "@/lib/queries";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,21 +17,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LEAD_STATUS_LABELS } from "@/lib/supabase/types";
-import { formatRelative } from "@/lib/utils";
+import { formatRelative, daysBetween } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
 import { PageHeader, MetaItem } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function DashboardPage() {
-  const [stats, leads, reps] = await Promise.all([
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { view?: string };
+}) {
+  const archived = searchParams?.view === "archived";
+  const [stats, leads, reps, archivedCount] = await Promise.all([
     getDashboardStats(),
-    getLeadInbox(60),
+    getLeadInbox(60, archived),
     getActiveReps(),
+    getArchivedLeadCount(),
   ]);
 
-  const top = leads[0];
+  // The "top signal" hero only makes sense for the active inbox.
+  const top = archived ? undefined : leads[0];
 
   return (
     <div className="animate-fade-in">
@@ -105,26 +117,63 @@ export default async function DashboardPage() {
       )}
 
       <section>
-        <div className="flex items-baseline justify-between mb-4">
+        <div className="flex items-baseline justify-between mb-4 gap-4 flex-wrap">
           <div className="flex items-baseline gap-3">
             <h2 className="display-serif text-2xl text-ink leading-none">
-              The Inbox
+              {archived ? "Archived" : "The Inbox"}
             </h2>
             <span className="mono text-[11px] uppercase tracking-wider text-ink-faint">
-              {leads.length} signals
+              {leads.length} {archived ? "archived" : "signals"}
             </span>
           </div>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/pipeline">
-              View pipeline
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider">
+              <Link
+                href="/dashboard"
+                className={`px-3 py-1.5 transition-colors ${
+                  archived
+                    ? "text-ink-faint hover:text-ink-dim"
+                    : "bg-brand/[0.08] text-brand-ink"
+                }`}
+              >
+                Active
+              </Link>
+              <Link
+                href="/dashboard?view=archived"
+                className={`px-3 py-1.5 border-l border-line transition-colors ${
+                  archived
+                    ? "bg-brand/[0.08] text-brand-ink"
+                    : "text-ink-faint hover:text-ink-dim"
+                }`}
+              >
+                Show archived ({archivedCount})
+              </Link>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/pipeline">
+                View pipeline
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        {archived && (
+          <div className="mb-4 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
+            <div className="mono text-[10px] uppercase tracking-wider text-signal-warm">
+              Archived · do not contact
+            </div>
+            <p className="text-[12px] text-ink-dim mt-1 leading-relaxed max-w-2xl">
+              These leads were rejected on 8 June 2026 because their source
+              articles were older than 60 days at re-check. Shown for reference
+              so the team can see what was filtered out and why.
+            </p>
+          </div>
+        )}
 
         <div className="border border-line bg-surface">
           {leads.length === 0 ? (
-            <EmptyInbox />
+            <EmptyInbox archived={archived} />
           ) : (
             <Table>
               <TableHeader>
@@ -164,6 +213,14 @@ export default async function DashboardPage() {
                             </span>
                           )}
                           <span>{formatRelative(lead.created_at)}</span>
+                          {lead.last_article_check && (
+                            <span
+                              className={articleCheckClass(lead.last_article_check)}
+                              title="Source article last re-verified"
+                            >
+                              article ✓ {formatRelative(lead.last_article_check)}
+                            </span>
+                          )}
                           {lead.rep_name && (
                             <span>→ {lead.rep_name}</span>
                           )}
@@ -184,14 +241,16 @@ export default async function DashboardPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                        <AssignDialog
-                          leadId={lead.id}
-                          leadName={lead.company_name}
-                          reps={reps}
-                          currentRepName={lead.rep_name ?? null}
-                          triggerSize="sm"
-                          triggerVariant="ghost"
-                        />
+                        {!archived && (
+                          <AssignDialog
+                            leadId={lead.id}
+                            leadName={lead.company_name}
+                            reps={reps}
+                            currentRepName={lead.rep_name ?? null}
+                            triggerSize="sm"
+                            triggerVariant="ghost"
+                          />
+                        )}
                         <Button asChild size="sm" variant="ghost">
                           <Link href={`/leads/${lead.id}`}>
                             Open
@@ -268,15 +327,26 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function EmptyInbox() {
+function EmptyInbox({ archived }: { archived?: boolean }) {
   return (
     <div className="px-6 py-20 text-center">
       <div className="display-serif text-6xl text-ink-faint/30 mb-3">∅</div>
-      <h3 className="display-serif text-2xl text-ink mb-2">Quiet on the wires.</h3>
+      <h3 className="display-serif text-2xl text-ink mb-2">
+        {archived ? "Nothing archived." : "Quiet on the wires."}
+      </h3>
       <p className="text-[13px] text-ink-dim max-w-sm mx-auto leading-relaxed">
-        New warehouse signals from across the GCC will appear here as they are
-        detected by the intelligence pipeline.
+        {archived
+          ? "Rejected leads will appear here when the pipeline filters them out — for example when a source article fails the freshness check."
+          : "New warehouse signals from across the GCC will appear here as they are detected by the intelligence pipeline."}
       </p>
     </div>
   );
+}
+
+// Article verification freshness: flag when the last re-check is itself getting
+// old, so the team knows the freshness signal can't be fully trusted.
+function articleCheckClass(checkedAt: string): string {
+  const days = daysBetween(checkedAt);
+  if (days > 30) return "text-signal-warm";
+  return "text-ink-faint";
 }

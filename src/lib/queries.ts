@@ -31,23 +31,29 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
+  // Top-line stats reflect active leads only — archived (do_not_contact) leads
+  // are rejected and should not inflate "hot", "awaiting", etc.
   const [todayResp, hotResp, assignedResp, awaitingResp] = await Promise.all([
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
+      .eq("do_not_contact", false)
       .gte("created_at", startOfDay.toISOString()),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
+      .eq("do_not_contact", false)
       .gte("score", 80),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
+      .eq("do_not_contact", false)
       .neq("status", "new")
       .neq("status", "dead"),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
+      .eq("do_not_contact", false)
       .eq("status", "new"),
   ]);
 
@@ -63,9 +69,13 @@ export type LeadInboxRow = Lead & {
   rep_name?: string | null;
 };
 
-export async function getLeadInbox(limit = 100): Promise<LeadInboxRow[]> {
+export async function getLeadInbox(
+  limit = 100,
+  archived = false
+): Promise<LeadInboxRow[]> {
   if (isMockMode()) {
     return [...MOCK_LEADS]
+      .filter((l) => Boolean(l.do_not_contact) === archived)
       .sort(
         (a, b) =>
           b.score - a.score ||
@@ -84,6 +94,7 @@ export async function getLeadInbox(limit = 100): Promise<LeadInboxRow[]> {
       )
     `
     )
+    .eq("do_not_contact", archived)
     .order("score", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -102,6 +113,21 @@ export async function getLeadInbox(limit = 100): Promise<LeadInboxRow[]> {
       rep_name: latestAssignment?.rep?.full_name ?? null,
     } as LeadInboxRow;
   });
+}
+
+/** Count of archived (do_not_contact = true) leads — drives the toggle badge. */
+export async function getArchivedLeadCount(): Promise<number> {
+  if (isMockMode()) return MOCK_LEADS.filter((l) => l.do_not_contact).length;
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("do_not_contact", true);
+  if (error) {
+    console.error("getArchivedLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
 }
 
 export async function getLeadById(id: string): Promise<{
