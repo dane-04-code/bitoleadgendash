@@ -79,28 +79,30 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             </p>
           )}
 
+          {lead.source_url && (
+            <a
+              href={lead.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/article inline-flex items-center gap-2.5 mt-5 border border-line bg-surface px-4 py-2.5 hover:border-brand/45 hover:bg-brand/[0.05] transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-brand-ink shrink-0" strokeWidth={1.75} />
+              <span className="mono text-[11px] uppercase tracking-wider text-brand-ink">
+                Read source article
+              </span>
+              {lead.signal_source && (
+                <span className="text-[12px] text-ink-faint border-l border-line pl-2.5 truncate max-w-[220px]">
+                  {lead.signal_source}
+                </span>
+              )}
+            </a>
+          )}
+
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 mt-7 max-w-3xl">
             <Field label="Location" value={lead.location} />
             <Field label="Industry" value={lead.industry} />
             <Field label="Warehouse" value={lead.warehouse_size} />
-            <Field
-              label="Source"
-              value={
-                lead.source_url ? (
-                  <a
-                    href={lead.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-brand-ink hover:underline inline-flex items-center gap-1"
-                  >
-                    Open
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                ) : (
-                  lead.signal_source
-                )
-              }
-            />
+            <Field label="Source" value={lead.signal_source} />
           </dl>
         </div>
 
