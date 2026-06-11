@@ -5,7 +5,9 @@ import {
   getLeadInbox,
   getActiveReps,
   getArchivedLeadCount,
+  getRecentLeadCount,
 } from "@/lib/queries";
+import type { InboxView } from "@/lib/queries";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,16 +31,24 @@ export default async function DashboardPage({
 }: {
   searchParams?: { view?: string };
 }) {
-  const archived = searchParams?.view === "archived";
-  const [stats, leads, reps, archivedCount] = await Promise.all([
+  const view: InboxView =
+    searchParams?.view === "archived"
+      ? "archived"
+      : searchParams?.view === "new"
+        ? "new"
+        : "active";
+  const archived = view === "archived";
+  const isNew = view === "new";
+  const [stats, leads, reps, archivedCount, recentCount] = await Promise.all([
     getDashboardStats(),
-    getLeadInbox(60, archived),
+    getLeadInbox(60, view),
     getActiveReps(),
     getArchivedLeadCount(),
+    getRecentLeadCount(),
   ]);
 
-  // The "top signal" hero only makes sense for the active inbox.
-  const top = archived ? undefined : leads[0];
+  // The "top signal" hero only makes sense for the full active inbox.
+  const top = view === "active" ? leads[0] : undefined;
 
   return (
     <div className="animate-fade-in">
@@ -92,6 +102,20 @@ export default async function DashboardPage({
                   {String(top.signal_type).replace(/_/g, " ")}
                 </span>
               )}
+              {top.signal_source &&
+                (top.source_url ? (
+                  <a
+                    href={top.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-brand-ink transition-colors"
+                  >
+                    via {top.signal_source}
+                    <ArrowUpRight className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <span>via {top.signal_source}</span>
+                ))}
               <span>{formatRelative(top.created_at)}</span>
             </div>
           </div>
@@ -120,20 +144,34 @@ export default async function DashboardPage({
         <div className="flex items-baseline justify-between mb-4 gap-4 flex-wrap">
           <div className="flex items-baseline gap-3">
             <h2 className="display-serif text-2xl text-ink leading-none">
-              {archived ? "Archived" : "The Inbox"}
+              {archived ? "Archived" : isNew ? "New this week" : "The Inbox"}
             </h2>
             <span className="mono text-[11px] uppercase tracking-wider text-ink-faint">
-              {leads.length} {archived ? "archived" : "signals"}
+              {isNew
+                ? `${leads.length} ${
+                    leads.length === 1 ? "signal" : "signals"
+                  } from the last 7 days`
+                : `${leads.length} ${archived ? "archived" : "signals"}`}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider">
               <Link
-                href="/dashboard"
+                href="/dashboard?view=new"
                 className={`px-3 py-1.5 transition-colors ${
-                  archived
-                    ? "text-ink-faint hover:text-ink-dim"
-                    : "bg-brand/[0.08] text-brand-ink"
+                  isNew
+                    ? "bg-brand/[0.08] text-brand-ink"
+                    : "text-ink-faint hover:text-ink-dim"
+                }`}
+              >
+                New this week ({recentCount})
+              </Link>
+              <Link
+                href="/dashboard"
+                className={`px-3 py-1.5 border-l border-line transition-colors ${
+                  view === "active"
+                    ? "bg-brand/[0.08] text-brand-ink"
+                    : "text-ink-faint hover:text-ink-dim"
                 }`}
               >
                 Active
@@ -181,6 +219,7 @@ export default async function DashboardPage({
                   <TableHead className="w-12 text-center">#</TableHead>
                   <TableHead>Company / Signal</TableHead>
                   <TableHead className="w-[120px]">Score</TableHead>
+                  <TableHead className="hidden sm:table-cell w-[130px]">Source</TableHead>
                   <TableHead className="hidden lg:table-cell w-[140px]">Location</TableHead>
                   <TableHead className="hidden xl:table-cell w-[140px]">Industry</TableHead>
                   <TableHead className="w-[110px]">Status</TableHead>
@@ -229,6 +268,9 @@ export default async function DashboardPage({
                     </TableCell>
                     <TableCell>
                       <ScoreBadge score={lead.score} size="sm" />
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell mono text-[12px]">
+                      <SourceLink source={lead.signal_source} url={lead.source_url} />
                     </TableCell>
                     <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2 truncate">
                       {lead.location || <span className="text-ink-faint">—</span>}
@@ -305,6 +347,32 @@ function Stat({
       </div>
     </div>
   );
+}
+
+function SourceLink({
+  source,
+  url,
+}: {
+  source: string | null;
+  url: string | null;
+}) {
+  if (!source && !url) return <span className="text-ink-faint">—</span>;
+  const label = source || "source";
+  if (url) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`Open source · ${label}`}
+        className="inline-flex items-center gap-1 text-ink-2 hover:text-brand-ink transition-colors max-w-[120px]"
+      >
+        <span className="truncate">{label}</span>
+        <ArrowUpRight className="h-3 w-3 shrink-0 opacity-60" />
+      </a>
+    );
+  }
+  return <span className="text-ink-2 truncate block max-w-[120px]">{label}</span>;
 }
 
 function StatusPill({ status }: { status: string }) {

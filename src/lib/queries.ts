@@ -69,22 +69,42 @@ export type LeadInboxRow = Lead & {
   rep_name?: string | null;
 };
 
+/** Which slice of the inbox to show. */
+export type InboxView = "active" | "archived" | "new";
+
+/** Leads created on or after this point count as "new this week". */
+const RECENT_WINDOW_DAYS = 7;
+
+function recentCutoffISO(days = RECENT_WINDOW_DAYS): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export async function getLeadInbox(
   limit = 100,
-  archived = false
+  view: InboxView = "active"
 ): Promise<LeadInboxRow[]> {
+  const archived = view === "archived";
+  const cutoff = recentCutoffISO();
+
   if (isMockMode()) {
     return [...MOCK_LEADS]
       .filter((l) => Boolean(l.do_not_contact) === archived)
-      .sort(
-        (a, b) =>
+      .filter((l) => view !== "new" || l.created_at >= cutoff)
+      .sort((a, b) => {
+        // The "new this week" view is recency-first; everything else is
+        // score-first so the strongest signals stay at the top.
+        if (view === "new") {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return (
           b.score - a.score ||
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
+        );
+      })
       .slice(0, limit);
   }
   const supabase = getSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("leads")
     .select(
       `
@@ -94,10 +114,19 @@ export async function getLeadInbox(
       )
     `
     )
-    .eq("do_not_contact", archived)
-    .order("score", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    .eq("do_not_contact", archived);
+
+  if (view === "new") {
+    query = query
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: false });
+  } else {
+    query = query
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: false });
+  }
+
+  const { data, error } = await query.limit(limit);
 
   if (error) {
     console.error("getLeadInbox error", error);
@@ -125,6 +154,27 @@ export async function getArchivedLeadCount(): Promise<number> {
     .eq("do_not_contact", true);
   if (error) {
     console.error("getArchivedLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of active leads that arrived within the recency window — drives the "New this week" badge. */
+export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<number> {
+  const cutoff = recentCutoffISO(days);
+  if (isMockMode()) {
+    return MOCK_LEADS.filter(
+      (l) => !l.do_not_contact && l.created_at >= cutoff
+    ).length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("do_not_contact", false)
+    .gte("created_at", cutoff);
+  if (error) {
+    console.error("getRecentLeadCount error", error);
     return 0;
   }
   return count ?? 0;
