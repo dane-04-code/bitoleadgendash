@@ -53,13 +53,31 @@ export type Lead = {
   status: LeadStatus;
   /** Set when a rep records an outreach; null until first contact. */
   last_contacted_at: string | null;
-  /** When true the lead is archived (rejected) and hidden from the default inbox. */
+  /** Legacy reject flag. Superseded by `archived`; kept for backwards compatibility. */
   do_not_contact: boolean;
+  /** When true the lead is archived and hidden from the default inbox. */
+  archived: boolean;
+  /** When the lead was archived; null if never archived. */
+  archived_at: string | null;
+  /** Why the lead was archived, e.g. "stale_>60d", "no_signal_date". */
+  archived_reason: string | null;
   /** When the source article was last re-verified for freshness; null if never. */
   last_article_check: string | null;
   created_at: string;
   updated_at: string;
 };
+
+/** Maps raw `archived_reason` codes to human-readable labels for the sales team. */
+export const ARCHIVED_REASON_LABELS: Record<string, string> = {
+  "stale_>60d": "Stale · article older than 60 days",
+  no_signal_date: "No signal date",
+};
+
+/** Human-readable version of an `archived_reason` code; falls back to a tidied code. */
+export function archivedReasonLabel(reason: string | null): string {
+  if (!reason) return "Archived";
+  return ARCHIVED_REASON_LABELS[reason] ?? reason.replace(/_/g, " ");
+}
 
 export type RoleFit = "strong" | "borderline" | "junior" | "senior";
 

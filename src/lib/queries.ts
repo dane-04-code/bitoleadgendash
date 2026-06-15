@@ -31,29 +31,29 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  // Top-line stats reflect active leads only — archived (do_not_contact) leads
-  // are rejected and should not inflate "hot", "awaiting", etc.
+  // Top-line stats reflect active leads only — archived leads are rejected noise
+  // and should not inflate "hot", "awaiting", etc.
   const [todayResp, hotResp, assignedResp, awaitingResp] = await Promise.all([
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
-      .eq("do_not_contact", false)
+      .eq("archived", false)
       .gte("created_at", startOfDay.toISOString()),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
-      .eq("do_not_contact", false)
+      .eq("archived", false)
       .gte("score", 80),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
-      .eq("do_not_contact", false)
+      .eq("archived", false)
       .neq("status", "new")
       .neq("status", "dead"),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
-      .eq("do_not_contact", false)
+      .eq("archived", false)
       .eq("status", "new"),
   ]);
 
@@ -83,16 +83,22 @@ export async function getLeadInbox(
   limit = 100,
   view: InboxView = "active"
 ): Promise<LeadInboxRow[]> {
-  const archived = view === "archived";
+  const showArchived = view === "archived";
   const cutoff = recentCutoffISO();
 
   if (isMockMode()) {
     return [...MOCK_LEADS]
-      .filter((l) => Boolean(l.do_not_contact) === archived)
+      .filter((l) => Boolean(l.archived) === showArchived)
       .filter((l) => view !== "new" || l.created_at >= cutoff)
       .sort((a, b) => {
-        // The "new this week" view is recency-first; everything else is
-        // score-first so the strongest signals stay at the top.
+        // Archive is ordered by when it was archived (most recent first);
+        // "new this week" is recency-first; everything else is score-first so
+        // the strongest signals stay at the top.
+        if (view === "archived") {
+          const at = a.archived_at ? new Date(a.archived_at).getTime() : -Infinity;
+          const bt = b.archived_at ? new Date(b.archived_at).getTime() : -Infinity;
+          return bt - at; // NULLS LAST
+        }
         if (view === "new") {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         }
@@ -114,9 +120,11 @@ export async function getLeadInbox(
       )
     `
     )
-    .eq("do_not_contact", archived);
+    .eq("archived", showArchived);
 
-  if (view === "new") {
+  if (view === "archived") {
+    query = query.order("archived_at", { ascending: false, nullsFirst: false });
+  } else if (view === "new") {
     query = query
       .gte("created_at", cutoff)
       .order("created_at", { ascending: false });
@@ -144,14 +152,29 @@ export async function getLeadInbox(
   });
 }
 
-/** Count of archived (do_not_contact = true) leads — drives the toggle badge. */
-export async function getArchivedLeadCount(): Promise<number> {
-  if (isMockMode()) return MOCK_LEADS.filter((l) => l.do_not_contact).length;
+/** Count of active (archived = false) leads — drives the main "Leads" tab badge. */
+export async function getActiveLeadCount(): Promise<number> {
+  if (isMockMode()) return MOCK_LEADS.filter((l) => !l.archived).length;
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
-    .eq("do_not_contact", true);
+    .eq("archived", false);
+  if (error) {
+    console.error("getActiveLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of archived (archived = true) leads — drives the "Archive" tab badge. */
+export async function getArchivedLeadCount(): Promise<number> {
+  if (isMockMode()) return MOCK_LEADS.filter((l) => l.archived).length;
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", true);
   if (error) {
     console.error("getArchivedLeadCount error", error);
     return 0;
@@ -164,14 +187,14 @@ export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<num
   const cutoff = recentCutoffISO(days);
   if (isMockMode()) {
     return MOCK_LEADS.filter(
-      (l) => !l.do_not_contact && l.created_at >= cutoff
+      (l) => !l.archived && l.created_at >= cutoff
     ).length;
   }
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
-    .eq("do_not_contact", false)
+    .eq("archived", false)
     .gte("created_at", cutoff);
   if (error) {
     console.error("getRecentLeadCount error", error);

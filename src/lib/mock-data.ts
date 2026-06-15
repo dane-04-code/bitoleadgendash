@@ -81,6 +81,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "new",
     last_contacted_at: null,
     do_not_contact: false,
+    archived: false,
+    archived_at: null,
+    archived_reason: null,
     last_article_check: hoursAgo(2),
     created_at: hoursAgo(2),
     updated_at: hoursAgo(2),
@@ -104,6 +107,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "assigned",
     last_contacted_at: null,
     do_not_contact: false,
+    archived: false,
+    archived_at: null,
+    archived_reason: null,
     last_article_check: hoursAgo(7),
     created_at: hoursAgo(8),
     updated_at: hoursAgo(4),
@@ -127,6 +133,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "contacted",
     last_contacted_at: hoursAgo(6),
     do_not_contact: false,
+    archived: false,
+    archived_at: null,
+    archived_reason: null,
     last_article_check: hoursAgo(18),
     created_at: hoursAgo(20),
     updated_at: hoursAgo(6),
@@ -150,6 +159,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "meeting",
     last_contacted_at: hoursAgo(10),
     do_not_contact: false,
+    archived: false,
+    archived_at: null,
+    archived_reason: null,
     last_article_check: hoursAgo(34),
     created_at: hoursAgo(36),
     updated_at: hoursAgo(10),
@@ -173,14 +185,17 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "new",
     last_contacted_at: null,
     do_not_contact: false,
+    archived: false,
+    archived_at: null,
+    archived_reason: null,
     last_article_check: daysAgo(2),
     created_at: daysAgo(2),
     updated_at: daysAgo(2),
     rep_name: null,
   },
 
-  // ── Archived (do_not_contact = true) ───────────────────────────────────────
-  // Rejected on 2026-06-08: source articles were older than 60 days at re-check.
+  // ── Archived (archived = true) ──────────────────────────────────────────────
+  // Filtered out of the inbox as noise — stale articles / missing signal dates.
   {
     id: "lead-6",
     company_name: "Gulf Warehousing Company",
@@ -199,6 +214,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "new",
     last_contacted_at: null,
     do_not_contact: true,
+    archived: true,
+    archived_at: daysAgo(7),
+    archived_reason: "stale_>60d",
     last_article_check: hoursAgo(6),
     created_at: daysAgo(74),
     updated_at: hoursAgo(6),
@@ -221,6 +239,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     status: "new",
     last_contacted_at: null,
     do_not_contact: true,
+    archived: true,
+    archived_at: daysAgo(3),
+    archived_reason: "no_signal_date",
     last_article_check: hoursAgo(6),
     created_at: daysAgo(88),
     updated_at: hoursAgo(6),
@@ -575,7 +596,7 @@ export function mockDashboardStats(): DashboardStats {
   let assigned = 0;
   let awaiting = 0;
   for (const l of MOCK_LEADS) {
-    if (l.do_not_contact) continue; // archived leads don't count toward active stats
+    if (l.archived) continue; // archived leads don't count toward active stats
     if (new Date(l.created_at).getTime() >= startMs) totalToday += 1;
     if (l.score >= 80) hot += 1;
     if (l.status !== "new" && l.status !== "dead") assigned += 1;

@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex flex-1 flex-col min-w-0">
         <MobileTopbar user={user} />
         <TopUtilityBar role={session.role} />
-        <main className="flex-1 min-w-0 px-5 sm:px-8 lg:px-10 py-6 lg:py-8 max-w-[1480px] w-full">
+        <main className="flex-1 min-w-0 px-5 sm:px-8 lg:px-10 py-6 lg:py-8 w-full">
           {children}
         </main>
         <footer className="border-t border-line px-5 sm:px-8 lg:px-10 py-3 mono text-[10px] uppercase tracking-wider text-ink-faint flex items-center justify-between">

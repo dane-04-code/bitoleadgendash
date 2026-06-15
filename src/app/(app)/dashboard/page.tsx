@@ -4,6 +4,7 @@ import {
   getDashboardStats,
   getLeadInbox,
   getActiveReps,
+  getActiveLeadCount,
   getArchivedLeadCount,
   getRecentLeadCount,
 } from "@/lib/queries";
@@ -18,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LEAD_STATUS_LABELS } from "@/lib/supabase/types";
+import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
 import { formatRelative, daysBetween } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
 import { PageHeader, MetaItem } from "@/components/page-header";
@@ -39,13 +40,15 @@ export default async function DashboardPage({
         : "active";
   const archived = view === "archived";
   const isNew = view === "new";
-  const [stats, leads, reps, archivedCount, recentCount] = await Promise.all([
-    getDashboardStats(),
-    getLeadInbox(60, view),
-    getActiveReps(),
-    getArchivedLeadCount(),
-    getRecentLeadCount(),
-  ]);
+  const [stats, leads, reps, activeCount, archivedCount, recentCount] =
+    await Promise.all([
+      getDashboardStats(),
+      getLeadInbox(60, view),
+      getActiveReps(),
+      getActiveLeadCount(),
+      getArchivedLeadCount(),
+      getRecentLeadCount(),
+    ]);
 
   // The "top signal" hero only makes sense for the full active inbox.
   const top = view === "active" ? leads[0] : undefined;
@@ -174,7 +177,7 @@ export default async function DashboardPage({
                     : "text-ink-faint hover:text-ink-dim"
                 }`}
               >
-                Active
+                Leads ({activeCount})
               </Link>
               <Link
                 href="/dashboard?view=archived"
@@ -184,7 +187,7 @@ export default async function DashboardPage({
                     : "text-ink-faint hover:text-ink-dim"
                 }`}
               >
-                Show archived ({archivedCount})
+                Archive ({archivedCount})
               </Link>
             </div>
             <Button asChild variant="ghost" size="sm">
@@ -199,12 +202,13 @@ export default async function DashboardPage({
         {archived && (
           <div className="mb-4 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
             <div className="mono text-[10px] uppercase tracking-wider text-signal-warm">
-              Archived · do not contact
+              Archived signals
             </div>
             <p className="text-[12px] text-ink-dim mt-1 leading-relaxed max-w-2xl">
-              These leads were rejected on 8 June 2026 because their source
-              articles were older than 60 days at re-check. Shown for reference
-              so the team can see what was filtered out and why.
+              These leads were filtered out of the inbox as noise — stale source
+              articles, missing signal dates, and similar. The reason and when
+              each was archived are shown per row, so the team can see what was
+              removed and why.
             </p>
           </div>
         )}
@@ -219,9 +223,18 @@ export default async function DashboardPage({
                   <TableHead className="w-12 text-center">#</TableHead>
                   <TableHead>Company / Signal</TableHead>
                   <TableHead className="w-[120px]">Score</TableHead>
-                  <TableHead className="hidden sm:table-cell w-[130px]">Source</TableHead>
-                  <TableHead className="hidden lg:table-cell w-[140px]">Location</TableHead>
-                  <TableHead className="hidden xl:table-cell w-[140px]">Industry</TableHead>
+                  {archived ? (
+                    <>
+                      <TableHead className="hidden sm:table-cell w-[220px]">Reason</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[130px]">Archived</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="hidden sm:table-cell w-[130px]">Source</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[140px]">Location</TableHead>
+                      <TableHead className="hidden xl:table-cell w-[140px]">Industry</TableHead>
+                    </>
+                  )}
                   <TableHead className="w-[110px]">Status</TableHead>
                   <TableHead className="text-right w-[180px]">Action</TableHead>
                 </TableRow>
@@ -269,15 +282,34 @@ export default async function DashboardPage({
                     <TableCell>
                       <ScoreBadge score={lead.score} size="sm" />
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell mono text-[12px]">
-                      <SourceLink source={lead.signal_source} url={lead.source_url} />
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2 truncate">
-                      {lead.location || <span className="text-ink-faint">—</span>}
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell mono text-[12px] text-ink-2 truncate">
-                      {lead.industry || <span className="text-ink-faint">—</span>}
-                    </TableCell>
+                    {archived ? (
+                      <>
+                        <TableCell className="hidden sm:table-cell">
+                          <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.06] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
+                            {archivedReasonLabel(lead.archived_reason)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2">
+                          {lead.archived_at ? (
+                            formatRelative(lead.archived_at)
+                          ) : (
+                            <span className="text-ink-faint">—</span>
+                          )}
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="hidden sm:table-cell mono text-[12px]">
+                          <SourceLink source={lead.signal_source} url={lead.source_url} />
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2 truncate">
+                          {lead.location || <span className="text-ink-faint">—</span>}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell mono text-[12px] text-ink-2 truncate">
+                          {lead.industry || <span className="text-ink-faint">—</span>}
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell>
                       <StatusPill status={lead.status} />
                     </TableCell>

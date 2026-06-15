@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { AssignDialog } from "@/components/assign-dialog";
 import { StatusSelector } from "@/components/status-selector";
-import { LEAD_STATUS_LABELS } from "@/lib/supabase/types";
+import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
 import { formatRelative, initials } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +53,22 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
         <ArrowLeft className="h-3 w-3" />
         {isAdmin ? "Back to inbox" : "Back to my leads"}
       </Link>
+
+      {lead.archived && (
+        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
+          <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.08] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
+            ⚑ Archived
+          </span>
+          <span className="text-[12px] text-ink-dim">
+            {archivedReasonLabel(lead.archived_reason)}
+          </span>
+          {lead.archived_at && (
+            <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
+              · archived {formatRelative(lead.archived_at)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* HEADER */}
       <header className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 pb-8 mb-8 border-b border-line">
