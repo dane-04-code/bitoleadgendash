@@ -12,6 +12,7 @@ import {
   UserCog,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const ADMIN_NAV = [
   { href: "/dashboard", label: "Inbox", code: "01", icon: LayoutGrid },
@@ -122,6 +123,8 @@ export function Sidebar({ user }: { user: SidebarUser }) {
           </div>
         )}
 
+        <ThemeToggle />
+
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
@@ -169,6 +172,7 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
             </Link>
           );
         })}
+        <ThemeToggle compact />
         <form action="/api/auth/logout" method="post" className="ml-1">
           <button
             type="submit"

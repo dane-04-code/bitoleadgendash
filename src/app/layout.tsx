@@ -40,6 +40,14 @@ export default function RootLayout({
       lang="en"
       className={`${sans.variable} ${mono.variable} ${serif.variable}`}
     >
+      <head>
+        <script
+          // Apply the saved theme before paint to avoid a flash of the wrong theme.
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen">{children}</body>
     </html>
   );

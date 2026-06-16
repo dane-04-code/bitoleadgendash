@@ -52,6 +52,56 @@
     --ring:              146 62% 26%;
     --radius:            0.25rem;
   }
+
+  /* ── Dark theme — deep warm charcoal, same operational green ───────────── */
+  .dark {
+    /* Surfaces — layered warm charcoal */
+    --bg:           40  8%  8%;      /* near-black, faint warmth */
+    --surface:      40  7%  11%;
+    --surface-2:    40  6%  15%;
+    --surface-3:    40  6%  19%;
+
+    /* Borders — warm low-contrast lines */
+    --line:         40  5%  24%;
+    --line-strong:  40  5%  34%;
+
+    /* Text — warm off-white ink */
+    --ink:          42  20% 92%;
+    --ink-2:        42  12% 78%;
+    --ink-dim:      42   8% 60%;
+    --ink-faint:    42   7% 46%;
+
+    /* Accent — brighter green so it reads on dark */
+    --accent:       146 48% 50%;
+    --accent-ink:   146 52% 62%;
+    --accent-bg:    146 40% 16%;
+
+    /* Signal status — luminous, never neon */
+    --hot:          358 72% 64%;
+    --warm:          30 85% 60%;
+    --cold:         206 78% 62%;
+    --good:         146 48% 54%;
+
+    /* Mapped tokens for legacy components */
+    --background:        40 8% 8%;
+    --foreground:        42 20% 92%;
+    --card:              40 7% 11%;
+    --card-foreground:   42 20% 92%;
+    --popover:           40 7% 11%;
+    --popover-foreground:42 20% 92%;
+    --primary:           146 48% 50%;
+    --primary-foreground: 40 10% 8%;
+    --secondary:         40 6% 15%;
+    --secondary-foreground: 42 20% 92%;
+    --muted:             40 6% 15%;
+    --muted-foreground:  42 8% 60%;
+    --accent-foreground: 40 10% 8%;
+    --destructive:       358 72% 64%;
+    --destructive-foreground: 40 10% 8%;
+    --border:            40 5% 24%;
+    --input:             40 5% 24%;
+    --ring:              146 48% 50%;
+  }
 }
 
 @layer base {
@@ -69,6 +119,10 @@
     color-scheme: light;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     background:
       /* warm paper base */
@@ -78,6 +132,15 @@
       repeating-linear-gradient(90deg, transparent 0 23px, hsla(200, 12%, 10%, 0.018) 23px 24px);
     background-attachment: fixed;
     min-height: 100vh;
+  }
+
+  /* Dark: flip the blueprint grid to faint light ink so it stays visible */
+  .dark body {
+    background:
+      linear-gradient(to bottom, hsl(var(--bg)), hsl(var(--bg))),
+      repeating-linear-gradient(0deg, transparent 0 23px, hsla(42, 20%, 92%, 0.022) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, hsla(42, 20%, 92%, 0.022) 23px 24px);
+    background-attachment: fixed;
   }
 
   ::selection {
