@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSession, SESSION_COOKIE } from "@/lib/auth-edge";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/api/auth/login",
+  "/api/auth/signup",
+  "/api/auth/logout",
+];
 
 // Pages that only admins (the manager) may visit.
 const ADMIN_ONLY = ["/dashboard", "/pipeline", "/reps", "/settings"];

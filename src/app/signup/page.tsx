@@ -1,22 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
-import { LoginForm } from "./login-form";
+import { SignupForm } from "./signup-form";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { next?: string; error?: string };
-}) {
+export default async function SignupPage() {
   if (await isAuthenticated()) {
-    redirect(searchParams.next || "/dashboard");
+    redirect("/my");
   }
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[1fr_460px]">
       {/* LEFT — editorial / brand */}
       <aside className="hidden lg:flex flex-col justify-between p-12 border-r border-line bg-surface relative overflow-hidden">
-        {/* subtle grid backdrop */}
         <div
           aria-hidden
           className="absolute inset-0"
@@ -46,11 +41,11 @@ export default async function LoginPage({
             Lead Intelligence Terminal
           </div>
           <h1 className="text-[40px] font-bold leading-[1.05] tracking-tight text-ink">
-            Catch the <span className="text-brand-ink">signal</span> before the warehouse is built.
+            Your leads, <span className="text-brand-ink">routed</span> straight to you.
           </h1>
           <p className="text-[14px] text-ink-dim mt-6 leading-relaxed max-w-sm">
-            Real-time intelligence on warehouse expansion across the GCC. Triage,
-            assign, and close — from one terminal.
+            Create your rep account to start working warehouse-expansion leads
+            across the GCC — triage, contact, and close from one terminal.
           </p>
         </div>
 
@@ -61,9 +56,8 @@ export default async function LoginPage({
         </footer>
       </aside>
 
-      {/* RIGHT — sign in */}
+      {/* RIGHT — sign up */}
       <main className="flex flex-col p-8 sm:p-12 lg:p-14 min-h-screen">
-        {/* small mark for mobile */}
         <header className="lg:hidden flex items-center gap-3 mb-12">
           <div className="relative h-9 w-9 border border-line-strong flex items-center justify-center bg-bg">
             <span className="display-serif text-ink text-lg leading-none">Li</span>
@@ -79,25 +73,25 @@ export default async function LoginPage({
 
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-sm">
-            <div className="eyebrow text-brand-ink mb-3">Restricted Access</div>
+            <div className="eyebrow text-brand-ink mb-3">New Rep Sign-up</div>
             <h2 className="text-[28px] font-bold tracking-tight leading-[1.05] text-ink mb-3">
-              Sign in.
+              Create your account.
             </h2>
             <p className="text-[13px] text-ink-dim mb-8 leading-relaxed">
-              Reps sign in with their work email and password. Admins use the
-              shared password.
+              Enter your details and the sign-up code from your admin. You&apos;ll
+              be signed in straight away.
             </p>
 
-            <LoginForm next={searchParams.next} error={searchParams.error} />
+            <SignupForm />
 
             <p className="mt-6 text-[13px] text-ink-dim text-center">
-              New rep?{" "}
-              <Link href="/signup" className="text-brand-ink hover:underline">
-                Create your account
+              Already have an account?{" "}
+              <Link href="/login" className="text-brand-ink hover:underline">
+                Sign in
               </Link>
             </p>
 
-            <div className="mt-10 pt-5 border-t border-line mono text-[10px] uppercase tracking-wider text-ink-faint flex items-center justify-between">
+            <div className="mt-8 pt-5 border-t border-line mono text-[10px] uppercase tracking-wider text-ink-faint flex items-center justify-between">
               <span>v0.1.0</span>
               <span className="flex items-center gap-1.5 text-signal-good">
                 <span className="dot bg-signal-good" />
