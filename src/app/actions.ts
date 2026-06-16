@@ -195,6 +195,31 @@ export async function toggleRepActive(repId: string, isActive: boolean) {
   return { ok: true };
 }
 
+export async function deleteRep(repId: string) {
+  if (!repId) return { ok: false, error: "Missing rep id." };
+  const supabase = getSupabaseServerClient();
+
+  // Remove this rep's lead assignments first so the delete can't trip a
+  // foreign-key constraint. The leads themselves stay — they just become
+  // unassigned and can be routed to someone else.
+  const { error: assignErr } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("rep_id", repId);
+  if (assignErr) {
+    console.error("deleteRep assignments", assignErr);
+    return { ok: false, error: assignErr.message };
+  }
+
+  const { error } = await supabase.from("reps").delete().eq("id", repId);
+  if (error) {
+    console.error("deleteRep", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/reps");
+  return { ok: true };
+}
+
 // ─── Rep self-service ──────────────────────────────────────────────────────
 
 export async function updateMyProfile(formData: FormData) {

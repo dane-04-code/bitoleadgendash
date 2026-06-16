@@ -2,6 +2,7 @@ import { Mail, Send, MapPin, KeyRound } from "lucide-react";
 import { getAllReps, getRepLeadCounts, type RepWithStatus } from "@/lib/queries";
 import { AddRepForm } from "@/components/add-rep-form";
 import { SetPasswordDialog } from "@/components/set-password-dialog";
+import { DeleteRepDialog } from "@/components/delete-rep-dialog";
 import { initials } from "@/lib/utils";
 import { PageHeader, MetaItem } from "@/components/page-header";
 
@@ -170,6 +171,11 @@ function RepCard({
           repName={rep.full_name}
           repEmail={rep.email}
           hasPassword={rep.has_password}
+        />
+        <DeleteRepDialog
+          repId={rep.id}
+          repName={rep.full_name}
+          leadCount={count}
         />
       </div>
     </div>
