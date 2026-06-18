@@ -5,6 +5,8 @@ import {
   MOCK_REPS,
   mockDashboardStats,
   mockLeadById,
+  mockLeadNotes,
+  mockLeadReview,
 } from "./mock-data";
 import type {
   Lead,
@@ -15,6 +17,8 @@ import type {
   CallBrief,
   PipelineUpdate,
   LeadStatus,
+  LeadNote,
+  LeadReview,
 } from "./supabase/types";
 
 export type DashboardStats = {
@@ -72,6 +76,34 @@ export type LeadInboxRow = Lead & {
 /** Which slice of the inbox to show. */
 export type InboxView = "active" | "archived" | "new";
 
+/** Optional filters applied to the inbox list view. */
+export type LeadInboxFilters = {
+  /** Free-text match against company name + signal summary. */
+  q?: string;
+  /** A specific lead status, or undefined for any. */
+  status?: LeadStatus;
+  /** Exact industry match (sourced from the facet list). */
+  industry?: string;
+  /** Minimum automated score (inclusive). */
+  minScore?: number;
+};
+
+/** True when any filter is actually set. */
+export function hasFilters(f: LeadInboxFilters): boolean {
+  return Boolean(f.q || f.status || f.industry || (f.minScore && f.minScore > 0));
+}
+
+function matchesFilters(lead: Lead, f: LeadInboxFilters): boolean {
+  if (f.status && lead.status !== f.status) return false;
+  if (f.industry && lead.industry !== f.industry) return false;
+  if (f.minScore && lead.score < f.minScore) return false;
+  if (f.q) {
+    const hay = `${lead.company_name} ${lead.signal_summary ?? ""}`.toLowerCase();
+    if (!hay.includes(f.q.toLowerCase())) return false;
+  }
+  return true;
+}
+
 /** Leads created on or after this point count as "new this week". */
 const RECENT_WINDOW_DAYS = 7;
 
@@ -81,7 +113,8 @@ function recentCutoffISO(days = RECENT_WINDOW_DAYS): string {
 
 export async function getLeadInbox(
   limit = 100,
-  view: InboxView = "active"
+  view: InboxView = "active",
+  filters: LeadInboxFilters = {}
 ): Promise<LeadInboxRow[]> {
   const showArchived = view === "archived";
   const cutoff = recentCutoffISO();
@@ -90,6 +123,7 @@ export async function getLeadInbox(
     return [...MOCK_LEADS]
       .filter((l) => Boolean(l.archived) === showArchived)
       .filter((l) => view !== "new" || l.created_at >= cutoff)
+      .filter((l) => matchesFilters(l, filters))
       .sort((a, b) => {
         // Archive is ordered by when it was archived (most recent first);
         // "new this week" is recency-first; everything else is score-first so
@@ -122,6 +156,21 @@ export async function getLeadInbox(
     )
     .eq("archived", showArchived);
 
+  // Inbox filters (search / status / industry / min score).
+  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.industry) query = query.eq("industry", filters.industry);
+  if (filters.minScore && filters.minScore > 0) {
+    query = query.gte("score", filters.minScore);
+  }
+  if (filters.q) {
+    const term = filters.q.replace(/[%,()]/g, " ").trim();
+    if (term) {
+      query = query.or(
+        `company_name.ilike.%${term}%,signal_summary.ilike.%${term}%`
+      );
+    }
+  }
+
   if (view === "archived") {
     query = query.order("archived_at", { ascending: false, nullsFirst: false });
   } else if (view === "new") {
@@ -150,6 +199,30 @@ export async function getLeadInbox(
       rep_name: latestAssignment?.rep?.full_name ?? null,
     } as LeadInboxRow;
   });
+}
+
+/** Distinct industries across leads — populates the inbox industry filter. */
+export async function getLeadFilterFacets(): Promise<{ industries: string[] }> {
+  if (isMockMode()) {
+    const industries = Array.from(
+      new Set(MOCK_LEADS.map((l) => l.industry).filter((v): v is string => Boolean(v)))
+    ).sort();
+    return { industries };
+  }
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leads")
+    .select("industry")
+    .eq("archived", false)
+    .not("industry", "is", null);
+  if (error) {
+    console.error("getLeadFilterFacets error", error);
+    return { industries: [] };
+  }
+  const industries = Array.from(
+    new Set((data || []).map((r: any) => r.industry).filter(Boolean) as string[])
+  ).sort();
+  return { industries };
 }
 
 /** Count of active (archived = false) leads — drives the main "Leads" tab badge. */
@@ -264,6 +337,38 @@ export async function getLeadById(id: string): Promise<{
     assignments: (assignmentsResp.data || []) as (Assignment & { rep: Rep | null })[],
     pipeline_updates: (updatesResp.data || []) as PipelineUpdate[],
   };
+}
+
+/** All notes for a lead, newest first. */
+export async function getLeadNotes(leadId: string): Promise<LeadNote[]> {
+  if (isMockMode()) return mockLeadNotes(leadId);
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("lead_notes")
+    .select("*")
+    .eq("lead_id", leadId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getLeadNotes error", error);
+    return [];
+  }
+  return (data || []) as LeadNote[];
+}
+
+/** The manual review scorecard for a lead, or null if none saved yet. */
+export async function getLeadReview(leadId: string): Promise<LeadReview | null> {
+  if (isMockMode()) return mockLeadReview(leadId);
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("lead_reviews")
+    .select("*")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (error) {
+    console.error("getLeadReview error", error);
+    return null;
+  }
+  return (data as LeadReview) ?? null;
 }
 
 export async function getRepById(id: string): Promise<Rep | null> {

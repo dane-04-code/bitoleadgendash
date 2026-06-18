@@ -6,6 +6,8 @@ import type {
   CallBrief,
   Assignment,
   PipelineUpdate,
+  LeadNote,
+  LeadReview,
 } from "./supabase/types";
 import type { LeadInboxRow, DashboardStats } from "./queries";
 
@@ -583,6 +585,81 @@ export const MOCK_PIPELINE_UPDATES: PipelineUpdate[] = [
     updated_at: hoursAgo(10),
   },
 ];
+
+// ─── Lead notes + manual review (mock, mutable) ─────────────────────────────
+// These arrays are mutated in-place by the mock action helpers so notes/reviews
+// persist for the life of the dev server process — enough to demo the feature
+// locally without a database. Real data lives in Supabase on Vercel.
+
+export const MOCK_LEAD_NOTES: LeadNote[] = [
+  {
+    id: "note-1-1",
+    lead_id: "lead-1",
+    author: "Admin",
+    body: "Tender opens in ~3 weeks — Faisal is the decision lead. Worth a pre-tender call before procurement gates it.",
+    created_at: hoursAgo(1),
+  },
+  {
+    id: "note-2-1",
+    lead_id: "lead-2",
+    author: "Omar Khalifa",
+    body: "Left voicemail with supply-chain desk. Cold-chain spec confirmed against the RFP.",
+    created_at: hoursAgo(3),
+  },
+];
+
+export const MOCK_LEAD_REVIEWS: LeadReview[] = [
+  {
+    lead_id: "lead-1",
+    contact_accuracy: 5,
+    relevancy: 5,
+    score_accuracy: 4,
+    gut_feel: 5,
+    reviewed_by: "Admin",
+    updated_at: hoursAgo(1),
+  },
+];
+
+export function mockLeadNotes(leadId: string): LeadNote[] {
+  return MOCK_LEAD_NOTES.filter((n) => n.lead_id === leadId).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
+
+export function mockAddLeadNote(
+  leadId: string,
+  body: string,
+  author: string | null
+): LeadNote {
+  const note: LeadNote = {
+    id: `note-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    lead_id: leadId,
+    author,
+    body,
+    created_at: new Date().toISOString(),
+  };
+  MOCK_LEAD_NOTES.push(note);
+  return note;
+}
+
+export function mockDeleteLeadNote(noteId: string): void {
+  const idx = MOCK_LEAD_NOTES.findIndex((n) => n.id === noteId);
+  if (idx >= 0) MOCK_LEAD_NOTES.splice(idx, 1);
+}
+
+export function mockLeadReview(leadId: string): LeadReview | null {
+  return MOCK_LEAD_REVIEWS.find((r) => r.lead_id === leadId) ?? null;
+}
+
+export function mockSaveLeadReview(
+  review: Omit<LeadReview, "updated_at">
+): LeadReview {
+  const existing = MOCK_LEAD_REVIEWS.find((r) => r.lead_id === review.lead_id);
+  const saved: LeadReview = { ...review, updated_at: new Date().toISOString() };
+  if (existing) Object.assign(existing, saved);
+  else MOCK_LEAD_REVIEWS.push(saved);
+  return saved;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 

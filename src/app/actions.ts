@@ -2,9 +2,36 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getCurrentRepId } from "@/lib/auth";
+import { getCurrentRepId, getSession } from "@/lib/auth";
 import { hashPassword, verifyPasswordHash } from "@/lib/auth";
+import {
+  isMockMode,
+  MOCK_REPS,
+  mockAddLeadNote,
+  mockDeleteLeadNote,
+  mockSaveLeadReview,
+} from "@/lib/mock-data";
 import type { LeadStatus } from "@/lib/supabase/types";
+
+/**
+ * Display name for whoever is acting now — "Admin" for the admin session, the
+ * rep's full name for a rep. Used to stamp notes and reviews.
+ */
+async function currentActorName(): Promise<string | null> {
+  const session = await getSession();
+  if (!session) return null;
+  if (session.role === "admin") return "Admin";
+  if (isMockMode()) {
+    return MOCK_REPS.find((r) => r.id === session.subject)?.full_name ?? "Rep";
+  }
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase
+    .from("reps")
+    .select("full_name")
+    .eq("id", session.subject)
+    .maybeSingle();
+  return (data?.full_name as string | undefined) ?? "Rep";
+}
 
 export async function assignLeadToRep(formData: FormData) {
   const leadId = String(formData.get("leadId") || "");
@@ -102,6 +129,95 @@ export async function markOutreachUsed(outreachId: string, leadId: string, used:
     .eq("id", outreachId);
   if (error) {
     console.error("markOutreachUsed", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+// ─── Lead notes ──────────────────────────────────────────────────────────────
+
+export async function addLeadNote(formData: FormData) {
+  const leadId = String(formData.get("leadId") || "");
+  const body = String(formData.get("body") || "").trim();
+  if (!leadId || !body) return { ok: false, error: "Note text is required." };
+
+  const author = await currentActorName();
+
+  if (isMockMode()) {
+    mockAddLeadNote(leadId, body, author);
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("lead_notes")
+    .insert({ lead_id: leadId, body, author });
+  if (error) {
+    console.error("addLeadNote", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+export async function deleteLeadNote(noteId: string, leadId: string) {
+  if (!noteId) return { ok: false, error: "Missing note id." };
+
+  if (isMockMode()) {
+    mockDeleteLeadNote(noteId);
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase.from("lead_notes").delete().eq("id", noteId);
+  if (error) {
+    console.error("deleteLeadNote", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+// ─── Manual review scorecard (temporary) ──────────────────────────────────────
+
+export async function saveLeadReview(formData: FormData) {
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead id." };
+
+  const parseScore = (key: string): number | null => {
+    const raw = formData.get(key);
+    if (raw == null || raw === "") return null;
+    const n = Number(raw);
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+  };
+
+  const review = {
+    lead_id: leadId,
+    contact_accuracy: parseScore("contact_accuracy"),
+    relevancy: parseScore("relevancy"),
+    score_accuracy: parseScore("score_accuracy"),
+    gut_feel: parseScore("gut_feel"),
+    reviewed_by: await currentActorName(),
+  };
+
+  if (isMockMode()) {
+    mockSaveLeadReview(review);
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("lead_reviews")
+    .upsert(
+      { ...review, updated_at: new Date().toISOString() },
+      { onConflict: "lead_id" }
+    );
+  if (error) {
+    console.error("saveLeadReview", error);
     return { ok: false, error: error.message };
   }
   revalidatePath(`/leads/${leadId}`);

@@ -6,14 +6,23 @@ import {
   Mail,
   Phone,
   Linkedin,
+  Send,
 } from "lucide-react";
-import { getLeadById, getActiveReps, isLeadOwnedByRep } from "@/lib/queries";
+import {
+  getLeadById,
+  getActiveReps,
+  isLeadOwnedByRep,
+  getLeadNotes,
+  getLeadReview,
+} from "@/lib/queries";
 import { getSession } from "@/lib/auth";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { AssignDialog } from "@/components/assign-dialog";
 import { StatusSelector } from "@/components/status-selector";
+import { LeadNotes } from "@/components/lead-notes";
+import { LeadReviewCard } from "@/components/lead-review";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
 import { formatRelative, initials } from "@/lib/utils";
 
@@ -35,7 +44,11 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
   const { lead, contacts, outreach, call_briefs, assignments, pipeline_updates } = data;
   const isAdmin = session.role === "admin";
-  const reps = isAdmin ? await getActiveReps() : [];
+  const [reps, notes, review] = await Promise.all([
+    isAdmin ? getActiveReps() : Promise.resolve([]),
+    getLeadNotes(params.id),
+    getLeadReview(params.id),
+  ]);
 
   const currentAssignment = assignments[0];
   const linkedinDrafts = outreach.filter((o) => o.channel === "linkedin");
@@ -230,10 +243,19 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
               </div>
             )}
           </Section>
+
+          <Section eyebrow="Notes" code="F" count={notes.length}>
+            <LeadNotes leadId={lead.id} notes={notes} />
+          </Section>
         </div>
 
         {/* SIDE COLUMN */}
         <aside className="space-y-8 lg:border-l lg:border-line lg:pl-8 min-w-0">
+          <div>
+            <div className="eyebrow mb-3">Manual review</div>
+            <LeadReviewCard leadId={lead.id} review={review} />
+          </div>
+
           {currentAssignment?.notes && (
             <div>
               <div className="eyebrow mb-3">Assignment note</div>
@@ -355,24 +377,42 @@ function ContactCard({
             <p className="text-[12px] text-ink-dim mt-0.5">{c.job_title}</p>
           )}
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-3">
+          <div className="flex flex-col gap-1.5 mt-3">
             {c.email && (
-              <a
-                href={`mailto:${c.email}`}
-                className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors"
-              >
-                <Mail className="h-3 w-3" strokeWidth={1.75} />
-                <span className="truncate max-w-[200px]">{c.email}</span>
-              </a>
+              <div className="flex items-center gap-2 min-w-0">
+                <a
+                  href={`mailto:${c.email}`}
+                  className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors min-w-0"
+                >
+                  <Mail className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                  <span className="truncate">{c.email}</span>
+                </a>
+                <CopyButton value={c.email} label="Copy email" iconOnly />
+                <a
+                  href={`https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(
+                    c.email
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Compose in Outlook"
+                  className="inline-flex items-center gap-1 mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-brand-ink transition-colors shrink-0"
+                >
+                  <Send className="h-3 w-3" strokeWidth={1.75} />
+                  Outlook
+                </a>
+              </div>
             )}
             {c.phone && (
-              <a
-                href={`tel:${c.phone}`}
-                className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors"
-              >
-                <Phone className="h-3 w-3" strokeWidth={1.75} />
-                {c.phone}
-              </a>
+              <div className="flex items-center gap-2 min-w-0">
+                <a
+                  href={`tel:${c.phone}`}
+                  className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors min-w-0"
+                >
+                  <Phone className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                  <span className="truncate">{c.phone}</span>
+                </a>
+                <CopyButton value={c.phone} label="Copy phone" iconOnly />
+              </div>
             )}
             {c.linkedin_url && (
               <a

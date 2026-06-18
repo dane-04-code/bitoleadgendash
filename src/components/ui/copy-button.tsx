@@ -10,9 +10,17 @@ interface CopyButtonProps {
   label?: string;
   className?: string;
   size?: "sm" | "default" | "lg";
+  /** Render just the copy icon (no label) — for inline use next to fields. */
+  iconOnly?: boolean;
 }
 
-export function CopyButton({ value, label = "Copy", className, size = "sm" }: CopyButtonProps) {
+export function CopyButton({
+  value,
+  label = "Copy",
+  className,
+  size = "sm",
+  iconOnly = false,
+}: CopyButtonProps) {
   const [copied, setCopied] = React.useState(false);
 
   async function handleCopy() {
@@ -23,6 +31,27 @@ export function CopyButton({ value, label = "Copy", className, size = "sm" }: Co
     } catch {
       // ignore
     }
+  }
+
+  if (iconOnly) {
+    return (
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={copied ? "Copied" : label}
+        title={copied ? "Copied" : label}
+        className={cn(
+          "inline-flex items-center text-ink-faint hover:text-brand-ink transition-colors",
+          className
+        )}
+      >
+        {copied ? (
+          <Check className="h-3 w-3 text-signal-good" />
+        ) : (
+          <Copy className="h-3 w-3" />
+        )}
+      </button>
+    );
   }
 
   return (

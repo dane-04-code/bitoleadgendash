@@ -150,6 +150,41 @@ export type CallBrief = {
   generated_at: string;
 };
 
+/** A free-text note written against a lead (append-only log, newest first). */
+export type LeadNote = {
+  id: string;
+  lead_id: string;
+  /** Display name of whoever wrote it ("Admin" or a rep's full name); null if unknown. */
+  author: string | null;
+  body: string;
+  created_at: string;
+};
+
+/**
+ * TEMPORARY manual scorecard for a lead — one row per lead, each field 1-5.
+ * Filled in by hand while we calibrate the automated score; drop the table and
+ * this type once calibration is done.
+ */
+export type LeadReview = {
+  lead_id: string;
+  contact_accuracy: number | null;
+  relevancy: number | null;
+  score_accuracy: number | null;
+  gut_feel: number | null;
+  reviewed_by: string | null;
+  updated_at: string | null;
+};
+
+/** The four manual review dimensions, in display order. */
+export const REVIEW_CATEGORIES = [
+  { key: "contact_accuracy", label: "Contact accuracy" },
+  { key: "relevancy", label: "Relevancy of lead" },
+  { key: "score_accuracy", label: "Score accuracy" },
+  { key: "gut_feel", label: "Gut feel" },
+] as const;
+
+export type ReviewCategoryKey = (typeof REVIEW_CATEGORIES)[number]["key"];
+
 export type LeadWithRelations = Lead & {
   contacts?: Contact[];
   assignments?: (Assignment & { rep?: Rep | null })[];

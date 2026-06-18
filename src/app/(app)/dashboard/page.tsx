@@ -7,10 +7,13 @@ import {
   getActiveLeadCount,
   getArchivedLeadCount,
   getRecentLeadCount,
+  getLeadFilterFacets,
+  hasFilters,
 } from "@/lib/queries";
-import type { InboxView } from "@/lib/queries";
+import type { InboxView, LeadInboxFilters } from "@/lib/queries";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { Button } from "@/components/ui/button";
+import { LeadFilters } from "@/components/lead-filters";
 import {
   Table,
   TableBody,
@@ -19,7 +22,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
+import {
+  LEAD_STATUS_LABELS,
+  LEAD_STATUSES,
+  archivedReasonLabel,
+  type LeadStatus,
+} from "@/lib/supabase/types";
 import { formatRelative, daysBetween } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
 import { PageHeader, MetaItem } from "@/components/page-header";
@@ -30,7 +38,13 @@ export const revalidate = 0;
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: { view?: string };
+  searchParams?: {
+    view?: string;
+    q?: string;
+    status?: string;
+    industry?: string;
+    minScore?: string;
+  };
 }) {
   const view: InboxView =
     searchParams?.view === "archived"
@@ -40,18 +54,31 @@ export default async function DashboardPage({
         : "active";
   const archived = view === "archived";
   const isNew = view === "new";
-  const [stats, leads, reps, activeCount, archivedCount, recentCount] =
+
+  const statusParam = searchParams?.status as LeadStatus | undefined;
+  const filters: LeadInboxFilters = {
+    q: searchParams?.q || undefined,
+    status: LEAD_STATUSES.includes(statusParam as LeadStatus)
+      ? statusParam
+      : undefined,
+    industry: searchParams?.industry || undefined,
+    minScore: searchParams?.minScore ? Number(searchParams.minScore) : undefined,
+  };
+  const filtersActive = hasFilters(filters);
+
+  const [stats, leads, reps, activeCount, archivedCount, recentCount, facets] =
     await Promise.all([
       getDashboardStats(),
-      getLeadInbox(60, view),
+      getLeadInbox(60, view, filters),
       getActiveReps(),
       getActiveLeadCount(),
       getArchivedLeadCount(),
       getRecentLeadCount(),
+      getLeadFilterFacets(),
     ]);
 
-  // The "top signal" hero only makes sense for the full active inbox.
-  const top = view === "active" ? leads[0] : undefined;
+  // The "top signal" hero only makes sense for the full, unfiltered active inbox.
+  const top = view === "active" && !filtersActive ? leads[0] : undefined;
 
   return (
     <div className="animate-fade-in">
@@ -199,6 +226,8 @@ export default async function DashboardPage({
           </div>
         </div>
 
+        <LeadFilters industries={facets.industries} />
+
         {archived && (
           <div className="mb-4 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
             <div className="mono text-[10px] uppercase tracking-wider text-signal-warm">
@@ -215,7 +244,7 @@ export default async function DashboardPage({
 
         <div className="border border-line bg-surface">
           {leads.length === 0 ? (
-            <EmptyInbox archived={archived} />
+            <EmptyInbox archived={archived} filtered={filtersActive} />
           ) : (
             <Table>
               <TableHeader>
@@ -427,7 +456,25 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function EmptyInbox({ archived }: { archived?: boolean }) {
+function EmptyInbox({
+  archived,
+  filtered,
+}: {
+  archived?: boolean;
+  filtered?: boolean;
+}) {
+  if (filtered) {
+    return (
+      <div className="px-6 py-20 text-center">
+        <div className="display-serif text-6xl text-ink-faint/30 mb-3">∅</div>
+        <h3 className="display-serif text-2xl text-ink mb-2">No matches.</h3>
+        <p className="text-[13px] text-ink-dim max-w-sm mx-auto leading-relaxed">
+          No leads match the current filters. Try clearing the search, status,
+          industry or score filters.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="px-6 py-20 text-center">
       <div className="display-serif text-6xl text-ink-faint/30 mb-3">∅</div>
