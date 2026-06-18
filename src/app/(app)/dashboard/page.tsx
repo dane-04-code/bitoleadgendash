@@ -28,7 +28,7 @@ import {
   archivedReasonLabel,
   type LeadStatus,
 } from "@/lib/supabase/types";
-import { formatRelative, daysBetween } from "@/lib/utils";
+import { formatRelative, daysBetween, firstName } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
 import { PageHeader, MetaItem } from "@/components/page-header";
 
@@ -264,7 +264,7 @@ export default async function DashboardPage({
                       <TableHead className="hidden xl:table-cell w-[140px]">Industry</TableHead>
                     </>
                   )}
-                  <TableHead className="w-[110px]">Status</TableHead>
+                  <TableHead className="w-[150px]">Status</TableHead>
                   <TableHead className="text-right w-[180px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -340,7 +340,7 @@ export default async function DashboardPage({
                       </>
                     )}
                     <TableCell>
-                      <StatusPill status={lead.status} />
+                      <StatusPill status={lead.status} repName={lead.rep_name} />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
@@ -436,7 +436,13 @@ function SourceLink({
   return <span className="text-ink-2 truncate block max-w-[120px]">{label}</span>;
 }
 
-function StatusPill({ status }: { status: string }) {
+function StatusPill({
+  status,
+  repName,
+}: {
+  status: string;
+  repName?: string | null;
+}) {
   const map: Record<string, string> = {
     new: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
     assigned: "border-signal-warm/40 text-signal-warm bg-signal-warm/[0.06]",
@@ -447,11 +453,18 @@ function StatusPill({ status }: { status: string }) {
     dead: "border-line text-ink-faint",
   };
   const cls = map[status] || "border-line text-ink-dim";
+  const baseLabel =
+    LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status;
+  // When a lead is assigned to a rep, name them: "Assigned to Layla".
+  const label =
+    status === "assigned" && repName
+      ? `Assigned to ${firstName(repName)}`
+      : baseLabel;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider ${cls}`}
+      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider whitespace-nowrap ${cls}`}
     >
-      {LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status}
+      {label}
     </span>
   );
 }

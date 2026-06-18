@@ -35,6 +35,12 @@ export function formatRelative(dateStr: string): string {
   return d.toLocaleDateString();
 }
 
+/** First name only, e.g. "Layla Haddad" -> "Layla". Falls back to the input. */
+export function firstName(name: string | null | undefined): string {
+  if (!name) return "";
+  return name.trim().split(/\s+/)[0] ?? name;
+}
+
 export function initials(name: string): string {
   return name
     .split(/\s+/)
