@@ -147,6 +147,10 @@ export function SetPasswordDialog({ repId, repName, repEmail, hasPassword }: Pro
             <p className="mono text-[10px] uppercase tracking-wider text-ink-faint">
               Send via Telegram or in-person — never email.
             </p>
+            <p className="text-[11px] text-ink-dim leading-relaxed">
+              This is temporary — the rep will be asked to set their own password
+              the first time they sign in.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">

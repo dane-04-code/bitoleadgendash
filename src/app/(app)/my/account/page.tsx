@@ -19,6 +19,8 @@ export default async function MyAccountPage() {
   const rep = await getRepById(session.subject);
   if (!rep) redirect("/login");
 
+  const forced = Boolean(rep.must_change_password);
+
   return (
     <div className="animate-fade-in">
       <PageHeader
@@ -42,6 +44,19 @@ export default async function MyAccountPage() {
         }
       />
 
+      {forced && (
+        <div className="mb-8 border border-signal-hot/40 bg-signal-hot/[0.06] px-4 py-3">
+          <div className="mono text-[10px] uppercase tracking-wider text-signal-hot flex items-center gap-1.5">
+            <span className="dot bg-signal-hot" />
+            Temporary password
+          </div>
+          <p className="text-[13px] text-ink-2 mt-1.5 leading-relaxed max-w-2xl">
+            You&apos;re signed in with a temporary password set by your admin.
+            Choose your own password below to continue to your leads.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
         {/* MAIN */}
         <div className="space-y-10 min-w-0">
@@ -61,6 +76,7 @@ export default async function MyAccountPage() {
                 telegramUsername={rep.telegram_username}
                 speciality={rep.speciality}
                 territory={rep.territory}
+                availability={rep.availability ?? "looking"}
               />
             </div>
           </section>
@@ -75,7 +91,7 @@ export default async function MyAccountPage() {
               </h2>
             </div>
             <div className="border border-line bg-surface p-5">
-              <ChangePasswordForm />
+              <ChangePasswordForm forced={forced} />
             </div>
           </section>
         </div>

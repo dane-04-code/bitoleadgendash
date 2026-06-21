@@ -5,7 +5,8 @@ export type LeadStatus =
   | "meeting"
   | "proposal"
   | "won"
-  | "dead";
+  | "dead"
+  | "returned";
 
 export const LEAD_STATUSES: LeadStatus[] = [
   "new",
@@ -15,6 +16,7 @@ export const LEAD_STATUSES: LeadStatus[] = [
   "proposal",
   "won",
   "dead",
+  "returned",
 ];
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
@@ -25,7 +27,33 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   proposal: "Proposal",
   won: "Won",
   dead: "Dead",
+  returned: "Returned",
 };
+
+/**
+ * Statuses a rep may set themselves on a lead they own. Reps drive a lead
+ * forward through the working stages; `new`/`assigned`/`returned` are lifecycle
+ * states the admin/system control (a rep sends a lead back via "Return lead",
+ * not by picking a status).
+ */
+export const REP_SETTABLE_STATUSES: LeadStatus[] = [
+  "contacted",
+  "meeting",
+  "proposal",
+  "won",
+  "dead",
+];
+
+/** Statuses the admin may set directly from the lead detail status dropdown. */
+export const ADMIN_SETTABLE_STATUSES: LeadStatus[] = [
+  "new",
+  "assigned",
+  "contacted",
+  "meeting",
+  "proposal",
+  "won",
+  "dead",
+];
 
 export type SignalType =
   | "expansion"
@@ -97,6 +125,14 @@ export type Contact = {
   created_at: string;
 };
 
+/** Whether a rep currently wants new leads routed to them. */
+export type RepAvailability = "looking" | "not_looking";
+
+export const REP_AVAILABILITY_LABELS: Record<RepAvailability, string> = {
+  looking: "Looking for leads",
+  not_looking: "Not looking",
+};
+
 export type Rep = {
   id: string;
   full_name: string;
@@ -109,6 +145,13 @@ export type Rep = {
   created_at: string;
   /** PBKDF2 hash, null if no password set yet. Never returned to client unhashed. */
   password?: string | null;
+  /** Rep's self-set availability for new leads. Defaults to "looking". */
+  availability?: RepAvailability;
+  /**
+   * True after an admin sets/resets the password — the rep is forced to choose
+   * their own on next login. Cleared once they change it themselves.
+   */
+  must_change_password?: boolean;
 };
 
 export type Assignment = {

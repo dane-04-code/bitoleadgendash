@@ -7,6 +7,9 @@ import {
   getActiveLeadCount,
   getArchivedLeadCount,
   getRecentLeadCount,
+  getUnassignedLeadCount,
+  getAssignedLeadCount,
+  getReturnedLeadCount,
   getLeadFilterFacets,
   hasFilters,
 } from "@/lib/queries";
@@ -46,12 +49,19 @@ export default async function DashboardPage({
     minScore?: string;
   };
 }) {
-  const view: InboxView =
-    searchParams?.view === "archived"
-      ? "archived"
-      : searchParams?.view === "new"
-        ? "new"
-        : "active";
+  const VIEW_VALUES: InboxView[] = [
+    "active",
+    "archived",
+    "new",
+    "unassigned",
+    "assigned",
+    "returned",
+  ];
+  const view: InboxView = VIEW_VALUES.includes(
+    searchParams?.view as InboxView
+  )
+    ? (searchParams?.view as InboxView)
+    : "active";
   const archived = view === "archived";
   const isNew = view === "new";
 
@@ -66,16 +76,29 @@ export default async function DashboardPage({
   };
   const filtersActive = hasFilters(filters);
 
-  const [stats, leads, reps, activeCount, archivedCount, recentCount, facets] =
-    await Promise.all([
-      getDashboardStats(),
-      getLeadInbox(60, view, filters),
-      getActiveReps(),
-      getActiveLeadCount(),
-      getArchivedLeadCount(),
-      getRecentLeadCount(),
-      getLeadFilterFacets(),
-    ]);
+  const [
+    stats,
+    leads,
+    reps,
+    activeCount,
+    archivedCount,
+    recentCount,
+    unassignedCount,
+    assignedCount,
+    returnedCount,
+    facets,
+  ] = await Promise.all([
+    getDashboardStats(),
+    getLeadInbox(60, view, filters),
+    getActiveReps(),
+    getActiveLeadCount(),
+    getArchivedLeadCount(),
+    getRecentLeadCount(),
+    getUnassignedLeadCount(),
+    getAssignedLeadCount(),
+    getReturnedLeadCount(),
+    getLeadFilterFacets(),
+  ]);
 
   // The "top signal" hero only makes sense for the full, unfiltered active inbox.
   const top = view === "active" && !filtersActive ? leads[0] : undefined;
@@ -174,7 +197,7 @@ export default async function DashboardPage({
         <div className="flex items-baseline justify-between mb-4 gap-4 flex-wrap">
           <div className="flex items-baseline gap-3">
             <h2 className="display-serif text-2xl text-ink leading-none">
-              {archived ? "Archived" : isNew ? "New this week" : "The Inbox"}
+              {VIEW_TITLES[view]}
             </h2>
             <span className="mono text-[11px] uppercase tracking-wider text-ink-faint">
               {isNew
@@ -184,38 +207,14 @@ export default async function DashboardPage({
                 : `${leads.length} ${archived ? "archived" : "signals"}`}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider">
-              <Link
-                href="/dashboard?view=new"
-                className={`px-3 py-1.5 transition-colors ${
-                  isNew
-                    ? "bg-brand/[0.08] text-brand-ink"
-                    : "text-ink-faint hover:text-ink-dim"
-                }`}
-              >
-                New this week ({recentCount})
-              </Link>
-              <Link
-                href="/dashboard"
-                className={`px-3 py-1.5 border-l border-line transition-colors ${
-                  view === "active"
-                    ? "bg-brand/[0.08] text-brand-ink"
-                    : "text-ink-faint hover:text-ink-dim"
-                }`}
-              >
-                Leads ({activeCount})
-              </Link>
-              <Link
-                href="/dashboard?view=archived"
-                className={`px-3 py-1.5 border-l border-line transition-colors ${
-                  archived
-                    ? "bg-brand/[0.08] text-brand-ink"
-                    : "text-ink-faint hover:text-ink-dim"
-                }`}
-              >
-                Archive ({archivedCount})
-              </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider flex-wrap">
+              <TabLink view="new" current={view} label="New this week" count={recentCount} />
+              <TabLink view="active" current={view} label="Leads" count={activeCount} />
+              <TabLink view="unassigned" current={view} label="Unassigned" count={unassignedCount} />
+              <TabLink view="assigned" current={view} label="Assigned" count={assignedCount} />
+              <TabLink view="returned" current={view} label="Returned" count={returnedCount} />
+              <TabLink view="archived" current={view} label="Archive" count={archivedCount} />
             </div>
             <Button asChild variant="ghost" size="sm">
               <Link href="/pipeline">
@@ -373,6 +372,42 @@ export default async function DashboardPage({
   );
 }
 
+const VIEW_TITLES: Record<InboxView, string> = {
+  active: "The Inbox",
+  new: "New this week",
+  unassigned: "Unassigned",
+  assigned: "Assigned",
+  returned: "Returned",
+  archived: "Archived",
+};
+
+function TabLink({
+  view,
+  current,
+  label,
+  count,
+}: {
+  view: InboxView;
+  current: InboxView;
+  label: string;
+  count: number;
+}) {
+  const active = current === view;
+  const href = view === "active" ? "/dashboard" : `/dashboard?view=${view}`;
+  return (
+    <Link
+      href={href}
+      className={`px-3 py-1.5 border-l border-line first:border-l-0 transition-colors ${
+        active
+          ? "bg-brand/[0.08] text-brand-ink"
+          : "text-ink-faint hover:text-ink-dim"
+      }`}
+    >
+      {label} ({count})
+    </Link>
+  );
+}
+
 function Stat({
   label,
   value,
@@ -451,6 +486,7 @@ function StatusPill({
     proposal: "border-brand/45 text-brand-ink bg-brand/[0.06]",
     won: "border-signal-good/40 text-signal-good bg-signal-good/[0.06]",
     dead: "border-line text-ink-faint",
+    returned: "border-signal-hot/40 text-signal-hot bg-signal-hot/[0.06]",
   };
   const cls = map[status] || "border-line text-ink-dim";
   const baseLabel =

@@ -124,6 +124,19 @@ export function AssignDialog({
                           {" "}· {r.territory}
                         </span>
                       )}
+                      <span
+                        className={
+                          r.availability === "not_looking"
+                            ? "text-signal-hot"
+                            : "text-signal-good"
+                        }
+                      >
+                        {" "}
+                        ·{" "}
+                        {r.availability === "not_looking"
+                          ? "Not looking"
+                          : "Looking"}
+                      </span>
                     </SelectItem>
                   ))
                 )}

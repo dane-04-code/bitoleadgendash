@@ -22,6 +22,9 @@ export default async function MyPage() {
     redirect("/api/auth/logout");
   }
 
+  // Admin reset their password — force them to choose their own before working.
+  if (rep.must_change_password) redirect("/my/account");
+
   const firstName = rep.full_name.split(/\s+/)[0] || rep.full_name;
 
   return (

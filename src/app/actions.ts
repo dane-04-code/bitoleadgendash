@@ -121,6 +121,82 @@ export async function updateLeadStatus(formData: FormData) {
   return { ok: true };
 }
 
+/**
+ * A rep returns a lead they own back to the admin. Removes the rep's assignment
+ * (so it leaves their board), sets the lead to "returned" so it surfaces in the
+ * admin's Returned inbox, logs the stage change, and saves the rep's reason as a
+ * note. A reason is required.
+ */
+export async function returnLead(formData: FormData) {
+  const repId = await getCurrentRepId();
+  if (!repId) return { ok: false, error: "Not signed in as a rep." };
+
+  const leadId = String(formData.get("leadId") || "");
+  const reason = String(formData.get("reason") || "").trim();
+  if (!leadId) return { ok: false, error: "Missing lead." };
+  if (!reason) {
+    return { ok: false, error: "Please give a reason for returning this lead." };
+  }
+
+  const supabase = getSupabaseServerClient();
+
+  // Only the owning rep may return a lead.
+  const { count: ownsCount } = await supabase
+    .from("assignments")
+    .select("*", { count: "exact", head: true })
+    .eq("lead_id", leadId)
+    .eq("rep_id", repId);
+  if (!ownsCount) {
+    return { ok: false, error: "This lead is not assigned to you." };
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .maybeSingle();
+  const oldStatus = (lead?.status as LeadStatus | undefined) ?? null;
+
+  // Drop the rep's assignment(s) so the lead leaves their inbox.
+  const { error: delErr } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("lead_id", leadId)
+    .eq("rep_id", repId);
+  if (delErr) {
+    console.error("returnLead delete assignment", delErr);
+    return { ok: false, error: delErr.message };
+  }
+
+  const { error: updErr } = await supabase
+    .from("leads")
+    .update({ status: "returned", updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+  if (updErr) {
+    console.error("returnLead update lead", updErr);
+    return { ok: false, error: updErr.message };
+  }
+
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    rep_id: repId,
+    old_status: oldStatus,
+    new_status: "returned",
+    note: `Returned by rep: ${reason}`,
+  });
+
+  const author = await currentActorName();
+  await supabase
+    .from("lead_notes")
+    .insert({ lead_id: leadId, body: `Returned lead — ${reason}`, author });
+
+  revalidatePath("/my");
+  revalidatePath("/dashboard");
+  revalidatePath("/pipeline");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
 export async function markOutreachUsed(outreachId: string, leadId: string, used: boolean) {
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
@@ -270,9 +346,11 @@ export async function setRepPassword(formData: FormData) {
 
   const passwordHash = await hashPassword(password);
   const supabase = getSupabaseServerClient();
+  // Every admin-set password is temporary: the rep is forced to choose their
+  // own on next login, so the admin never holds the rep's permanent password.
   const { error } = await supabase
     .from("reps")
-    .update({ password: passwordHash })
+    .update({ password: passwordHash, must_change_password: true })
     .eq("id", repId);
   if (error) {
     console.error("setRepPassword", error);
@@ -346,6 +424,9 @@ export async function updateMyProfile(formData: FormData) {
     String(formData.get("telegram_username") || "").trim() || null;
   const speciality = String(formData.get("speciality") || "").trim() || null;
   const territory = String(formData.get("territory") || "").trim() || null;
+  const availabilityRaw = String(formData.get("availability") || "").trim();
+  const availability =
+    availabilityRaw === "not_looking" ? "not_looking" : "looking";
 
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
@@ -354,6 +435,7 @@ export async function updateMyProfile(formData: FormData) {
       telegram_username: telegram,
       speciality,
       territory,
+      availability,
     })
     .eq("id", repId);
   if (error) {
@@ -405,14 +487,16 @@ export async function changeMyPassword(formData: FormData) {
   if (!ok) return { ok: false, error: "Current password is incorrect." };
 
   const newHash = await hashPassword(next);
+  // The rep has now chosen their own password — clear the forced-change flag.
   const { error: updateErr } = await supabase
     .from("reps")
-    .update({ password: newHash })
+    .update({ password: newHash, must_change_password: false })
     .eq("id", repId);
   if (updateErr) {
     console.error("changeMyPassword update", updateErr);
     return { ok: false, error: updateErr.message };
   }
   revalidatePath("/my/account");
+  revalidatePath("/my");
   return { ok: true };
 }

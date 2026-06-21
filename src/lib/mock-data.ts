@@ -36,6 +36,7 @@ export const MOCK_REPS: Rep[] = [
     speciality: "Pallet racking · UAE",
     territory: "UAE",
     is_active: true,
+    availability: "looking",
     created_at: daysAgo(60),
   },
   {
@@ -47,6 +48,7 @@ export const MOCK_REPS: Rep[] = [
     speciality: "Automation · KSA",
     territory: "KSA",
     is_active: true,
+    availability: "not_looking",
     created_at: daysAgo(90),
   },
   {
@@ -58,6 +60,7 @@ export const MOCK_REPS: Rep[] = [
     speciality: "Cold chain · QAT",
     territory: "Qatar",
     is_active: true,
+    availability: "looking",
     created_at: daysAgo(30),
   },
 ];
@@ -676,7 +679,8 @@ export function mockDashboardStats(): DashboardStats {
     if (l.archived) continue; // archived leads don't count toward active stats
     if (new Date(l.created_at).getTime() >= startMs) totalToday += 1;
     if (l.score >= 80) hot += 1;
-    if (l.status !== "new" && l.status !== "dead") assigned += 1;
+    if (l.status !== "new" && l.status !== "dead" && l.status !== "returned")
+      assigned += 1;
     if (l.status === "new") awaiting += 1;
   }
   return { totalToday, hot, assigned, awaiting };

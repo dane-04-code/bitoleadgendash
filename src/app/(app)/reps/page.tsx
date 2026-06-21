@@ -5,6 +5,7 @@ import { SetPasswordDialog } from "@/components/set-password-dialog";
 import { DeleteRepDialog } from "@/components/delete-rep-dialog";
 import { initials } from "@/lib/utils";
 import { PageHeader, MetaItem } from "@/components/page-header";
+import { REP_AVAILABILITY_LABELS } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -133,6 +134,24 @@ function RepCard({
             {rep.speciality && (
               <p className="text-[12px] text-ink-dim mt-0.5 truncate">{rep.speciality}</p>
             )}
+            <span
+              className={`inline-flex items-center gap-1 mt-1.5 mono text-[10px] uppercase tracking-wider ${
+                rep.availability === "not_looking"
+                  ? "text-ink-faint"
+                  : "text-signal-good"
+              }`}
+            >
+              <span
+                className={`dot ${
+                  rep.availability === "not_looking"
+                    ? "bg-ink-faint"
+                    : "bg-signal-good"
+                }`}
+              />
+              {REP_AVAILABILITY_LABELS[
+                rep.availability === "not_looking" ? "not_looking" : "looking"
+              ]}
+            </span>
           </div>
         </div>
         <div className="text-right shrink-0">

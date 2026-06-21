@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { changeMyPassword } from "@/app/actions";
 
-export function ChangePasswordForm() {
+export function ChangePasswordForm({ forced = false }: { forced?: boolean }) {
   const router = useRouter();
   const formRef = React.useRef<HTMLFormElement>(null);
   const [submitting, setSubmitting] = React.useState(false);
@@ -29,6 +29,13 @@ export function ChangePasswordForm() {
     }
     setSaved(true);
     formRef.current?.reset();
+    // When forced (temporary password), send the rep on to their leads now
+    // that they've set their own password.
+    if (forced) {
+      router.push("/my");
+      router.refresh();
+      return;
+    }
     router.refresh();
     setTimeout(() => setSaved(false), 2400);
   }

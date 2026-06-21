@@ -16,6 +16,7 @@ const COLUMN_DOT: Record<LeadStatus, string> = {
   proposal: "bg-brand",
   won: "bg-signal-good",
   dead: "bg-ink-faint",
+  returned: "bg-signal-hot",
 };
 
 const COLUMN_CODE: Record<LeadStatus, string> = {
@@ -26,13 +27,17 @@ const COLUMN_CODE: Record<LeadStatus, string> = {
   proposal: "05",
   won: "06",
   dead: "07",
+  returned: "08",
 };
 
 export default async function PipelinePage() {
   const buckets = await getPipelineLeads();
   const total = LEAD_STATUSES.reduce((sum, s) => sum + buckets[s].length, 0);
   const won = buckets.won.length;
-  const winRate = total > 0 ? Math.round((won / Math.max(1, total - buckets.dead.length)) * 100) : 0;
+  // "In pipeline" excludes closed-out (dead) and rep-returned leads.
+  const inPipeline = total - buckets.dead.length - buckets.returned.length;
+  const winRate =
+    inPipeline > 0 ? Math.round((won / Math.max(1, inPipeline)) * 100) : 0;
 
   return (
     <div className="animate-fade-in">
@@ -44,13 +49,13 @@ export default async function PipelinePage() {
             The deal <em className="text-brand-ink">flow</em>.
           </>
         }
-        subtitle="Every active lead, plotted across the seven sales stages. Days indicate how long a lead has been sitting in its current stage."
+        subtitle="Every active lead, plotted across each sales stage. Days indicate how long a lead has been sitting in its current stage. Returned leads have been sent back by a rep for re-routing."
         meta={
           <>
-            <MetaItem label="In pipeline" value={total - buckets.dead.length} />
+            <MetaItem label="In pipeline" value={inPipeline} />
             <MetaItem label="Won" value={won} />
             <MetaItem label="Win rate" value={`${winRate}%`} accent />
-            <MetaItem label="Stages" value="7" />
+            <MetaItem label="Returned" value={buckets.returned.length} />
           </>
         }
       />

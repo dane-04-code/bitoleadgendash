@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateMyProfile } from "@/app/actions";
+import {
+  REP_AVAILABILITY_LABELS,
+  type RepAvailability,
+} from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
 
 export function RepProfileForm({
   fullName,
@@ -14,17 +19,21 @@ export function RepProfileForm({
   telegramUsername,
   speciality,
   territory,
+  availability: initialAvailability,
 }: {
   fullName: string;
   email: string;
   telegramUsername: string | null;
   speciality: string | null;
   territory: string | null;
+  availability: RepAvailability;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
+  const [availability, setAvailability] =
+    React.useState<RepAvailability>(initialAvailability);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,7 +54,33 @@ export function RepProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <input type="hidden" name="availability" value={availability} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>Availability</Label>
+          <div className="inline-flex border border-line rounded-sm overflow-hidden">
+            {(["looking", "not_looking"] as RepAvailability[]).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setAvailability(opt)}
+                className={cn(
+                  "px-3 py-1.5 text-[12px] transition-colors",
+                  opt === "not_looking" && "border-l border-line",
+                  availability === opt
+                    ? "bg-brand/[0.08] text-brand-ink"
+                    : "text-ink-dim hover:text-ink hover:bg-surface-2"
+                )}
+              >
+                {REP_AVAILABILITY_LABELS[opt]}
+              </button>
+            ))}
+          </div>
+          <p className="mono text-[10px] uppercase tracking-wider text-ink-faint">
+            Lets the admin see whether you want new leads right now
+          </p>
+        </div>
+
         <div className="space-y-1.5 sm:col-span-2">
           <Label>Full name</Label>
           <Input value={fullName} disabled />

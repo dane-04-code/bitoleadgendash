@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   ExternalLink,
@@ -14,6 +14,7 @@ import {
   isLeadOwnedByRep,
   getLeadNotes,
   getLeadReview,
+  getRepById,
 } from "@/lib/queries";
 import { getSession } from "@/lib/auth";
 import { ScoreBadge } from "@/components/ui/score-badge";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { AssignDialog } from "@/components/assign-dialog";
 import { StatusSelector } from "@/components/status-selector";
+import { ReturnLeadDialog } from "@/components/return-lead-dialog";
 import { LeadNotes } from "@/components/lead-notes";
 import { LeadReviewCard } from "@/components/lead-review";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
@@ -33,8 +35,11 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
   const session = await getSession();
   if (!session) notFound();
 
-  // Reps can only see leads assigned to them.
+  // Reps can only see leads assigned to them, and must clear a forced password
+  // change before working any lead.
   if (session.role === "rep") {
+    const rep = await getRepById(session.subject);
+    if (rep?.must_change_password) redirect("/my/account");
     const owns = await isLeadOwnedByRep(params.id, session.subject);
     if (!owns) notFound();
   }
@@ -138,8 +143,12 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
         <aside className="flex flex-col items-start lg:items-end gap-5 shrink-0 lg:min-w-[280px]">
           <ScoreBadge score={lead.score} size="lg" />
           <div className="flex items-center gap-2 flex-wrap lg:justify-end">
-            <StatusSelector leadId={lead.id} currentStatus={lead.status} />
-            {isAdmin && (
+            <StatusSelector
+              leadId={lead.id}
+              currentStatus={lead.status}
+              role={session.role}
+            />
+            {isAdmin ? (
               <AssignDialog
                 leadId={lead.id}
                 leadName={lead.company_name}
@@ -147,6 +156,8 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                 currentRepName={currentAssignment?.rep?.full_name ?? null}
                 triggerVariant="default"
               />
+            ) : (
+              <ReturnLeadDialog leadId={lead.id} leadName={lead.company_name} />
             )}
           </div>
           {currentAssignment?.rep && (
@@ -452,6 +463,7 @@ function StatusInline({ status }: { status: string }) {
     proposal: "text-brand-ink",
     won: "text-signal-good",
     dead: "text-ink-faint",
+    returned: "text-signal-hot",
   };
   return (
     <span className={map[status] || "text-ink-dim"}>

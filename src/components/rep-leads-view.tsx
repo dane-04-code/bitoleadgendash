@@ -31,6 +31,7 @@ const COLUMN_DOT: Record<LeadStatus, string> = {
   proposal: "bg-brand",
   won: "bg-signal-good",
   dead: "bg-ink-faint",
+  returned: "bg-signal-hot",
 };
 
 const COLUMN_CODE: Record<LeadStatus, string> = {
@@ -41,7 +42,14 @@ const COLUMN_CODE: Record<LeadStatus, string> = {
   proposal: "05",
   won: "06",
   dead: "07",
+  returned: "08",
 };
+
+// Returned leads leave a rep's board (they're unassigned), so don't render a
+// perpetually-empty Returned column on the rep view.
+const REP_BOARD_COLUMNS: LeadStatus[] = LEAD_STATUSES.filter(
+  (s) => s !== "returned"
+);
 
 export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
   const [view, setView] = React.useState<View>("board");
@@ -124,6 +132,7 @@ function Board({ leads }: { leads: RepInboxLead[] }) {
       proposal: [],
       won: [],
       dead: [],
+      returned: [],
     };
     for (const lead of leads) {
       const status = (lead.status as LeadStatus) in map ? (lead.status as LeadStatus) : "new";
@@ -135,7 +144,7 @@ function Board({ leads }: { leads: RepInboxLead[] }) {
   return (
     <div className="overflow-x-auto -mx-5 sm:-mx-8 lg:-mx-10 px-5 sm:px-8 lg:px-10 scrollbar-thin pb-3">
       <div className="flex gap-3 min-w-max">
-        {LEAD_STATUSES.map((status) => (
+        {REP_BOARD_COLUMNS.map((status) => (
           <Column key={status} status={status} leads={buckets[status]} />
         ))}
       </div>
@@ -296,6 +305,7 @@ function StatusPill({ status }: { status: string }) {
     proposal: "border-brand/45 text-brand-ink bg-brand/[0.06]",
     won: "border-signal-good/40 text-signal-good bg-signal-good/[0.06]",
     dead: "border-line text-ink-faint",
+    returned: "border-signal-hot/40 text-signal-hot bg-signal-hot/[0.06]",
   };
   const cls = map[status] || "border-line text-ink-dim";
   return (

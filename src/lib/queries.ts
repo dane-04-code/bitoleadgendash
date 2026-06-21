@@ -53,7 +53,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .select("*", { count: "exact", head: true })
       .eq("archived", false)
       .neq("status", "new")
-      .neq("status", "dead"),
+      .neq("status", "dead")
+      .neq("status", "returned"),
     supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
@@ -74,7 +75,24 @@ export type LeadInboxRow = Lead & {
 };
 
 /** Which slice of the inbox to show. */
-export type InboxView = "active" | "archived" | "new";
+export type InboxView =
+  | "active"
+  | "archived"
+  | "new"
+  | "unassigned"
+  | "assigned"
+  | "returned";
+
+/**
+ * Statuses that mean a lead is currently owned and being worked by a rep —
+ * the "Assigned" slice of the inbox.
+ */
+const ASSIGNED_STATUSES: LeadStatus[] = [
+  "assigned",
+  "contacted",
+  "meeting",
+  "proposal",
+];
 
 /** Optional filters applied to the inbox list view. */
 export type LeadInboxFilters = {
@@ -104,6 +122,22 @@ function matchesFilters(lead: Lead, f: LeadInboxFilters): boolean {
   return true;
 }
 
+/** Whether a lead belongs in the given inbox view (assignment/recency slice). */
+function matchesView(lead: Lead, view: InboxView, cutoff: string): boolean {
+  switch (view) {
+    case "new":
+      return lead.created_at >= cutoff;
+    case "unassigned":
+      return lead.status === "new";
+    case "assigned":
+      return ASSIGNED_STATUSES.includes(lead.status);
+    case "returned":
+      return lead.status === "returned";
+    default:
+      return true; // "active" / "archived" — no extra slice
+  }
+}
+
 /** Leads created on or after this point count as "new this week". */
 const RECENT_WINDOW_DAYS = 7;
 
@@ -122,7 +156,7 @@ export async function getLeadInbox(
   if (isMockMode()) {
     return [...MOCK_LEADS]
       .filter((l) => Boolean(l.archived) === showArchived)
-      .filter((l) => view !== "new" || l.created_at >= cutoff)
+      .filter((l) => matchesView(l, view, cutoff))
       .filter((l) => matchesFilters(l, filters))
       .sort((a, b) => {
         // Archive is ordered by when it was archived (most recent first);
@@ -178,6 +212,11 @@ export async function getLeadInbox(
       .gte("created_at", cutoff)
       .order("created_at", { ascending: false });
   } else {
+    // Assignment slices filter by status, then fall through to score ordering.
+    if (view === "unassigned") query = query.eq("status", "new");
+    else if (view === "assigned") query = query.in("status", ASSIGNED_STATUSES);
+    else if (view === "returned") query = query.eq("status", "returned");
+
     query = query
       .order("score", { ascending: false })
       .order("created_at", { ascending: false });
@@ -271,6 +310,63 @@ export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<num
     .gte("created_at", cutoff);
   if (error) {
     console.error("getRecentLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of active leads still awaiting assignment (status = new). */
+export async function getUnassignedLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return MOCK_LEADS.filter((l) => !l.archived && l.status === "new").length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "new");
+  if (error) {
+    console.error("getUnassignedLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of active leads currently owned and being worked by a rep. */
+export async function getAssignedLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return MOCK_LEADS.filter(
+      (l) => !l.archived && ASSIGNED_STATUSES.includes(l.status)
+    ).length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .in("status", ASSIGNED_STATUSES);
+  if (error) {
+    console.error("getAssignedLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of active leads a rep has returned to the admin. */
+export async function getReturnedLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return MOCK_LEADS.filter((l) => !l.archived && l.status === "returned")
+      .length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "returned");
+  if (error) {
+    console.error("getReturnedLeadCount error", error);
     return 0;
   }
   return count ?? 0;
@@ -483,7 +579,7 @@ export async function getActiveReps(): Promise<Rep[]> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("reps")
-    .select("id, full_name, email, telegram_username, telegram_chat_id, speciality, territory, is_active, created_at")
+    .select("id, full_name, email, telegram_username, telegram_chat_id, speciality, territory, is_active, availability, created_at")
     .eq("is_active", true)
     .order("full_name", { ascending: true });
   if (error) {
@@ -563,6 +659,7 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
     proposal: [],
     won: [],
     dead: [],
+    returned: [],
   };
 
   for (const row of (leads || []) as any[]) {
