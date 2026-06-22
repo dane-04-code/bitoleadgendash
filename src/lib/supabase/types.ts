@@ -224,6 +224,8 @@ export type LeadReview = {
   relevancy: number | null;
   score_accuracy: number | null;
   gut_feel: number | null;
+  /** Free-text comment from the reviewer; null if none left. */
+  comment: string | null;
   reviewed_by: string | null;
   updated_at: string | null;
 };

@@ -470,6 +470,7 @@ export async function saveLeadReview(formData: FormData) {
     relevancy: parseScore("relevancy"),
     score_accuracy: parseScore("score_accuracy"),
     gut_feel: parseScore("gut_feel"),
+    comment: String(formData.get("comment") || "").trim() || null,
     reviewed_by: await currentActorName(),
   };
 

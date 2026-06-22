@@ -9,6 +9,7 @@ import {
   type ReviewCategoryKey,
 } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { saveLeadReview } from "@/app/actions";
 import { cn, formatRelative } from "@/lib/utils";
 
@@ -32,18 +33,22 @@ export function LeadReviewCard({
 }) {
   const router = useRouter();
   const [scores, setScores] = React.useState<Scores>(() => fromReview(review));
+  const [comment, setComment] = React.useState(review?.comment ?? "");
   const [saved, setSaved] = React.useState(false); // saved flash
   const [pending, startTransition] = React.useTransition();
 
   // Keep in sync if the server data changes after a refresh.
   React.useEffect(() => {
     setScores(fromReview(review));
+    setComment(review?.comment ?? "");
   }, [review]);
 
   const dirty = React.useMemo(() => {
     const base = fromReview(review);
-    return REVIEW_CATEGORIES.some((c) => base[c.key] !== scores[c.key]);
-  }, [scores, review]);
+    const scoresDirty = REVIEW_CATEGORIES.some((c) => base[c.key] !== scores[c.key]);
+    const commentDirty = (review?.comment ?? "") !== comment;
+    return scoresDirty || commentDirty;
+  }, [scores, comment, review]);
 
   function set(key: ReviewCategoryKey, value: number) {
     setScores((prev) => ({ ...prev, [key]: prev[key] === value ? null : value }));
@@ -57,6 +62,7 @@ export function LeadReviewCard({
       const v = scores[c.key];
       if (v != null) fd.set(c.key, String(v));
     }
+    fd.set("comment", comment);
     startTransition(async () => {
       await saveLeadReview(fd);
       setSaved(true);
@@ -105,6 +111,22 @@ export function LeadReviewCard({
             </div>
           </div>
         ))}
+
+        <div>
+          <div className="mono text-[10px] uppercase tracking-wider text-ink-dim mb-1.5">
+            Comment
+          </div>
+          <Textarea
+            value={comment}
+            onChange={(e) => {
+              setComment(e.target.value);
+              setSaved(false);
+            }}
+            placeholder="Anything worth noting on this lead…"
+            rows={3}
+            className="text-[12px]"
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-line px-4 py-2.5">

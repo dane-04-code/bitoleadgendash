@@ -620,6 +620,7 @@ export const MOCK_LEAD_REVIEWS: LeadReview[] = [
     relevancy: 5,
     score_accuracy: 4,
     gut_feel: 5,
+    comment: "Strong fit — pre-tender timing is ideal. Flagged Faisal as lead.",
     reviewed_by: "Admin",
     updated_at: hoursAgo(1),
   },
