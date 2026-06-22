@@ -21,3 +21,10 @@ CREATE INDEX IF NOT EXISTS feedback_created_idx ON feedback (created_at DESC);
 
 -- The dashboard reads/writes Supabase with the anon key.
 GRANT SELECT, INSERT, UPDATE, DELETE ON feedback TO anon, authenticated;
+
+-- This app controls access in its own session/middleware layer and talks to
+-- Supabase with the anon key, like every other table here. Newer Supabase
+-- projects auto-enable RLS on new tables, which would block the anon key with
+-- "new row violates row-level security policy" — so disable it to match the
+-- rest of the schema.
+ALTER TABLE feedback DISABLE ROW LEVEL SECURITY;
