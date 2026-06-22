@@ -22,6 +22,7 @@ import type {
   LeadReview,
   Feedback,
 } from "./supabase/types";
+import { UNOWNED_STATUSES } from "./supabase/types";
 
 export type DashboardStats = {
   totalToday: number;
@@ -55,6 +56,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .select("*", { count: "exact", head: true })
       .eq("archived", false)
       .neq("status", "new")
+      .neq("status", "listed")
       .neq("status", "dead")
       .neq("status", "returned"),
     supabase
@@ -82,6 +84,7 @@ export type InboxView =
   | "archived"
   | "new"
   | "unassigned"
+  | "listed"
   | "assigned"
   | "returned";
 
@@ -131,12 +134,17 @@ function matchesView(lead: Lead, view: InboxView, cutoff: string): boolean {
       return lead.created_at >= cutoff;
     case "unassigned":
       return lead.status === "new";
+    case "listed":
+      return lead.status === "listed";
     case "assigned":
       return ASSIGNED_STATUSES.includes(lead.status);
     case "returned":
       return lead.status === "returned";
+    case "active":
+      // The manager's main list: only unowned leads (no rep clutter).
+      return UNOWNED_STATUSES.includes(lead.status);
     default:
-      return true; // "active" / "archived" — no extra slice
+      return true; // "archived" — slice handled by the archived flag
   }
 }
 
@@ -215,7 +223,9 @@ export async function getLeadInbox(
       .order("created_at", { ascending: false });
   } else {
     // Assignment slices filter by status, then fall through to score ordering.
-    if (view === "unassigned") query = query.eq("status", "new");
+    if (view === "active") query = query.in("status", UNOWNED_STATUSES);
+    else if (view === "unassigned") query = query.eq("status", "new");
+    else if (view === "listed") query = query.eq("status", "listed");
     else if (view === "assigned") query = query.in("status", ASSIGNED_STATUSES);
     else if (view === "returned") query = query.eq("status", "returned");
 
@@ -266,16 +276,42 @@ export async function getLeadFilterFacets(): Promise<{ industries: string[] }> {
   return { industries };
 }
 
-/** Count of active (archived = false) leads — drives the main "Leads" tab badge. */
+/**
+ * Count of unowned active leads — drives the main "Leads" tab badge. Owned
+ * leads are excluded so the badge matches the decluttered list.
+ */
 export async function getActiveLeadCount(): Promise<number> {
-  if (isMockMode()) return MOCK_LEADS.filter((l) => !l.archived).length;
+  if (isMockMode()) {
+    return MOCK_LEADS.filter(
+      (l) => !l.archived && UNOWNED_STATUSES.includes(l.status)
+    ).length;
+  }
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
-    .eq("archived", false);
+    .eq("archived", false)
+    .in("status", UNOWNED_STATUSES);
   if (error) {
     console.error("getActiveLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of leads currently on the marketplace (status = listed). */
+export async function getListedLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return MOCK_LEADS.filter((l) => !l.archived && l.status === "listed").length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "listed");
+  if (error) {
+    console.error("getListedLeadCount error", error);
     return 0;
   }
   return count ?? 0;
@@ -670,6 +706,7 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
 
   const buckets: Record<LeadStatus, PipelineLead[]> = {
     new: [],
+    listed: [],
     assigned: [],
     contacted: [],
     meeting: [],

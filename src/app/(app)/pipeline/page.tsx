@@ -10,6 +10,7 @@ export const revalidate = 0;
 
 const COLUMN_DOT: Record<LeadStatus, string> = {
   new: "bg-signal-cold",
+  listed: "bg-brand",
   assigned: "bg-signal-warm",
   contacted: "bg-signal-cold",
   meeting: "bg-brand",
@@ -21,13 +22,14 @@ const COLUMN_DOT: Record<LeadStatus, string> = {
 
 const COLUMN_CODE: Record<LeadStatus, string> = {
   new: "01",
-  assigned: "02",
-  contacted: "03",
-  meeting: "04",
-  proposal: "05",
-  won: "06",
-  dead: "07",
-  returned: "08",
+  listed: "02",
+  assigned: "03",
+  contacted: "04",
+  meeting: "05",
+  proposal: "06",
+  won: "07",
+  dead: "08",
+  returned: "09",
 };
 
 export default async function PipelinePage() {

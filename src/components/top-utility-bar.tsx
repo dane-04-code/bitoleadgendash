@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 const PAGE_LABELS: Record<string, { code: string; label: string }> = {
   "/dashboard": { code: "01", label: "Inbox" },
   "/pipeline": { code: "02", label: "Pipeline" },
-  "/reps": { code: "03", label: "Team" },
+  "/marketplace": { code: "03", label: "Marketplace" },
+  "/reps": { code: "04", label: "Team" },
   "/feedback": { code: "·", label: "Feedback" },
-  "/settings": { code: "04", label: "Settings" },
+  "/settings": { code: "·", label: "Settings" },
   "/my": { code: "A", label: "My leads" },
 };
 

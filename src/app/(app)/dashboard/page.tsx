@@ -7,7 +7,7 @@ import {
   getActiveLeadCount,
   getArchivedLeadCount,
   getRecentLeadCount,
-  getUnassignedLeadCount,
+  getListedLeadCount,
   getAssignedLeadCount,
   getReturnedLeadCount,
   getLeadFilterFacets,
@@ -53,7 +53,7 @@ export default async function DashboardPage({
     "active",
     "archived",
     "new",
-    "unassigned",
+    "listed",
     "assigned",
     "returned",
   ];
@@ -83,7 +83,7 @@ export default async function DashboardPage({
     activeCount,
     archivedCount,
     recentCount,
-    unassignedCount,
+    listedCount,
     assignedCount,
     returnedCount,
     facets,
@@ -94,7 +94,7 @@ export default async function DashboardPage({
     getActiveLeadCount(),
     getArchivedLeadCount(),
     getRecentLeadCount(),
-    getUnassignedLeadCount(),
+    getListedLeadCount(),
     getAssignedLeadCount(),
     getReturnedLeadCount(),
     getLeadFilterFacets(),
@@ -211,7 +211,7 @@ export default async function DashboardPage({
             <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider flex-wrap">
               <TabLink view="new" current={view} label="New this week" count={recentCount} />
               <TabLink view="active" current={view} label="Leads" count={activeCount} />
-              <TabLink view="unassigned" current={view} label="Unassigned" count={unassignedCount} />
+              <TabLink view="listed" current={view} label="Listed" count={listedCount} />
               <TabLink view="assigned" current={view} label="Assigned" count={assignedCount} />
               <TabLink view="returned" current={view} label="Returned" count={returnedCount} />
               <TabLink view="archived" current={view} label="Archive" count={archivedCount} />
@@ -376,6 +376,7 @@ const VIEW_TITLES: Record<InboxView, string> = {
   active: "The Inbox",
   new: "New this week",
   unassigned: "Unassigned",
+  listed: "On the marketplace",
   assigned: "Assigned",
   returned: "Returned",
   archived: "Archived",
@@ -480,6 +481,7 @@ function StatusPill({
 }) {
   const map: Record<string, string> = {
     new: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
+    listed: "border-brand/45 text-brand-ink bg-brand/[0.06]",
     assigned: "border-signal-warm/40 text-signal-warm bg-signal-warm/[0.06]",
     contacted: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
     meeting: "border-brand/45 text-brand-ink bg-brand/[0.06]",

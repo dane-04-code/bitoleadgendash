@@ -1,5 +1,6 @@
 export type LeadStatus =
   | "new"
+  | "listed"
   | "assigned"
   | "contacted"
   | "meeting"
@@ -10,6 +11,7 @@ export type LeadStatus =
 
 export const LEAD_STATUSES: LeadStatus[] = [
   "new",
+  "listed",
   "assigned",
   "contacted",
   "meeting",
@@ -21,6 +23,7 @@ export const LEAD_STATUSES: LeadStatus[] = [
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   new: "New",
+  listed: "Listed",
   assigned: "Assigned",
   contacted: "Contacted",
   meeting: "Meeting",
@@ -29,6 +32,13 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   dead: "Dead",
   returned: "Returned",
 };
+
+/**
+ * Statuses where a lead has no current rep owner — these are the ones that
+ * belong in the manager's main inbox list. Owned leads (assigned + working
+ * stages, won/dead) live in the pipeline/Assigned tab instead.
+ */
+export const UNOWNED_STATUSES: LeadStatus[] = ["new", "listed", "returned"];
 
 /**
  * Statuses a rep may set themselves on a lead they own. Reps drive a lead

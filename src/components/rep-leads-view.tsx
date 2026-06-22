@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import type { RepInboxLead } from "@/lib/queries";
 import {
   LEAD_STATUSES,
@@ -10,21 +9,11 @@ import {
   type LeadStatus,
 } from "@/lib/supabase/types";
 import { ScoreBadge } from "@/components/ui/score-badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn, formatRelative } from "@/lib/utils";
-
-type View = "board" | "list";
 
 const COLUMN_DOT: Record<LeadStatus, string> = {
   new: "bg-signal-cold",
+  listed: "bg-brand",
   assigned: "bg-signal-warm",
   contacted: "bg-signal-cold",
   meeting: "bg-brand",
@@ -36,24 +25,23 @@ const COLUMN_DOT: Record<LeadStatus, string> = {
 
 const COLUMN_CODE: Record<LeadStatus, string> = {
   new: "01",
-  assigned: "02",
-  contacted: "03",
-  meeting: "04",
-  proposal: "05",
-  won: "06",
-  dead: "07",
-  returned: "08",
+  listed: "02",
+  assigned: "03",
+  contacted: "04",
+  meeting: "05",
+  proposal: "06",
+  won: "07",
+  dead: "08",
+  returned: "09",
 };
 
-// Returned leads leave a rep's board (they're unassigned), so don't render a
-// perpetually-empty Returned column on the rep view.
+// A rep only ever holds owned leads, so drop the columns for unowned states
+// (new / listed / returned) — they'd always be empty on the rep board.
 const REP_BOARD_COLUMNS: LeadStatus[] = LEAD_STATUSES.filter(
-  (s) => s !== "returned"
+  (s) => s !== "returned" && s !== "listed" && s !== "new"
 );
 
 export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
-  const [view, setView] = React.useState<View>("board");
-
   return (
     <section>
       <div className="flex items-baseline justify-between gap-4 mb-4 flex-wrap">
@@ -65,58 +53,16 @@ export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
             {leads.length} routed to you
           </span>
         </div>
-
-        {leads.length > 0 && (
-          <div
-            role="tablist"
-            aria-label="Lead view"
-            className="inline-flex border border-line bg-surface-2 p-0.5 rounded-sm self-center"
-          >
-            <ViewTab active={view === "board"} onClick={() => setView("board")}>
-              Board
-            </ViewTab>
-            <ViewTab active={view === "list"} onClick={() => setView("list")}>
-              List
-            </ViewTab>
-          </div>
-        )}
       </div>
 
       {leads.length === 0 ? (
         <div className="border border-line bg-surface">
           <Empty />
         </div>
-      ) : view === "board" ? (
-        <Board leads={leads} />
       ) : (
-        <ListView leads={leads} />
+        <Board leads={leads} />
       )}
     </section>
-  );
-}
-
-function ViewTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn(
-        "mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-sm transition-colors",
-        active ? "bg-ink text-bg" : "text-ink-dim hover:text-ink"
-      )}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -126,6 +72,7 @@ function Board({ leads }: { leads: RepInboxLead[] }) {
   const buckets = React.useMemo(() => {
     const map: Record<LeadStatus, RepInboxLead[]> = {
       new: [],
+      listed: [],
       assigned: [],
       contacted: [],
       meeting: [],
@@ -135,7 +82,8 @@ function Board({ leads }: { leads: RepInboxLead[] }) {
       returned: [],
     };
     for (const lead of leads) {
-      const status = (lead.status as LeadStatus) in map ? (lead.status as LeadStatus) : "new";
+      const status =
+        (lead.status as LeadStatus) in map ? (lead.status as LeadStatus) : "assigned";
       map[status].push(lead);
     }
     return map;
@@ -218,105 +166,6 @@ function BoardCard({ lead }: { lead: RepInboxLead }) {
   );
 }
 
-// ───────────────────────── List view ─────────────────────────
-
-function ListView({ leads }: { leads: RepInboxLead[] }) {
-  return (
-    <div className="border border-line bg-surface">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12 text-center">#</TableHead>
-            <TableHead>Company / Signal</TableHead>
-            <TableHead className="w-[120px]">Score</TableHead>
-            <TableHead className="hidden lg:table-cell w-[160px]">Location</TableHead>
-            <TableHead className="w-[110px]">Status</TableHead>
-            <TableHead className="hidden md:table-cell w-[120px]">Routed</TableHead>
-            <TableHead className="text-right w-[100px]">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {leads.map((lead, i) => (
-            <Row key={lead.id} lead={lead} index={i} />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-function Row({ lead, index }: { lead: RepInboxLead; index: number }) {
-  const dim = lead.status === "won" || lead.status === "dead";
-  return (
-    <TableRow className={`group ${dim ? "opacity-60" : ""}`}>
-      <TableCell className="text-center mono text-[11px] text-ink-faint">
-        {String(index + 1).padStart(2, "0")}
-      </TableCell>
-      <TableCell>
-        <Link
-          href={`/leads/${lead.id}`}
-          className="block hover:text-brand-ink transition-colors max-w-md"
-        >
-          <div className="text-[14px] font-medium text-ink truncate">
-            {lead.company_name}
-          </div>
-          {lead.signal_summary && (
-            <div className="text-[12px] text-ink-dim mt-0.5 line-clamp-1 leading-snug">
-              {lead.signal_summary}
-            </div>
-          )}
-          {lead.assignment_notes && (
-            <div className="mt-1.5 mono text-[10px] uppercase tracking-wider text-brand-ink/80 line-clamp-1">
-              ◆ {lead.assignment_notes}
-            </div>
-          )}
-        </Link>
-      </TableCell>
-      <TableCell>
-        <ScoreBadge score={lead.score} size="sm" />
-      </TableCell>
-      <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2 truncate">
-        {lead.location || <span className="text-ink-faint">—</span>}
-      </TableCell>
-      <TableCell>
-        <StatusPill status={lead.status} />
-      </TableCell>
-      <TableCell className="hidden md:table-cell mono text-[11px] uppercase tracking-wider text-ink-faint">
-        {formatRelative(lead.assigned_at)}
-      </TableCell>
-      <TableCell className="text-right">
-        <Button asChild size="sm" variant="ghost">
-          <Link href={`/leads/${lead.id}`}>
-            Open
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    new: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
-    assigned: "border-signal-warm/40 text-signal-warm bg-signal-warm/[0.06]",
-    contacted: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
-    meeting: "border-brand/45 text-brand-ink bg-brand/[0.06]",
-    proposal: "border-brand/45 text-brand-ink bg-brand/[0.06]",
-    won: "border-signal-good/40 text-signal-good bg-signal-good/[0.06]",
-    dead: "border-line text-ink-faint",
-    returned: "border-signal-hot/40 text-signal-hot bg-signal-hot/[0.06]",
-  };
-  const cls = map[status] || "border-line text-ink-dim";
-  return (
-    <span
-      className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider ${cls}`}
-    >
-      {LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status}
-    </span>
-  );
-}
-
 function Empty() {
   return (
     <div className="px-6 py-20 text-center">
@@ -325,8 +174,8 @@ function Empty() {
         No leads routed to you yet.
       </h3>
       <p className="text-[13px] text-ink-dim max-w-sm mx-auto leading-relaxed">
-        When the admin assigns a warehouse-expansion signal to you, it will
-        appear here. Hold tight.
+        When a lead is assigned to you — or you claim one from the marketplace —
+        it&apos;ll appear here. Hold tight.
       </p>
     </div>
   );

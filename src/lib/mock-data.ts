@@ -189,7 +189,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
       "Hiring pattern consistent with new build but no public announcement yet.",
     bito_products: ["Conveyor", "Sortation"],
     source_url: "https://noon.com/careers",
-    status: "new",
+    status: "listed",
     last_contacted_at: null,
     do_not_contact: false,
     archived: false,
@@ -730,7 +730,12 @@ export function mockDashboardStats(): DashboardStats {
     if (l.archived) continue; // archived leads don't count toward active stats
     if (new Date(l.created_at).getTime() >= startMs) totalToday += 1;
     if (l.score >= 80) hot += 1;
-    if (l.status !== "new" && l.status !== "dead" && l.status !== "returned")
+    if (
+      l.status !== "new" &&
+      l.status !== "listed" &&
+      l.status !== "dead" &&
+      l.status !== "returned"
+    )
       assigned += 1;
     if (l.status === "new") awaiting += 1;
   }

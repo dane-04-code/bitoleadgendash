@@ -23,6 +23,9 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { AssignDialog } from "@/components/assign-dialog";
 import { StatusSelector } from "@/components/status-selector";
 import { ReturnLeadDialog } from "@/components/return-lead-dialog";
+import { ClaimButton } from "@/components/claim-button";
+import { UnclaimButton } from "@/components/unclaim-button";
+import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
 import { LeadReviewCard } from "@/components/lead-review";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
@@ -35,13 +38,10 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
   const session = await getSession();
   if (!session) notFound();
 
-  // Reps can only see leads assigned to them, and must clear a forced password
-  // change before working any lead.
+  // Reps must clear a forced password change before working any lead.
   if (session.role === "rep") {
     const rep = await getRepById(session.subject);
     if (rep?.must_change_password) redirect("/my/account");
-    const owns = await isLeadOwnedByRep(params.id, session.subject);
-    if (!owns) notFound();
   }
 
   const data = await getLeadById(params.id);
@@ -49,6 +49,13 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
   const { lead, contacts, outreach, call_briefs, assignments, pipeline_updates } = data;
   const isAdmin = session.role === "admin";
+
+  // Reps may open a lead they own OR one that's on the marketplace (to claim).
+  let repOwns = false;
+  if (!isAdmin) {
+    repOwns = await isLeadOwnedByRep(params.id, session.subject);
+    if (!repOwns && lead.status !== "listed") notFound();
+  }
   const [reps, notes, review] = await Promise.all([
     isAdmin ? getActiveReps() : Promise.resolve([]),
     getLeadNotes(params.id),
@@ -143,21 +150,39 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
         <aside className="flex flex-col items-start lg:items-end gap-5 shrink-0 lg:min-w-[280px]">
           <ScoreBadge score={lead.score} size="lg" />
           <div className="flex items-center gap-2 flex-wrap lg:justify-end">
-            <StatusSelector
-              leadId={lead.id}
-              currentStatus={lead.status}
-              role={session.role}
-            />
             {isAdmin ? (
-              <AssignDialog
-                leadId={lead.id}
-                leadName={lead.company_name}
-                reps={reps}
-                currentRepName={currentAssignment?.rep?.full_name ?? null}
-                triggerVariant="default"
-              />
+              <>
+                <StatusSelector
+                  leadId={lead.id}
+                  currentStatus={lead.status}
+                  role="admin"
+                />
+                <AssignDialog
+                  leadId={lead.id}
+                  leadName={lead.company_name}
+                  reps={reps}
+                  currentRepName={currentAssignment?.rep?.full_name ?? null}
+                  triggerVariant="default"
+                />
+                {["new", "returned", "listed"].includes(lead.status) && (
+                  <ListToggleButton
+                    leadId={lead.id}
+                    isListed={lead.status === "listed"}
+                  />
+                )}
+              </>
+            ) : repOwns ? (
+              <>
+                <StatusSelector
+                  leadId={lead.id}
+                  currentStatus={lead.status}
+                  role="rep"
+                />
+                <UnclaimButton leadId={lead.id} />
+                <ReturnLeadDialog leadId={lead.id} leadName={lead.company_name} />
+              </>
             ) : (
-              <ReturnLeadDialog leadId={lead.id} leadName={lead.company_name} />
+              <ClaimButton leadId={lead.id} />
             )}
           </div>
           {currentAssignment?.rep && (
@@ -457,6 +482,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function StatusInline({ status }: { status: string }) {
   const map: Record<string, string> = {
     new: "text-signal-cold",
+    listed: "text-brand-ink",
     assigned: "text-signal-warm",
     contacted: "text-signal-cold",
     meeting: "text-brand-ink",

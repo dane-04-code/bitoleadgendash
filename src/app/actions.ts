@@ -60,14 +60,16 @@ export async function assignLeadToRep(formData: FormData) {
     return { ok: false, error: insertErr.message };
   }
 
-  // bump status to "assigned" if currently "new"
+  // Assigning makes a lead owned — bump any unowned status (new / listed /
+  // returned) to "assigned" and pull it off the marketplace / main list.
   const { data: lead } = await supabase
     .from("leads")
     .select("status")
     .eq("id", leadId)
     .maybeSingle();
 
-  if (lead?.status === "new") {
+  const oldStatus = lead?.status as string | undefined;
+  if (oldStatus && ["new", "listed", "returned"].includes(oldStatus)) {
     await supabase
       .from("leads")
       .update({ status: "assigned", updated_at: new Date().toISOString() })
@@ -75,7 +77,7 @@ export async function assignLeadToRep(formData: FormData) {
     await supabase.from("pipeline_updates").insert({
       lead_id: leadId,
       rep_id: repId,
-      old_status: "new",
+      old_status: oldStatus,
       new_status: "assigned",
       note: "Auto-updated on assignment",
     });
@@ -197,6 +199,191 @@ export async function returnLead(formData: FormData) {
     .from("lead_notes")
     .insert({ lead_id: leadId, body: `Returned lead — ${reason}`, author });
 
+  revalidatePath("/my");
+  revalidatePath("/dashboard");
+  revalidatePath("/pipeline");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+// ─── Lead marketplace ──────────────────────────────────────────────────────
+
+/** Admin publishes an unowned lead to the marketplace (status → listed). */
+export async function listLead(formData: FormData) {
+  const session = await getSession();
+  if (session?.role !== "admin") return { ok: false, error: "Admins only." };
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const supabase = getSupabaseServerClient();
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .maybeSingle();
+  const oldStatus = (lead?.status as LeadStatus | undefined) ?? null;
+  if (oldStatus && !["new", "returned", "listed"].includes(oldStatus)) {
+    return {
+      ok: false,
+      error: "This lead has an owner — it can't be listed.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ status: "listed", updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+  if (error) {
+    console.error("listLead", error);
+    return { ok: false, error: error.message };
+  }
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    old_status: oldStatus,
+    new_status: "listed",
+    note: "Listed on marketplace",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/marketplace");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+/** Admin pulls a lead back off the marketplace (status → new). */
+export async function unlistLead(formData: FormData) {
+  const session = await getSession();
+  if (session?.role !== "admin") return { ok: false, error: "Admins only." };
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ status: "new", updated_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .eq("status", "listed");
+  if (error) {
+    console.error("unlistLead", error);
+    return { ok: false, error: error.message };
+  }
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    old_status: "listed",
+    new_status: "new",
+    note: "Removed from marketplace",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/marketplace");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+/** A rep claims a listed lead — self-assigns it and pulls it off the market. */
+export async function claimLead(formData: FormData) {
+  const repId = await getCurrentRepId();
+  if (!repId) return { ok: false, error: "Not signed in as a rep." };
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const supabase = getSupabaseServerClient();
+
+  // Flip listed → assigned atomically; if no row changed, someone beat us to it.
+  const { data: claimed, error: updErr } = await supabase
+    .from("leads")
+    .update({ status: "assigned", updated_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .eq("status", "listed")
+    .select("id");
+  if (updErr) {
+    console.error("claimLead update", updErr);
+    return { ok: false, error: updErr.message };
+  }
+  if (!claimed || claimed.length === 0) {
+    return { ok: false, error: "This lead was just claimed by someone else." };
+  }
+
+  const { error: insErr } = await supabase.from("assignments").insert({
+    lead_id: leadId,
+    rep_id: repId,
+    notes: "Claimed from marketplace",
+  });
+  if (insErr) {
+    console.error("claimLead assignment", insErr);
+    return { ok: false, error: insErr.message };
+  }
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    rep_id: repId,
+    old_status: "listed",
+    new_status: "assigned",
+    note: "Claimed from marketplace",
+  });
+
+  revalidatePath("/marketplace");
+  revalidatePath("/my");
+  revalidatePath("/dashboard");
+  revalidatePath("/pipeline");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+/**
+ * A rep releases a lead they hold (claimed or admin-assigned). Drops their
+ * assignment and puts the lead back on the marketplace (status → listed) for
+ * anyone to claim. No reason required — distinct from "Return lead".
+ */
+export async function unclaimLead(formData: FormData) {
+  const repId = await getCurrentRepId();
+  if (!repId) return { ok: false, error: "Not signed in as a rep." };
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const supabase = getSupabaseServerClient();
+  const { count: ownsCount } = await supabase
+    .from("assignments")
+    .select("*", { count: "exact", head: true })
+    .eq("lead_id", leadId)
+    .eq("rep_id", repId);
+  if (!ownsCount) {
+    return { ok: false, error: "This lead is not assigned to you." };
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .maybeSingle();
+  const oldStatus = (lead?.status as LeadStatus | undefined) ?? null;
+
+  const { error: delErr } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("lead_id", leadId)
+    .eq("rep_id", repId);
+  if (delErr) {
+    console.error("unclaimLead delete", delErr);
+    return { ok: false, error: delErr.message };
+  }
+
+  const { error: updErr } = await supabase
+    .from("leads")
+    .update({ status: "listed", updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+  if (updErr) {
+    console.error("unclaimLead update", updErr);
+    return { ok: false, error: updErr.message };
+  }
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    rep_id: repId,
+    old_status: oldStatus,
+    new_status: "listed",
+    note: "Unclaimed — back on marketplace",
+  });
+
+  revalidatePath("/marketplace");
   revalidatePath("/my");
   revalidatePath("/dashboard");
   revalidatePath("/pipeline");
