@@ -8,6 +8,8 @@ import type {
   PipelineUpdate,
   LeadNote,
   LeadReview,
+  Feedback,
+  FeedbackStatus,
 } from "./supabase/types";
 import type { LeadInboxRow, DashboardStats } from "./queries";
 
@@ -662,6 +664,55 @@ export function mockSaveLeadReview(
   if (existing) Object.assign(existing, saved);
   else MOCK_LEAD_REVIEWS.push(saved);
   return saved;
+}
+
+// ─── Feedback (mock, mutable) ───────────────────────────────────────────────
+
+export const MOCK_FEEDBACK: Feedback[] = [
+  {
+    id: "fb-1",
+    author: "Layla Haddad",
+    author_role: "rep",
+    category: "idea",
+    body: "Would love a way to bulk-export my assigned leads to CSV for offline calls.",
+    status: "new",
+    created_at: hoursAgo(5),
+  },
+  {
+    id: "fb-2",
+    author: "Omar Khalifa",
+    author_role: "rep",
+    category: "bug",
+    body: "The score badge colour looks off in dark mode on the pipeline cards.",
+    status: "reviewed",
+    created_at: daysAgo(2),
+  },
+];
+
+export function mockAllFeedback(): Feedback[] {
+  return [...MOCK_FEEDBACK].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
+
+export function mockAddFeedback(
+  entry: Omit<Feedback, "id" | "created_at">
+): Feedback {
+  const fb: Feedback = {
+    ...entry,
+    id: `fb-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    created_at: new Date().toISOString(),
+  };
+  MOCK_FEEDBACK.push(fb);
+  return fb;
+}
+
+export function mockUpdateFeedbackStatus(
+  id: string,
+  status: FeedbackStatus
+): void {
+  const fb = MOCK_FEEDBACK.find((f) => f.id === id);
+  if (fb) fb.status = status;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

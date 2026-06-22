@@ -7,6 +7,7 @@ import {
   mockLeadById,
   mockLeadNotes,
   mockLeadReview,
+  mockAllFeedback,
 } from "./mock-data";
 import type {
   Lead,
@@ -19,6 +20,7 @@ import type {
   LeadStatus,
   LeadNote,
   LeadReview,
+  Feedback,
 } from "./supabase/types";
 
 export type DashboardStats = {
@@ -465,6 +467,21 @@ export async function getLeadReview(leadId: string): Promise<LeadReview | null> 
     return null;
   }
   return (data as LeadReview) ?? null;
+}
+
+/** All feedback submissions, newest first — drives the admin Feedback page. */
+export async function getAllFeedback(): Promise<Feedback[]> {
+  if (isMockMode()) return mockAllFeedback();
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getAllFeedback error", error);
+    return [];
+  }
+  return (data || []) as Feedback[];
 }
 
 export async function getRepById(id: string): Promise<Rep | null> {

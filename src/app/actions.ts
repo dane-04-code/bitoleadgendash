@@ -10,8 +10,15 @@ import {
   mockAddLeadNote,
   mockDeleteLeadNote,
   mockSaveLeadReview,
+  mockAddFeedback,
+  mockUpdateFeedbackStatus,
 } from "@/lib/mock-data";
-import type { LeadStatus } from "@/lib/supabase/types";
+import type {
+  LeadStatus,
+  FeedbackCategory,
+  FeedbackStatus,
+} from "@/lib/supabase/types";
+import { FEEDBACK_CATEGORIES, FEEDBACK_STATUSES } from "@/lib/supabase/types";
 
 /**
  * Display name for whoever is acting now — "Admin" for the admin session, the
@@ -297,6 +304,69 @@ export async function saveLeadReview(formData: FormData) {
     return { ok: false, error: error.message };
   }
   revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+// ─── Feedback / suggestions ────────────────────────────────────────────────
+
+export async function submitFeedback(formData: FormData) {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+
+  const categoryRaw = String(formData.get("category") || "idea");
+  const category: FeedbackCategory = FEEDBACK_CATEGORIES.includes(
+    categoryRaw as FeedbackCategory
+  )
+    ? (categoryRaw as FeedbackCategory)
+    : "idea";
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { ok: false, error: "Please enter your feedback." };
+
+  const author = await currentActorName();
+  const author_role = session.role;
+
+  if (isMockMode()) {
+    mockAddFeedback({ author, author_role, category, body, status: "new" });
+    revalidatePath("/feedback");
+    return { ok: true };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("feedback")
+    .insert({ author, author_role, category, body });
+  if (error) {
+    console.error("submitFeedback", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/feedback");
+  return { ok: true };
+}
+
+export async function updateFeedbackStatus(id: string, status: FeedbackStatus) {
+  const session = await getSession();
+  if (session?.role !== "admin") return { ok: false, error: "Admins only." };
+  if (!id) return { ok: false, error: "Missing feedback id." };
+  if (!FEEDBACK_STATUSES.includes(status)) {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  if (isMockMode()) {
+    mockUpdateFeedbackStatus(id, status);
+    revalidatePath("/feedback");
+    return { ok: true };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("feedback")
+    .update({ status })
+    .eq("id", id);
+  if (error) {
+    console.error("updateFeedbackStatus", error);
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/feedback");
   return { ok: true };
 }
 

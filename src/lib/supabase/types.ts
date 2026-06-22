@@ -228,6 +228,38 @@ export const REVIEW_CATEGORIES = [
 
 export type ReviewCategoryKey = (typeof REVIEW_CATEGORIES)[number]["key"];
 
+// ─── Feedback / suggestions ───────────────────────────────────────────────
+
+export type FeedbackCategory = "bug" | "idea" | "other";
+export type FeedbackStatus = "new" | "reviewed" | "done";
+
+export const FEEDBACK_CATEGORIES: FeedbackCategory[] = ["bug", "idea", "other"];
+export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  bug: "Bug",
+  idea: "Idea",
+  other: "Other",
+};
+
+export const FEEDBACK_STATUSES: FeedbackStatus[] = ["new", "reviewed", "done"];
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  new: "New",
+  reviewed: "Reviewed",
+  done: "Done",
+};
+
+/** A suggestion / bug report submitted by a rep or the admin. */
+export type Feedback = {
+  id: string;
+  /** Display name of the submitter ("Admin" or a rep's full name); null if unknown. */
+  author: string | null;
+  /** "admin" | "rep" — who submitted it. */
+  author_role: string | null;
+  category: FeedbackCategory | string;
+  body: string;
+  status: FeedbackStatus | string;
+  created_at: string;
+};
+
 export type LeadWithRelations = Lead & {
   contacts?: Contact[];
   assignments?: (Assignment & { rep?: Rep | null })[];

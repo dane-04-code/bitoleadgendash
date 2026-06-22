@@ -7,6 +7,7 @@ const PAGE_LABELS: Record<string, { code: string; label: string }> = {
   "/dashboard": { code: "01", label: "Inbox" },
   "/pipeline": { code: "02", label: "Pipeline" },
   "/reps": { code: "03", label: "Team" },
+  "/feedback": { code: "·", label: "Feedback" },
   "/settings": { code: "04", label: "Settings" },
   "/my": { code: "A", label: "My leads" },
 };

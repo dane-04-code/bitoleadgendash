@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
   UserCog,
+  MessageSquare,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,12 +19,14 @@ const ADMIN_NAV = [
   { href: "/dashboard", label: "Inbox", code: "01", icon: LayoutGrid },
   { href: "/pipeline",  label: "Pipeline", code: "02", icon: Columns3 },
   { href: "/reps",      label: "Team", code: "03", icon: Users },
-  { href: "/settings",  label: "Settings", code: "04", icon: Cog },
+  { href: "/feedback",  label: "Feedback", code: "04", icon: MessageSquare },
+  { href: "/settings",  label: "Settings", code: "05", icon: Cog },
 ];
 
 const REP_NAV = [
   { href: "/my", label: "My leads", code: "01", icon: LayoutGrid },
   { href: "/my/account", label: "Account", code: "02", icon: UserCog },
+  { href: "/feedback", label: "Feedback", code: "03", icon: MessageSquare },
 ];
 
 export type SidebarUser =
