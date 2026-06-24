@@ -35,6 +35,7 @@ export function LeadReviewCard({
   const [scores, setScores] = React.useState<Scores>(() => fromReview(review));
   const [comment, setComment] = React.useState(review?.comment ?? "");
   const [saved, setSaved] = React.useState(false); // saved flash
+  const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
 
   // Keep in sync if the server data changes after a refresh.
@@ -53,6 +54,7 @@ export function LeadReviewCard({
   function set(key: ReviewCategoryKey, value: number) {
     setScores((prev) => ({ ...prev, [key]: prev[key] === value ? null : value }));
     setSaved(false);
+    setError(null);
   }
 
   function handleSave() {
@@ -63,8 +65,13 @@ export function LeadReviewCard({
       if (v != null) fd.set(c.key, String(v));
     }
     fd.set("comment", comment);
+    setError(null);
     startTransition(async () => {
-      await saveLeadReview(fd);
+      const result = await saveLeadReview(fd);
+      if (result && result.ok === false) {
+        setError(result.error ?? "Couldn’t save. Please try again.");
+        return;
+      }
       setSaved(true);
       router.refresh();
     });
@@ -121,6 +128,7 @@ export function LeadReviewCard({
             onChange={(e) => {
               setComment(e.target.value);
               setSaved(false);
+              setError(null);
             }}
             placeholder="Anything worth noting on this lead…"
             rows={3}
@@ -131,7 +139,9 @@ export function LeadReviewCard({
 
       <div className="flex items-center justify-between border-t border-line px-4 py-2.5">
         <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-          {review?.updated_at ? (
+          {error ? (
+            <span className="text-signal-bad normal-case tracking-normal">{error}</span>
+          ) : review?.updated_at ? (
             <>
               {review.reviewed_by ? `${review.reviewed_by} · ` : ""}
               {formatRelative(review.updated_at)}
