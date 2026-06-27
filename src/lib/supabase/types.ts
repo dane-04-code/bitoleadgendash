@@ -65,6 +65,26 @@ export const ADMIN_SETTABLE_STATUSES: LeadStatus[] = [
   "dead",
 ];
 
+export type ScoreBreakdownItem = {
+  key: string;
+  label: string;
+  passed: boolean;
+  note: string | null;
+};
+
+export const SCORE_BREAKDOWN_CRITERIA = [
+  { key: "signal_fresh",     label: "Signal freshness (< 30 days)" },
+  { key: "hiring_signal",    label: "Active hiring signal detected" },
+  { key: "expansion_signal", label: "Expansion / new facility signal" },
+  { key: "industry_match",   label: "Industry match for BITO products" },
+  { key: "verified_contact", label: "Verified contact found" },
+  { key: "gcc_location",     label: "Location in target GCC territory" },
+  { key: "company_scale",    label: "Company scale indicates need" },
+  { key: "product_fit",      label: "BITO product fit identified" },
+] as const;
+
+export type ScoreBreakdownKey = (typeof SCORE_BREAKDOWN_CRITERIA)[number]["key"];
+
 export type SignalType =
   | "expansion"
   | "funding"
@@ -86,6 +106,8 @@ export type Lead = {
   warehouse_size: string | null;
   score: number;
   score_reason: string | null;
+  /** Structured 8-criteria breakdown from Hermes. NULL for leads ingested before this field was added. */
+  score_breakdown: ScoreBreakdownItem[] | null;
   bito_products: string[] | null;
   source_url: string | null;
   status: LeadStatus;

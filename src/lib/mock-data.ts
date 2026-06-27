@@ -83,6 +83,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 94,
     score_reason:
       "Confirmed build, public tender timeline, BITO product fit on pallet racking, mezzanine and conveyor lines.",
+    score_breakdown: null,
     bito_products: ["PRO pallet racking", "Conveyor systems", "Mezzanine"],
     source_url: "https://gulfnews.com/business/aramex-dubai-south",
     status: "new",
@@ -109,6 +110,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 88,
     score_reason:
       "Active RFP with 14-day window, cold chain spec matches BITO shuttle and drive-in racking.",
+    score_breakdown: null,
     bito_products: ["Drive-in racking", "Shuttle system", "Cold-spec coatings"],
     source_url: "https://arabnews.com/almarai-coldchain",
     status: "assigned",
@@ -135,6 +137,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 81,
     score_reason:
       "Tender language explicitly mentions mezzanine and pick-to-light — strong BITO fit.",
+    score_breakdown: null,
     bito_products: ["Mezzanine", "Pick modules", "Carton flow"],
     source_url: "https://linkedin.com/feed/lulu-rfp",
     status: "contacted",
@@ -161,6 +164,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 72,
     score_reason:
       "Funded with explicit warehouse capex earmark. Spec not yet public — engagement now positions BITO ahead of formal RFP.",
+    score_breakdown: null,
     bito_products: ["Selective racking", "VNA systems"],
     source_url: "https://reuters.com/qatar-logistics-hub-c",
     status: "meeting",
@@ -187,6 +191,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 64,
     score_reason:
       "Hiring pattern consistent with new build but no public announcement yet.",
+    score_breakdown: null,
     bito_products: ["Conveyor", "Sortation"],
     source_url: "https://noon.com/careers",
     status: "listed",
@@ -216,6 +221,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 58,
     score_reason:
       "Signal never firmed up; source article predates the 60-day freshness window.",
+    score_breakdown: null,
     bito_products: ["Selective racking"],
     source_url: "https://tradearabia.com/gwc-logistics-village",
     status: "new",
@@ -241,6 +247,7 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     warehouse_size: "~18,000 sqm",
     score: 49,
     score_reason: "Stale press signal; archived on freshness re-check.",
+    score_breakdown: null,
     bito_products: ["Mezzanine"],
     source_url: "https://zawya.com/agility-kuwait-dc",
     status: "new",

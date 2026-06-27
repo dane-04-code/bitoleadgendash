@@ -391,6 +391,43 @@ export async function unclaimLead(formData: FormData) {
   return { ok: true };
 }
 
+export async function killLead(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+  const session = await getSession();
+  if (session?.role !== "admin") return { ok: false, error: "Admins only." };
+
+  const leadId = String(formData.get("leadId") || "");
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const supabase = getSupabaseServerClient();
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .maybeSingle();
+  const oldStatus = (lead?.status as LeadStatus | undefined) ?? null;
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ status: "dead", updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+  if (error) {
+    console.error("killLead", error);
+    return { ok: false, error: error.message };
+  }
+
+  await supabase.from("pipeline_updates").insert({
+    lead_id: leadId,
+    old_status: oldStatus,
+    new_status: "dead",
+    note: "Killed by admin",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/pipeline");
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
 export async function markOutreachUsed(outreachId: string, leadId: string, used: boolean) {
   const supabase = getSupabaseServerClient();
   const { error } = await supabase

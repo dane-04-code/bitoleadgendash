@@ -28,6 +28,7 @@ import { UnclaimButton } from "@/components/unclaim-button";
 import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
 import { LeadReviewCard } from "@/components/lead-review";
+import { ScoreBreakdown } from "@/components/ui/score-breakdown";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
 import { formatRelative, initials } from "@/lib/utils";
 
@@ -203,13 +204,15 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
         {/* MAIN COLUMN */}
         <div className="space-y-10 min-w-0">
-          {lead.score_reason && (
-            <Section eyebrow="Why this is a lead" code="A">
+          <Section eyebrow="Why this is a lead" code="A">
+            {lead.score_breakdown ? (
+              <ScoreBreakdown breakdown={lead.score_breakdown} />
+            ) : lead.score_reason ? (
               <p className="text-[15px] leading-relaxed text-ink-2">
                 {lead.score_reason}
               </p>
-            </Section>
-          )}
+            ) : null}
+          </Section>
 
           {lead.bito_products && lead.bito_products.length > 0 && (
             <Section eyebrow="BITO products matched" code="B">

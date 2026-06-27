@@ -33,6 +33,7 @@ import {
 } from "@/lib/supabase/types";
 import { formatRelative, daysBetween, firstName } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
+import { KillLeadButton } from "@/components/kill-lead-button";
 import { PageHeader, MetaItem } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
@@ -344,14 +345,17 @@ export default async function DashboardPage({
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
                         {!archived && (
-                          <AssignDialog
-                            leadId={lead.id}
-                            leadName={lead.company_name}
-                            reps={reps}
-                            currentRepName={lead.rep_name ?? null}
-                            triggerSize="sm"
-                            triggerVariant="ghost"
-                          />
+                          <>
+                            <AssignDialog
+                              leadId={lead.id}
+                              leadName={lead.company_name}
+                              reps={reps}
+                              currentRepName={lead.rep_name ?? null}
+                              triggerSize="sm"
+                              triggerVariant="ghost"
+                            />
+                            <KillLeadButton leadId={lead.id} leadName={lead.company_name} />
+                          </>
                         )}
                         <Button asChild size="sm" variant="ghost">
                           <Link href={`/leads/${lead.id}`}>
