@@ -6,8 +6,8 @@ import {
   getActiveReps,
   getActiveLeadCount,
   getArchivedLeadCount,
+  getKilledLeadCount,
   getRecentLeadCount,
-  getListedLeadCount,
   getAssignedLeadCount,
   getReturnedLeadCount,
   getLeadFilterFacets,
@@ -53,6 +53,7 @@ export default async function DashboardPage({
   const VIEW_VALUES: InboxView[] = [
     "active",
     "archived",
+    "killed",
     "new",
     "listed",
     "assigned",
@@ -64,6 +65,7 @@ export default async function DashboardPage({
     ? (searchParams?.view as InboxView)
     : "active";
   const archived = view === "archived";
+  const killed = view === "killed";
   const isNew = view === "new";
 
   const statusParam = searchParams?.status as LeadStatus | undefined;
@@ -83,8 +85,8 @@ export default async function DashboardPage({
     reps,
     activeCount,
     archivedCount,
+    killedCount,
     recentCount,
-    listedCount,
     assignedCount,
     returnedCount,
     facets,
@@ -94,8 +96,8 @@ export default async function DashboardPage({
     getActiveReps(),
     getActiveLeadCount(),
     getArchivedLeadCount(),
+    getKilledLeadCount(),
     getRecentLeadCount(),
-    getListedLeadCount(),
     getAssignedLeadCount(),
     getReturnedLeadCount(),
     getLeadFilterFacets(),
@@ -138,7 +140,7 @@ export default async function DashboardPage({
               Top Signal · Highest Score
             </div>
             <Link
-              href={`/leads/${top.id}`}
+              href={`/leads/${top.id}?from=active`}
               className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-ink hover:text-brand-ink transition-colors"
             >
               {top.company_name}
@@ -184,7 +186,7 @@ export default async function DashboardPage({
                 triggerVariant="default"
               />
               <Button asChild variant="outline" size="default">
-                <Link href={`/leads/${top.id}`}>
+                <Link href={`/leads/${top.id}?from=active`}>
                   Open
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
@@ -212,10 +214,10 @@ export default async function DashboardPage({
             <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider flex-wrap">
               <TabLink view="new" current={view} label="New this week" count={recentCount} />
               <TabLink view="active" current={view} label="Leads" count={activeCount} />
-              <TabLink view="listed" current={view} label="Listed" count={listedCount} />
               <TabLink view="assigned" current={view} label="Assigned" count={assignedCount} />
               <TabLink view="returned" current={view} label="Returned" count={returnedCount} />
-              <TabLink view="archived" current={view} label="Archive" count={archivedCount} />
+              <TabLink view="archived" current={view} label="Archived" count={archivedCount} />
+              <TabLink view="killed" current={view} label="Killed" count={killedCount} />
             </div>
             <Button asChild variant="ghost" size="sm">
               <Link href="/pipeline">
@@ -242,9 +244,21 @@ export default async function DashboardPage({
           </div>
         )}
 
+        {killed && (
+          <div className="mb-4 border border-signal-hot/30 bg-signal-hot/[0.05] px-4 py-3">
+            <div className="mono text-[10px] uppercase tracking-wider text-signal-hot">
+              Killed leads
+            </div>
+            <p className="text-[12px] text-ink-dim mt-1 leading-relaxed max-w-2xl">
+              These leads were marked dead by a manager. They stay available here
+              for review instead of disappearing from view.
+            </p>
+          </div>
+        )}
+
         <div className="border border-line bg-surface">
           {leads.length === 0 ? (
-            <EmptyInbox archived={archived} filtered={filtersActive} />
+            <EmptyInbox archived={archived} killed={killed} filtered={filtersActive} />
           ) : (
             <Table>
               <TableHeader>
@@ -276,7 +290,7 @@ export default async function DashboardPage({
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/leads/${lead.id}`}
+                        href={`/leads/${lead.id}?from=${view}`}
                         className="block hover:text-brand-ink transition-colors max-w-md"
                       >
                         <div className="text-[14px] font-medium text-ink truncate">
@@ -344,7 +358,7 @@ export default async function DashboardPage({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                        {!archived && (
+                        {!archived && !killed && (
                           <>
                             <AssignDialog
                               leadId={lead.id}
@@ -358,7 +372,7 @@ export default async function DashboardPage({
                           </>
                         )}
                         <Button asChild size="sm" variant="ghost">
-                          <Link href={`/leads/${lead.id}`}>
+                          <Link href={`/leads/${lead.id}?from=${view}`}>
                             Open
                             <ArrowUpRight className="h-3 w-3" />
                           </Link>
@@ -384,6 +398,7 @@ const VIEW_TITLES: Record<InboxView, string> = {
   assigned: "Assigned",
   returned: "Returned",
   archived: "Archived",
+  killed: "Killed",
 };
 
 function TabLink({
@@ -513,9 +528,11 @@ function StatusPill({
 
 function EmptyInbox({
   archived,
+  killed,
   filtered,
 }: {
   archived?: boolean;
+  killed?: boolean;
   filtered?: boolean;
 }) {
   if (filtered) {
@@ -534,12 +551,18 @@ function EmptyInbox({
     <div className="px-6 py-20 text-center">
       <div className="display-serif text-6xl text-ink-faint/30 mb-3">∅</div>
       <h3 className="display-serif text-2xl text-ink mb-2">
-        {archived ? "Nothing archived." : "Quiet on the wires."}
+        {archived
+          ? "Nothing archived."
+          : killed
+            ? "Nothing killed."
+            : "Quiet on the wires."}
       </h3>
       <p className="text-[13px] text-ink-dim max-w-sm mx-auto leading-relaxed">
         {archived
           ? "Rejected leads will appear here when the pipeline filters them out — for example when a source article fails the freshness check."
-          : "New warehouse signals from across the GCC will appear here as they are detected by the intelligence pipeline."}
+          : killed
+            ? "Leads killed by a manager will appear here for review."
+            : "New warehouse signals from across the GCC will appear here as they are detected by the intelligence pipeline."}
       </p>
     </div>
   );

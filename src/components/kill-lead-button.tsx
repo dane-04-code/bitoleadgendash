@@ -54,8 +54,8 @@ export function KillLeadButton({
           <DialogTitle>Kill this lead?</DialogTitle>
           <DialogDescription>
             This will mark <span className="text-ink font-medium">{leadName}</span> as
-            dead and remove it from your inbox. The lead stays visible in the pipeline
-            Dead column. This cannot be undone.
+            dead and move it out of the live inbox. You can still review it from
+            the Killed inbox tab and the pipeline Dead column.
           </DialogDescription>
         </DialogHeader>
         {error && (

@@ -82,6 +82,7 @@ export type LeadInboxRow = Lead & {
 export type InboxView =
   | "active"
   | "archived"
+  | "killed"
   | "new"
   | "unassigned"
   | "listed"
@@ -140,6 +141,8 @@ function matchesView(lead: Lead, view: InboxView, cutoff: string): boolean {
       return ASSIGNED_STATUSES.includes(lead.status);
     case "returned":
       return lead.status === "returned";
+    case "killed":
+      return lead.status === "dead";
     case "active":
       // The manager's main list: only unowned leads (no rep clutter).
       return UNOWNED_STATUSES.includes(lead.status);
@@ -228,6 +231,7 @@ export async function getLeadInbox(
     else if (view === "listed") query = query.eq("status", "listed");
     else if (view === "assigned") query = query.in("status", ASSIGNED_STATUSES);
     else if (view === "returned") query = query.eq("status", "returned");
+    else if (view === "killed") query = query.eq("status", "dead");
 
     query = query
       .order("score", { ascending: false })
@@ -332,6 +336,24 @@ export async function getArchivedLeadCount(): Promise<number> {
   return count ?? 0;
 }
 
+/** Count of active-but-dead leads killed by a manager. */
+export async function getKilledLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return MOCK_LEADS.filter((l) => !l.archived && l.status === "dead").length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "dead");
+  if (error) {
+    console.error("getKilledLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 /** Count of active leads that arrived within the recency window — drives the "New this week" badge. */
 export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<number> {
   const cutoff = recentCutoffISO(days);
@@ -408,6 +430,19 @@ export async function getReturnedLeadCount(): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+export async function getNextInboxLeadId(
+  currentId: string,
+  view: InboxView = "active"
+): Promise<string | null> {
+  const leads = await getLeadInbox(500, view);
+  if (leads.length === 0) return null;
+
+  const currentIndex = leads.findIndex((lead) => lead.id === currentId);
+  if (currentIndex === -1) return leads[0]?.id ?? null;
+
+  return leads[currentIndex + 1]?.id ?? null;
 }
 
 export async function getLeadById(id: string): Promise<{

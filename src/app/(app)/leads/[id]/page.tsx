@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   ExternalLink,
   Mail,
   Phone,
@@ -15,7 +16,9 @@ import {
   getLeadNotes,
   getLeadReview,
   getRepById,
+  getNextInboxLeadId,
 } from "@/lib/queries";
+import type { InboxView } from "@/lib/queries";
 import { getSession } from "@/lib/auth";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { Button } from "@/components/ui/button";
@@ -35,9 +38,33 @@ import { formatRelative, initials } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+const INBOX_VIEWS: InboxView[] = [
+  "active",
+  "archived",
+  "killed",
+  "new",
+  "unassigned",
+  "listed",
+  "assigned",
+  "returned",
+];
+
+function dashboardHref(view: InboxView): string {
+  return view === "active" ? "/dashboard" : `/dashboard?view=${view}`;
+}
+
+export default async function LeadDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { from?: string };
+}) {
   const session = await getSession();
   if (!session) notFound();
+  const inboxView = INBOX_VIEWS.includes(searchParams?.from as InboxView)
+    ? (searchParams?.from as InboxView)
+    : "active";
 
   // Reps must clear a forced password change before working any lead.
   if (session.role === "rep") {
@@ -57,10 +84,11 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
     repOwns = await isLeadOwnedByRep(params.id, session.subject);
     if (!repOwns && lead.status !== "listed") notFound();
   }
-  const [reps, notes, review] = await Promise.all([
+  const [reps, notes, review, nextLeadId] = await Promise.all([
     isAdmin ? getActiveReps() : Promise.resolve([]),
     getLeadNotes(params.id),
     getLeadReview(params.id),
+    isAdmin ? getNextInboxLeadId(params.id, inboxView) : Promise.resolve(null),
   ]);
 
   const currentAssignment = assignments[0];
@@ -73,7 +101,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
   return (
     <div className="animate-fade-in pb-12">
       <Link
-        href={isAdmin ? "/dashboard" : "/my"}
+        href={isAdmin ? dashboardHref(inboxView) : "/my"}
         className="inline-flex items-center gap-1.5 mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-ink transition-colors mb-6"
       >
         <ArrowLeft className="h-3 w-3" />
@@ -149,6 +177,14 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
         </div>
 
         <aside className="flex flex-col items-start lg:items-end gap-5 shrink-0 lg:min-w-[280px]">
+          {isAdmin && nextLeadId && (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/leads/${nextLeadId}?from=${inboxView}`}>
+                Next lead
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
           <ScoreBadge score={lead.score} size="lg" />
           <div className="flex items-center gap-2 flex-wrap lg:justify-end">
             {isAdmin ? (
