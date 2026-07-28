@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,6 +15,8 @@ import {
   isLeadOwnedByRep,
   getLeadNotes,
   getLeadReview,
+  getDealProfile,
+  getDealSale,
   getRepById,
   getNextInboxLeadId,
 } from "@/lib/queries";
@@ -30,6 +32,7 @@ import { ClaimButton } from "@/components/claim-button";
 import { UnclaimButton } from "@/components/unclaim-button";
 import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
+import { DealProfileDialog } from "@/components/deal-profile-panel";
 import { LeadReviewCard } from "@/components/lead-review";
 import { ScoreBreakdown } from "@/components/ui/score-breakdown";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
@@ -84,10 +87,12 @@ export default async function LeadDetailPage({
     repOwns = await isLeadOwnedByRep(params.id, session.subject);
     if (!repOwns && lead.status !== "listed") notFound();
   }
-  const [reps, notes, review, nextLeadId] = await Promise.all([
+  const [reps, notes, review, dealProfile, dealSale, nextLeadId] = await Promise.all([
     isAdmin ? getActiveReps() : Promise.resolve([]),
     getLeadNotes(params.id),
     getLeadReview(params.id),
+    getDealProfile(params.id),
+    getDealSale(params.id),
     isAdmin ? getNextInboxLeadId(params.id, inboxView) : Promise.resolve(null),
   ]);
 
@@ -111,14 +116,14 @@ export default async function LeadDetailPage({
       {lead.archived && (
         <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
           <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.08] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
-            ⚑ Archived
+            âš‘ Archived
           </span>
           <span className="text-[12px] text-ink-dim">
             {archivedReasonLabel(lead.archived_reason)}
           </span>
           {lead.archived_at && (
             <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-              · archived {formatRelative(lead.archived_at)}
+              Â· archived {formatRelative(lead.archived_at)}
             </span>
           )}
         </div>
@@ -128,7 +133,7 @@ export default async function LeadDetailPage({
       <header className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 pb-8 mb-8 border-b border-line">
         <div className="min-w-0">
           <div className="flex items-center gap-3 mono text-[10px] uppercase tracking-wider text-ink-faint mb-4">
-            <span>Lead · {shortId}</span>
+            <span>Lead Â· {shortId}</span>
             <span className="text-ink-faint/40">/</span>
             {lead.signal_type && (
               <span className="text-brand-ink">
@@ -187,6 +192,9 @@ export default async function LeadDetailPage({
           )}
           <ScoreBadge score={lead.score} size="lg" />
           <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+            {(isAdmin || repOwns) && (
+              <DealProfileDialog leadId={lead.id} leadStatus={lead.status} profile={dealProfile} sale={dealSale} />
+            )}
             {isAdmin ? (
               <>
                 <StatusSelector
@@ -362,8 +370,8 @@ export default async function LeadDetailPage({
                     <span className="dot bg-brand mt-1.5 ml-px relative z-10" />
                     <div>
                       <div className="text-[12px] text-ink">
-                        <span className="text-ink-dim">{u.old_status || "—"}</span>
-                        <span className="mx-1.5 text-ink-faint">→</span>
+                        <span className="text-ink-dim">{u.old_status || "â€”"}</span>
+                        <span className="mx-1.5 text-ink-faint">â†’</span>
                         <span className="font-medium">{u.new_status}</span>
                       </div>
                       <div className="mono text-[10px] uppercase tracking-wider text-ink-faint mt-0.5">
@@ -444,7 +452,7 @@ function ContactCard({
             </span>
             {c.is_primary && (
               <span className="mono text-[9px] uppercase tracking-wider text-brand-ink">
-                ◆ Primary
+                â—† Primary
               </span>
             )}
           </div>
@@ -512,7 +520,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
     <div>
       <dt className="eyebrow mb-1.5">{label}</dt>
       <dd className="text-[13px] text-ink-2">
-        {value || <span className="text-ink-faint">—</span>}
+        {value || <span className="text-ink-faint">â€”</span>}
       </dd>
     </div>
   );
@@ -585,3 +593,4 @@ function DraftBlock({
     </div>
   );
 }
+

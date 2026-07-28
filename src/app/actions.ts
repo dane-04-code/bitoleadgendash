@@ -17,6 +17,7 @@ import type {
   LeadStatus,
   FeedbackCategory,
   FeedbackStatus,
+  DealProfile,
 } from "@/lib/supabase/types";
 import { FEEDBACK_CATEGORIES, FEEDBACK_STATUSES } from "@/lib/supabase/types";
 
@@ -483,6 +484,108 @@ export async function deleteLeadNote(noteId: string, leadId: string) {
   if (error) {
     console.error("deleteLeadNote", error);
     return { ok: false, error: error.message };
+  }
+  revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
+}
+
+// â”€â”€â”€ Deal profiles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+
+export async function saveDealProfile(formData: FormData) {
+  const leadId = String(formData.get("leadId") || "").trim();
+  if (!leadId) return { ok: false, error: "Missing lead." };
+
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Please sign in again." };
+  if (isMockMode()) return { ok: false, error: "Deal profiles need a connected Supabase project." };
+
+  const supabase = getSupabaseServerClient();
+  if (session.role === "rep") {
+    const { count } = await supabase
+      .from("assignments")
+      .select("*", { count: "exact", head: true })
+      .eq("lead_id", leadId)
+      .eq("rep_id", session.subject);
+    if (!count) return { ok: false, error: "This lead is not assigned to you." };
+  }
+
+  const text = (key: string) => String(formData.get(key) || "").trim() || null;
+  const number = (key: string, min: number, max?: number) => {
+    const value = text(key);
+    if (value === null) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= min && (max === undefined || parsed <= max)
+      ? parsed
+      : null;
+  };
+  const products = String(formData.get("productsOfInterest") || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const actor = await currentActorName();
+  const saleDate = text("saleDate");
+  const saleValue = number("saleValue", 0);
+  const grossProfit = number("grossProfit", 0);
+  const profitMargin = number("profitMarginPercent", 0, 100);
+  const saleProjectReference = text("saleProjectReference");
+  const saleCurrency = text("saleCurrency")?.toUpperCase() ?? null;
+  const saleNotes = text("saleNotes");
+  const saleTouched = [saleDate, saleValue, grossProfit, profitMargin, saleProjectReference, saleCurrency, saleNotes]
+    .some((value) => value !== null);
+
+  if (saleTouched) {
+    if (!saleDate || saleValue === null) {
+      return { ok: false, error: "A sale date and sale value are required to record a won deal." };
+    }
+    const { data: lead, error: leadError } = await supabase
+      .from("leads")
+      .select("status")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (leadError || lead?.status !== "won") {
+      return { ok: false, error: "Mark the lead as Won before recording a sale." };
+    }
+  }
+  const profile: Partial<DealProfile> & { lead_id: string; updated_by: string | null } = {
+    lead_id: leadId,
+    deal_name: text("dealName"), project_type: text("projectType"), project_stage: text("projectStage"),
+    opportunity_reference: text("opportunityReference"), country: text("country"), city: text("city"),
+    site_address: text("siteAddress"), facility_type: text("facilityType"), project_summary: text("projectSummary"),
+    requirements: text("requirements"), products_of_interest: products,
+    estimated_value: number("estimatedValue", 0), currency: text("currency")?.toUpperCase() ?? null,
+    win_probability: number("winProbability", 0, 100), expected_close_date: text("expectedCloseDate"),
+    budget_status: text("budgetStatus"), decision_maker: text("decisionMaker"), technical_contact: text("technicalContact"),
+    procurement_method: text("procurementMethod"), tender_reference: text("tenderReference"), tender_deadline: text("tenderDeadline"),
+    proposal_reference: text("proposalReference"), proposal_sent_date: text("proposalSentDate"),
+    target_installation_date: text("targetInstallationDate"), competitors: text("competitors"),
+    incumbent_supplier: text("incumbentSupplier"), commercial_terms: text("commercialTerms"),
+    risks_and_blockers: text("risksAndBlockers"), next_action: text("nextAction"),
+    next_action_due_date: text("nextActionDueDate"), death_reason: text("deathReason"), death_notes: text("deathNotes"),
+    internal_notes: text("internalNotes"), updated_by: actor,
+  };
+
+  const { error } = await supabase.from("deal_profiles").upsert(profile, { onConflict: "lead_id" });
+  if (error) {
+    console.error("saveDealProfile", error);
+    return { ok: false, error: error.message };
+  }
+  if (saleTouched) {
+    const { error: saleError } = await supabase.from("deal_sales").upsert({
+      lead_id: leadId,
+      project_reference: saleProjectReference,
+      sale_date: saleDate,
+      sale_value: saleValue,
+      currency: saleCurrency || profile.currency || "AED",
+      gross_profit: grossProfit,
+      profit_margin_percent: profitMargin,
+      notes: saleNotes,
+      recorded_by: actor,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "lead_id" });
+    if (saleError) {
+      console.error("saveDealProfile sale", saleError);
+      return { ok: false, error: saleError.message };
+    }
   }
   revalidatePath(`/leads/${leadId}`);
   return { ok: true };

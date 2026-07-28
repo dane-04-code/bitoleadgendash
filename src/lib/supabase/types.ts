@@ -235,6 +235,64 @@ export type LeadNote = {
   created_at: string;
 };
 
+/** Sales-owned commercial information for a single lead. */
+export type DealProfile = {
+  lead_id: string;
+  deal_name: string | null;
+  project_type: string | null;
+  country: string | null;
+  city: string | null;
+  site_address: string | null;
+  facility_type: string | null;
+  project_summary: string | null;
+  requirements: string | null;
+  products_of_interest: string[];
+  estimated_value: number | null;
+  currency: string | null;
+  win_probability: number | null;
+  expected_close_date: string | null;
+  next_action: string | null;
+  next_action_due_date: string | null;
+  death_reason: string | null;
+  death_notes: string | null;
+  opportunity_reference: string | null;
+  project_stage: string | null;
+  decision_maker: string | null;
+  technical_contact: string | null;
+  budget_status: string | null;
+  procurement_method: string | null;
+  tender_reference: string | null;
+  tender_deadline: string | null;
+  proposal_reference: string | null;
+  proposal_sent_date: string | null;
+  target_installation_date: string | null;
+  competitors: string | null;
+  incumbent_supplier: string | null;
+  commercial_terms: string | null;
+  risks_and_blockers: string | null;
+  internal_notes: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Revenue recorded when a lead converts to a won deal. */
+export type DealSale = {
+  id: string;
+  lead_id: string;
+  project_reference: string | null;
+  sale_date: string;
+  sale_value: number;
+  currency: string;
+  gross_profit: number | null;
+  profit_margin_percent: number | null;
+  notes: string | null;
+  recorded_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /**
  * TEMPORARY manual scorecard for a lead — one row per lead, each field 1-5.
  * Filled in by hand while we calibrate the automated score; drop the table and

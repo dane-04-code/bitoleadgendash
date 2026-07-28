@@ -20,6 +20,8 @@ import type {
   LeadStatus,
   LeadNote,
   LeadReview,
+  DealProfile,
+  DealSale,
   Feedback,
 } from "./supabase/types";
 import { UNOWNED_STATUSES } from "./supabase/types";
@@ -522,6 +524,38 @@ export async function getLeadNotes(leadId: string): Promise<LeadNote[]> {
     return [];
   }
   return (data || []) as LeadNote[];
+}
+
+/** The sales-owned deal profile for a lead, if the team has started one. */
+export async function getDealProfile(leadId: string): Promise<DealProfile | null> {
+  if (isMockMode()) return null;
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("deal_profiles")
+    .select("*")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (error) {
+    console.error("getDealProfile error", error);
+    return null;
+  }
+  return (data as DealProfile) ?? null;
+}
+
+/** The recorded sale for a won lead, if one exists. */
+export async function getDealSale(leadId: string): Promise<DealSale | null> {
+  if (isMockMode()) return null;
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("deal_sales")
+    .select("*")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (error) {
+    console.error("getDealSale error", error);
+    return null;
+  }
+  return (data as DealSale) ?? null;
 }
 
 /** The manual review scorecard for a lead, or null if none saved yet. */
