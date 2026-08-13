@@ -41,6 +41,19 @@
     /* Flare — permitted for tiny components only, never a surface */
     --flare:         29 100% 44%;    /* #e06c00 */
 
+    /* The rail — the one region the brand hue owns outright. Every pair below
+       is measured, not eyeballed: text sits ≥4.5:1 on rail and hover. On the
+       active item only --rail-ink is legible, so active items use it for
+       their numeral and badge too rather than the dimmer steps. */
+    --rail:         183 100% 15%;    /* #00464a */
+    --rail-hover:   183 100% 18%;    /* #00595e */
+    --rail-active:  183 100% 25%;    /* #00797f */
+    --rail-edge:    183 100% 12%;
+    --rail-ink:     180  44% 96%;    /* #f2fafa — 10.0:1 on rail */
+    --rail-ink-2:   183  30% 77%;    /* #b3d4d6 —  6.7:1 */
+    --rail-ink-3:   184  29% 70%;    /* #9cc6c9 —  5.7:1 */
+    --rail-mark:    185  61% 79%;    /* #a8e4ea —  7.6:1 */
+
     /* Score tiers ride the teal ramp; the tier word always ships with the dot,
        so nothing here is conveyed by colour alone. */
     --tier-hot:     183 100% 18%;
@@ -109,6 +122,17 @@
     --accent-bg:    188 32% 17%;
 
     --flare:         29 88% 58%;
+
+    /* On dark the rail sits only 1.4:1 off the page ground, so it earns its
+       edge from a hairline rather than from luminance alone. */
+    --rail:         185 63% 14%;     /* #0d3539 */
+    --rail-hover:   184 55% 18%;     /* #154649 */
+    --rail-active:  185 55% 25%;     /* #1d5f65 */
+    --rail-edge:    185 40% 22%;
+    --rail-ink:     180 39% 93%;     /* #e6f4f4 — 11.7:1 on rail */
+    --rail-ink-2:   185 28% 73%;     /* #a8cbce —  7.6:1 */
+    --rail-ink-3:   185 24% 64%;     /* #8db5b9 —  6.0:1 */
+    --rail-mark:    186 59% 65%;     /* #6fd0da —  7.4:1 */
 
     --tier-hot:     185 50% 66%;
     --tier-warm:    185 45% 53%;

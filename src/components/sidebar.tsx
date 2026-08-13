@@ -52,19 +52,19 @@ export function Sidebar({
   const { open } = useCommandPalette();
 
   return (
-    <aside className="hidden lg:flex h-screen w-[236px] shrink-0 flex-col bg-surface sticky top-0 px-4 pt-[22px] pb-[18px] gap-6">
+    <aside className="hidden lg:flex h-screen w-[236px] shrink-0 flex-col gap-6 border-r border-rail-edge bg-rail px-4 pt-[22px] pb-[18px] sticky top-0">
       <Link
         href={user.role === "admin" ? "/dashboard" : "/my"}
-        className="flex items-center gap-[11px] px-1.5 rounded-md"
+        className="flex items-center gap-[11px] rounded-md px-1.5"
       >
         {/* Reserved logo slot. BITO's mark is deliberately never placed — the
             space is held so it can be, without a relayout. */}
         <span aria-hidden className="block w-7 shrink-0" />
         <span className="block">
-          <span className="block text-[14.5px] font-bold leading-tight text-ink">
+          <span className="block text-[14.5px] font-bold leading-tight text-rail-ink">
             LeadIntelligence
           </span>
-          <span className="mono block text-[9.5px] font-medium uppercase tracking-[0.13em] text-ink-faint mt-0.5">
+          <span className="mono mt-0.5 block text-[9.5px] font-medium uppercase tracking-[0.13em] text-rail-3">
             BITO UAE · GCC
           </span>
         </span>
@@ -73,15 +73,15 @@ export function Sidebar({
       <button
         type="button"
         onClick={open}
-        className="flex items-center gap-2.5 rounded-md bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-dim transition-colors hover:bg-surface-3 hover:text-brand-deep"
+        className="flex items-center gap-2.5 rounded-md bg-rail-hover px-3 py-2.5 text-[12.5px] text-rail-2 transition-colors hover:bg-rail-active hover:text-rail-ink"
       >
         <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
         <span className="flex-1 text-left">Search…</span>
-        <kbd className="mono text-[10px] text-ink-faint">⌘K</kbd>
+        <kbd className="mono text-[10px] text-rail-3">⌘K</kbd>
       </button>
 
       <nav className="flex flex-col gap-0.5">
-        <div className="mono px-2.5 pb-2 text-[9.5px] font-medium uppercase tracking-[0.16em] text-ink-faint">
+        <div className="mono px-2.5 pb-2 text-[9.5px] font-medium uppercase tracking-[0.16em] text-rail-3">
           {user.role === "admin" ? "Navigation" : "Workspace"}
         </div>
         {nav.map((item) => {
@@ -100,20 +100,22 @@ export function Sidebar({
               className={cn(
                 "group flex items-center gap-[11px] rounded-md px-2.5 py-2.5 transition-colors",
                 active
-                  ? "bg-surface-3 text-brand-deep"
-                  : "text-ink-dim hover:bg-surface-2 hover:text-brand-deep"
+                  ? "bg-rail-active text-rail-ink"
+                  : "text-rail-2 hover:bg-rail-hover hover:text-rail-ink"
               )}
             >
+              {/* On the active block only --rail-ink clears 4.5:1, so the
+                  numeral and badge ride full ink there instead of dimming. */}
               <span
                 className={cn(
                   "mono w-3.5 shrink-0 text-[9.5px] font-medium",
-                  active ? "text-brand-soft" : "text-ink-ghost"
+                  active ? "text-rail-ink" : "text-rail-3"
                 )}
               >
                 {item.code}
               </span>
               <Icon
-                className="h-3.5 w-3.5 shrink-0 opacity-70"
+                className="h-3.5 w-3.5 shrink-0 opacity-80"
                 strokeWidth={1.75}
                 aria-hidden
               />
@@ -129,7 +131,7 @@ export function Sidebar({
                 <span
                   className={cn(
                     "mono text-[10px] font-semibold tabular",
-                    active ? "text-brand" : "text-ink-ghost"
+                    active ? "text-rail-ink" : "text-rail-3"
                   )}
                 >
                   {badge}
@@ -142,27 +144,25 @@ export function Sidebar({
 
       <div className="mt-auto flex flex-col gap-3">
         <div className="flex items-center gap-2.5 px-1.5 py-1">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[11px] font-semibold text-brand-deep">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rail-active text-[11px] font-semibold text-rail-ink">
             {user.role === "admin" ? "AD" : initials(user.label)}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12.5px] font-semibold leading-tight text-ink">
+            <span className="block truncate text-[12.5px] font-semibold leading-tight text-rail-ink">
               {user.role === "admin" ? "Admin" : user.label}
             </span>
-            <span className="mono mt-0.5 flex items-center gap-1.5 text-[9.5px] font-medium uppercase tracking-[0.1em] text-brand-soft">
-              {user.role === "admin"
-                ? "Active"
-                : user.territory || "Sales rep"}
+            <span className="mono mt-0.5 flex items-center gap-1.5 text-[9.5px] font-medium uppercase tracking-[0.1em] text-rail-mark">
+              {user.role === "admin" ? "Active" : user.territory || "Sales rep"}
             </span>
           </span>
         </div>
 
-        <ThemeToggle />
+        <ThemeToggle onRail />
 
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12.5px] text-ink-dim transition-colors hover:bg-surface-2 hover:text-brand-deep"
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12.5px] text-rail-2 transition-colors hover:bg-rail-hover hover:text-rail-ink"
           >
             <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />
             Sign out
@@ -178,9 +178,9 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
   const nav = user.role === "admin" ? ADMIN_NAV : REP_NAV;
   const home = user.role === "admin" ? "/dashboard" : "/my";
   return (
-    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-surface px-4 py-3">
+    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-rail px-4 py-3">
       <Link href={home} className="min-w-0 shrink rounded-md">
-        <span className="block truncate text-[13.5px] font-bold tracking-tight text-ink">
+        <span className="block truncate text-[13.5px] font-bold tracking-tight text-rail-ink">
           LeadIntelligence
         </span>
       </Link>
@@ -195,10 +195,10 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
                 active
-                  ? "bg-surface-3 text-brand-deep"
-                  : "text-ink-dim hover:text-brand-deep"
+                  ? "bg-rail-active text-rail-ink"
+                  : "text-rail-2 hover:text-rail-ink"
               )}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
@@ -207,11 +207,11 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
             </Link>
           );
         })}
-        <ThemeToggle compact />
+        <ThemeToggle compact onRail />
         <form action="/api/auth/logout" method="post" className="ml-1">
           <button
             type="submit"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-ink-dim transition-colors hover:text-brand-deep"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-rail-2 transition-colors hover:text-rail-ink"
             aria-label="Sign out"
           >
             <LogOut className="h-4 w-4" strokeWidth={1.75} />

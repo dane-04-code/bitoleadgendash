@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LEAD_STATUSES, LEAD_STATUS_LABELS } from "@/lib/supabase/types";
+import { PILL_CONTROL, PILL_GHOST } from "@/lib/styles";
 
 const ANY = "__any__";
 
@@ -21,12 +22,6 @@ const SCORE_OPTIONS = [
   { value: "80", label: "Hot · 80+" },
   { value: "90", label: "90+" },
 ];
-
-/** The comp's filter control: a soft white pill on the mint ground. */
-const PILL =
-  "h-auto w-auto gap-2.5 rounded-lg border-0 bg-surface px-4 py-2.5 text-[13px] font-medium text-ink-2 " +
-  "transition-colors hover:bg-surface-3 hover:text-brand-deep focus:bg-surface-3 focus:text-brand-deep " +
-  "data-[state=open]:bg-surface-3 data-[state=open]:text-brand-deep";
 
 export function LeadFilters({ industries }: { industries: string[] }) {
   const router = useRouter();
@@ -86,7 +81,7 @@ export function LeadFilters({ industries }: { industries: string[] }) {
       </div>
 
       <Select value={status0 || ANY} onValueChange={(v) => push({ status: v })}>
-        <SelectTrigger className={PILL} aria-label="Filter by status">
+        <SelectTrigger className={PILL_CONTROL} aria-label="Filter by status">
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -104,7 +99,7 @@ export function LeadFilters({ industries }: { industries: string[] }) {
           value={industry0 || ANY}
           onValueChange={(v) => push({ industry: v })}
         >
-          <SelectTrigger className={PILL} aria-label="Filter by industry">
+          <SelectTrigger className={PILL_CONTROL} aria-label="Filter by industry">
             <SelectValue placeholder="All industries" />
           </SelectTrigger>
           <SelectContent>
@@ -122,7 +117,7 @@ export function LeadFilters({ industries }: { industries: string[] }) {
         value={minScore0 || "0"}
         onValueChange={(v) => push({ minScore: v })}
       >
-        <SelectTrigger className={PILL} aria-label="Filter by minimum score">
+        <SelectTrigger className={PILL_CONTROL} aria-label="Filter by minimum score">
           <SelectValue placeholder="Any score" />
         </SelectTrigger>
         <SelectContent>
@@ -143,7 +138,7 @@ export function LeadFilters({ industries }: { industries: string[] }) {
               scroll: false,
             });
           }}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-ink-faint transition-colors hover:bg-surface hover:text-brand-deep"
+          className={PILL_GHOST}
         >
           <X className="h-3.5 w-3.5" aria-hidden />
           Clear

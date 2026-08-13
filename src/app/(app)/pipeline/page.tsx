@@ -1,4 +1,4 @@
-import { getPipelineLeads } from "@/lib/queries";
+import { getPipelineLeads, getActiveReps } from "@/lib/queries";
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/supabase/types";
 import { PageHeader, MetaItem } from "@/components/page-header";
 import { KanbanBoard, type KanbanLead } from "@/components/kanban-board";
@@ -22,7 +22,23 @@ const DROPPABLE: LeadStatus[] = [
 ];
 
 export default async function PipelinePage() {
-  const buckets = await getPipelineLeads();
+  const [buckets, reps] = await Promise.all([
+    getPipelineLeads(),
+    getActiveReps(),
+  ]);
+
+  // The board filters on rep_name, which is what the pipeline query returns.
+  // Union with the names actually on the board so a lead assigned to a rep who
+  // has since been deactivated is still reachable through the picker.
+  const onBoard = new Set(
+    Object.values(buckets)
+      .flat()
+      .map((l) => l.rep_name)
+      .filter((n): n is string => Boolean(n))
+  );
+  const repNames = Array.from(
+    new Set([...reps.map((r) => r.full_name), ...onBoard])
+  ).sort((a, b) => a.localeCompare(b));
 
   const total = LEAD_STATUSES.reduce((sum, s) => sum + buckets[s].length, 0);
   const won = buckets.won.length;
@@ -81,6 +97,7 @@ export default async function PipelinePage() {
         columns={LEAD_STATUSES}
         buckets={kanban}
         droppable={DROPPABLE}
+        reps={repNames}
         emptyHint="No leads"
       />
     </div>

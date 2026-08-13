@@ -52,6 +52,16 @@ const config: Config = {
           bg: "hsl(var(--accent-bg))",
         },
         flare: "hsl(var(--flare))",
+        rail: {
+          DEFAULT: "hsl(var(--rail))",
+          hover: "hsl(var(--rail-hover))",
+          active: "hsl(var(--rail-active))",
+          edge: "hsl(var(--rail-edge))",
+          ink: "hsl(var(--rail-ink))",
+          2: "hsl(var(--rail-ink-2))",
+          3: "hsl(var(--rail-ink-3))",
+          mark: "hsl(var(--rail-mark))",
+        },
         ink: {
           DEFAULT: "hsl(var(--ink))",
           2: "hsl(var(--ink-2))",

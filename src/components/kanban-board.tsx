@@ -25,11 +25,23 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Lock } from "lucide-react";
+import { GripVertical, Lock, X } from "lucide-react";
 import { LEAD_STATUS_LABELS, type LeadStatus } from "@/lib/supabase/types";
 import { ScoreBadge } from "@/components/ui/score-badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { moveLeadToStatus } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { PILL_CONTROL, PILL_GHOST } from "@/lib/styles";
+
+/** Filter sentinels. Real values are rep names, which cannot collide. */
+const ALL_REPS = "__all__";
+const UNASSIGNED = "__unassigned__";
 
 export type KanbanLead = {
   id: string;
@@ -74,6 +86,7 @@ export function KanbanBoard({
   droppable,
   showRep = true,
   emptyHint = "Nothing here",
+  reps,
 }: {
   columns: LeadStatus[];
   buckets: Record<string, KanbanLead[]>;
@@ -81,6 +94,11 @@ export function KanbanBoard({
   droppable: LeadStatus[];
   showRep?: boolean;
   emptyHint?: string;
+  /**
+   * Salesmen who may own a lead. Supplying this turns on the board filter;
+   * a rep-scoped board (every card already theirs) omits it.
+   */
+  reps?: string[];
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -88,6 +106,7 @@ export function KanbanBoard({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [repFilter, setRepFilter] = useState<string>(ALL_REPS);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Server data wins whenever it changes underneath us (revalidate, nav back).
@@ -126,6 +145,52 @@ export function KanbanBoard({
     }
     return null;
   }, [activeId, local, columns]);
+
+  /**
+   * Filtering is a view over `local`, never a mutation of it — a drag still
+   * resolves against the full board, so moving a visible card cannot be
+   * confused by the cards the filter is hiding.
+   */
+  const matchesRep = (lead: KanbanLead) => {
+    if (repFilter === ALL_REPS) return true;
+    if (repFilter === UNASSIGNED) return !lead.rep_name;
+    return lead.rep_name === repFilter;
+  };
+
+  const visible = useMemo(() => {
+    if (repFilter === ALL_REPS) return local;
+    const out: Record<string, KanbanLead[]> = {};
+    for (const col of columns) out[col] = (local[col] ?? []).filter(matchesRep);
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [local, columns, repFilter]);
+
+  /** Lead count per salesman, so the picker states the size of each book. */
+  const repCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    let unassigned = 0;
+    let total = 0;
+    for (const col of columns) {
+      for (const lead of local[col] ?? []) {
+        total += 1;
+        if (lead.rep_name) {
+          counts.set(lead.rep_name, (counts.get(lead.rep_name) ?? 0) + 1);
+        } else {
+          unassigned += 1;
+        }
+      }
+    }
+    return { counts, unassigned, total };
+  }, [local, columns]);
+
+  const shown = useMemo(
+    () => columns.reduce((n, col) => n + (visible[col] ?? []).length, 0),
+    [visible, columns]
+  );
+
+  const filtering = repFilter !== ALL_REPS;
+  const filterLabel =
+    repFilter === UNASSIGNED ? "Unassigned" : repFilter;
 
   function onDragStart(e: DragStartEvent) {
     setActiveId(String(e.active.id));
@@ -173,6 +238,59 @@ export function KanbanBoard({
 
   return (
     <div>
+      {reps && reps.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2.5">
+          <Select value={repFilter} onValueChange={setRepFilter}>
+            <SelectTrigger
+              className={PILL_CONTROL}
+              aria-label="Filter the board by salesman"
+            >
+              <SelectValue placeholder="All salesmen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_REPS}>
+                All salesmen · {repCounts.total}
+              </SelectItem>
+              {repCounts.unassigned > 0 && (
+                <SelectItem value={UNASSIGNED}>
+                  Unassigned · {repCounts.unassigned}
+                </SelectItem>
+              )}
+              {reps.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name} · {repCounts.counts.get(name) ?? 0}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Nothing falls through: while a filter is on, say plainly how much
+              of the board is hidden rather than letting it look empty. */}
+          {filtering && (
+            <>
+              <p
+                className="text-[12.5px] text-ink-dim"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="font-semibold text-ink">{filterLabel}</span>
+                {" · "}
+                {shown} of {repCounts.total} lead
+                {repCounts.total === 1 ? "" : "s"} shown
+              </p>
+              <button
+                type="button"
+                onClick={() => setRepFilter(ALL_REPS)}
+                className={PILL_GHOST}
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+                Clear
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {error && (
         <div
           role="alert"
@@ -196,11 +314,13 @@ export function KanbanBoard({
               <Column
                 key={status}
                 status={status}
-                leads={local[status] ?? []}
+                leads={visible[status] ?? []}
+                totalCount={(local[status] ?? []).length}
+                filtering={filtering}
                 canDrop={droppable.includes(status)}
                 showRep={showRep}
                 flashId={flash}
-                emptyHint={emptyHint}
+                emptyHint={filtering ? `No leads for ${filterLabel}` : emptyHint}
               />
             ))}
           </div>
@@ -219,6 +339,8 @@ export function KanbanBoard({
 function Column({
   status,
   leads,
+  totalCount,
+  filtering,
   canDrop,
   showRep,
   flashId,
@@ -226,6 +348,8 @@ function Column({
 }: {
   status: LeadStatus;
   leads: KanbanLead[];
+  totalCount: number;
+  filtering: boolean;
   canDrop: boolean;
   showRep: boolean;
   flashId: string | null;
@@ -253,6 +377,9 @@ function Column({
         </div>
         <span className="mono text-[12px] tabular font-bold shrink-0">
           {leads.length}
+          {filtering && (
+            <span className="font-medium opacity-70">/{totalCount}</span>
+          )}
         </span>
       </header>
 
