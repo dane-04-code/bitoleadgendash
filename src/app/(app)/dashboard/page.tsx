@@ -34,6 +34,7 @@ import {
   type LeadStatus,
 } from "@/lib/supabase/types";
 import { cn, formatRelative, daysBetween, firstName } from "@/lib/utils";
+import { StatStrip, Stat } from "@/components/stat-strip";
 import { AssignDialog } from "@/components/assign-dialog";
 import { KillLeadButton } from "@/components/kill-lead-button";
 
@@ -109,29 +110,18 @@ export default async function DashboardPage({
     <div>
       <h1 className="sr-only">Inbox — today&apos;s signals across the GCC</h1>
 
-      {/* The page numeral and the counter strip read as one line, the way the
-          comp sets them: the figure anchors the left edge, the numbers run
-          along the baseline beside it. */}
-      <header className="flex items-center gap-5 sm:gap-[22px] mb-5">
-        <span
-          aria-hidden
-          className="display-number hidden sm:block shrink-0 text-[62px] leading-[0.85] text-line-strong"
-        >
-          01
-        </span>
-        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-8 gap-y-4 lg:gap-x-10">
-          <Stat label="New today" value={stats.totalToday} />
-          <Stat label="Hot · 80+" value={stats.hot} tone="brand" />
-          <Stat label="Assigned" value={stats.assigned} />
-          <Stat
-            label="Live quotes"
-            value={liveQuoteCount}
-            hint="Quotes issued and still open"
-          />
-          <Stat label="Won" value={wonCount} />
-          <Stat label="Dead" value={killedCount} tone="quiet" />
-        </div>
-      </header>
+      <StatStrip number="01" className="mb-5">
+        <Stat label="New today" value={stats.totalToday} />
+        <Stat label="Hot · 80+" value={stats.hot} tone="brand" />
+        <Stat label="Assigned" value={stats.assigned} />
+        <Stat
+          label="Live quotes"
+          value={liveQuoteCount}
+          hint="Quotes issued and still open"
+        />
+        <Stat label="Won" value={wonCount} />
+        <Stat label="Dead" value={killedCount} tone="quiet" />
+      </StatStrip>
 
       <div className="h-px bg-line mb-4" />
 
@@ -423,45 +413,6 @@ const VIEW_TITLES: Record<InboxView, string> = {
   archived: "Archived",
   killed: "Killed",
 };
-
-/** A counter in the header strip: mono label above a condensed figure. */
-function Stat({
-  label,
-  value,
-  tone,
-  hint,
-}: {
-  label: string;
-  value: React.ReactNode;
-  tone?: "brand" | "quiet";
-  hint?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span
-        className={cn(
-          "mono text-[11px] font-medium uppercase tracking-[0.12em] text-ink-faint",
-          hint && "cursor-help"
-        )}
-        title={hint}
-      >
-        {label}
-      </span>
-      <span
-        className={cn(
-          "display-number text-[34px] leading-none tabular",
-          tone === "brand"
-            ? "text-brand-ink"
-            : tone === "quiet"
-              ? "text-ink-faint"
-              : "text-ink"
-        )}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
 
 function TabLink({
   view,

@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Sidebar user={user} counts={counts} />
         <div className="flex flex-1 flex-col min-w-0">
           <MobileTopbar user={user} />
-          <main className="flex-1 min-w-0 w-full px-4 sm:px-6 lg:px-[30px] pt-5 lg:pt-[26px] pb-10">
+          <main className="flex flex-col flex-1 min-h-0 min-w-0 w-full px-4 sm:px-6 lg:px-[30px] pt-5 lg:pt-[26px] pb-8">
             <TopUtilityBar role={session.role} />
             {children}
           </main>

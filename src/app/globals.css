@@ -60,6 +60,24 @@
     --tier-warm:    183 100% 25%;
     --tier-cold:    180   7% 39%;
 
+    /* Stage tones, from the Pipeline comp. Each column carries one, as a dot
+       beside a written stage name — the dot narrows it, the label states it. */
+    --stage-new:        183 100% 25%;  /* #00797f */
+    --stage-listed:     180   8% 59%;  /* #8fa0a0 */
+    --stage-assigned:    38  73% 45%;  /* #c98a1f */
+    --stage-contacted:  183 100% 25%;
+    --stage-meeting:    183 100% 18%;  /* #00565b */
+    --stage-quote:      183  36% 48%;  /* #4fa3a8 */
+    --stage-won:        149  78% 27%;  /* #0f7a42 */
+    --stage-dead:         8  50% 46%;  /* #b04a3a */
+    --stage-returned:   180   7% 63%;  /* #9aa8a8 */
+
+    /* Score heat on the board: red hot, amber warm, grey cold. The dot is
+       redundant emphasis — the score itself is printed beside it. */
+    --heat-high:          8  50% 46%;
+    --heat-mid:          38  73% 45%;
+    --heat-low:         180   8% 59%;
+
     /* Semantic status — UX convention, not brand */
     --good:         135 29% 44%;     /* #4f8f5f */
     --warn:          39 61% 52%;     /* #cf9a3a */
@@ -133,6 +151,20 @@
     --rail-ink-2:   185 28% 73%;     /* #a8cbce —  7.6:1 */
     --rail-ink-3:   185 24% 64%;     /* #8db5b9 —  6.0:1 */
     --rail-mark:    186 59% 65%;     /* #6fd0da —  7.4:1 */
+
+    --stage-new:        185 45% 53%;
+    --stage-listed:     180  9% 58%;
+    --stage-assigned:    38  72% 60%;
+    --stage-contacted:  185 45% 53%;
+    --stage-meeting:    185 50% 66%;
+    --stage-quote:      185 35% 62%;
+    --stage-won:        149 52% 50%;
+    --stage-dead:         8  62% 63%;
+    --stage-returned:   180  8% 62%;
+
+    --heat-high:          8  62% 63%;
+    --heat-mid:          38  72% 60%;
+    --heat-low:         180  9% 58%;
 
     --tier-hot:     185 50% 66%;
     --tier-warm:    185 45% 53%;
@@ -317,6 +349,11 @@
       transform: none;
     }
   }
+
+  /* The board hides its own horizontal bar and is driven by the rail above it,
+     so the control sits under the filters instead of below the fold. */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { height: 0; width: 0; display: none; }
 
   .scrollbar-thin::-webkit-scrollbar { width: 9px; height: 9px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {

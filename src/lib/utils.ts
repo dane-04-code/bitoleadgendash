@@ -41,6 +41,28 @@ export function firstName(name: string | null | undefined): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
+/**
+ * Country out of a free-text location — "Jebel Ali, Dubai, UAE" -> "UAE".
+ * Locations are written by the upstream pipeline with the country last, so the
+ * trailing segment is the only reliable region signal we have; there is no
+ * region column. Returns null when there is nothing after the last comma.
+ */
+export function regionOf(location: string | null | undefined): string | null {
+  if (!location) return null;
+  const tail = location.split(",").pop()?.trim();
+  if (!tail) return null;
+  // Fold the spellings the fixtures and live rows both use.
+  const canon: Record<string, string> = {
+    "u.a.e.": "UAE",
+    "u.a.e": "UAE",
+    uae: "UAE",
+    "united arab emirates": "UAE",
+    ksa: "Saudi Arabia",
+    "saudi arabia": "Saudi Arabia",
+  };
+  return canon[tail.toLowerCase()] ?? tail;
+}
+
 export function initials(name: string): string {
   return name
     .split(/\s+/)

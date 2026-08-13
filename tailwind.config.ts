@@ -85,6 +85,22 @@ const config: Config = {
           warm: "hsl(var(--tier-warm))",
           cold: "hsl(var(--tier-cold))",
         },
+        stage: {
+          new: "hsl(var(--stage-new))",
+          listed: "hsl(var(--stage-listed))",
+          assigned: "hsl(var(--stage-assigned))",
+          contacted: "hsl(var(--stage-contacted))",
+          meeting: "hsl(var(--stage-meeting))",
+          quote: "hsl(var(--stage-quote))",
+          won: "hsl(var(--stage-won))",
+          dead: "hsl(var(--stage-dead))",
+          returned: "hsl(var(--stage-returned))",
+        },
+        heat: {
+          high: "hsl(var(--heat-high))",
+          mid: "hsl(var(--heat-mid))",
+          low: "hsl(var(--heat-low))",
+        },
         signal: {
           hot: "hsl(var(--hot))",
           warm: "hsl(var(--warm))",
