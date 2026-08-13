@@ -78,22 +78,18 @@ export function LeadReviewCard({
   }
 
   return (
-    <div className="border border-line bg-surface">
-      <div className="flex items-center justify-between border-b border-line px-4 py-2.5 bg-surface-2">
-        <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-          Manual review
-        </span>
-        <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.08] px-1.5 py-0.5 mono text-[9px] uppercase tracking-wider text-signal-warm">
+    <section className="panel p-[18px] lg:p-5">
+      <div className="mb-3.5 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13.5px] font-bold text-ink">Manual review</h2>
+        <span className="mono rounded-sm bg-stage-assigned px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.06em] text-white">
           Temp
         </span>
       </div>
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="space-y-3.5">
         {REVIEW_CATEGORIES.map((c) => (
           <div key={c.key}>
-            <div className="mono text-[10px] uppercase tracking-wider text-ink-dim mb-1.5">
-              {c.label}
-            </div>
+            <div className="eyebrow mb-1.5">{c.label}</div>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((n) => {
                 const active = scores[c.key] === n;
@@ -105,10 +101,10 @@ export function LeadReviewCard({
                     aria-label={`${c.label}: ${n} of 5`}
                     aria-pressed={active}
                     className={cn(
-                      "flex-1 h-7 rounded-sm border text-[12px] mono tabular transition-colors",
+                      "mono tabular h-7 flex-1 rounded-md text-[12px] transition-colors",
                       active
-                        ? "border-brand bg-brand text-white"
-                        : "border-line bg-surface-2 text-ink-dim hover:border-line-strong hover:text-ink"
+                        ? "bg-brand text-white"
+                        : "bg-surface-2 text-ink-dim hover:bg-surface-3 hover:text-ink"
                     )}
                   >
                     {n}
@@ -120,9 +116,7 @@ export function LeadReviewCard({
         ))}
 
         <div>
-          <div className="mono text-[10px] uppercase tracking-wider text-ink-dim mb-1.5">
-            Comment
-          </div>
+          <div className="eyebrow mb-1.5">Comment</div>
           <Textarea
             value={comment}
             onChange={(e) => {
@@ -137,8 +131,8 @@ export function LeadReviewCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-line px-4 py-2.5">
-        <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
+      <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-line-soft pt-3">
+        <span className="eyebrow min-w-0 truncate">
           {error ? (
             <span className="text-signal-hot normal-case tracking-normal">{error}</span>
           ) : review?.updated_at ? (
@@ -165,6 +159,6 @@ export function LeadReviewCard({
           {saved && !dirty ? "Saved" : "Save"}
         </Button>
       </div>
-    </div>
+    </section>
   );
 }

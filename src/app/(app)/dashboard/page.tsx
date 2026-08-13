@@ -17,6 +17,7 @@ import {
 } from "@/lib/queries";
 import type { InboxView, LeadInboxFilters } from "@/lib/queries";
 import { ScoreBadge } from "@/components/ui/score-badge";
+import { StatusChip } from "@/components/ui/status-chip";
 import { Button } from "@/components/ui/button";
 import { LeadFilters } from "@/components/lead-filters";
 import {
@@ -28,12 +29,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  LEAD_STATUS_LABELS,
   LEAD_STATUSES,
   archivedReasonLabel,
   type LeadStatus,
 } from "@/lib/supabase/types";
-import { cn, formatRelative, daysBetween, firstName } from "@/lib/utils";
+import { cn, formatRelative, daysBetween } from "@/lib/utils";
 import { StatStrip, Stat } from "@/components/stat-strip";
 import { AssignDialog } from "@/components/assign-dialog";
 import { KillLeadButton } from "@/components/kill-lead-button";
@@ -507,48 +507,6 @@ function SourceLink({
   }
   return (
     <span className="block max-w-[120px] truncate text-[12px] font-medium text-ink-2">
-      {label}
-    </span>
-  );
-}
-
-/**
- * Stage chip. The teal ramp is one hue, so the stage word always ships — the
- * tint narrows it down, the label states it.
- */
-function StatusChip({
-  status,
-  repName,
-}: {
-  status: string;
-  repName?: string | null;
-}) {
-  const map: Record<string, string> = {
-    new: "bg-brand-bg text-brand-deep",
-    listed: "bg-brand text-white",
-    assigned: "bg-brand-soft text-white",
-    contacted: "bg-brand text-white",
-    meeting: "bg-brand-ink text-white",
-    quote: "bg-brand-deep text-white",
-    won: "bg-signal-good text-white",
-    dead: "bg-ink-faint text-white",
-    returned: "bg-signal-hot text-white",
-  };
-  const cls = map[status] || "bg-ink-faint text-white";
-  const baseLabel =
-    LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status;
-  // When a lead is assigned to a rep, name them: "Assigned to Layla".
-  const label =
-    status === "assigned" && repName
-      ? `Assigned to ${firstName(repName)}`
-      : baseLabel;
-  return (
-    <span
-      className={cn(
-        "mono inline-flex shrink-0 items-center rounded-sm px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.06em] whitespace-nowrap",
-        cls
-      )}
-    >
       {label}
     </span>
   );

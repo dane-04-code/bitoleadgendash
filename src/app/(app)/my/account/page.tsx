@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Mail, Send, MapPin } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getRepById } from "@/lib/queries";
-import { PageHeader, MetaItem } from "@/components/page-header";
+import { StatStrip, Stat } from "@/components/stat-strip";
 import { RepProfileForm } from "@/components/rep-profile-form";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { initials } from "@/lib/utils";
@@ -23,122 +23,100 @@ export default async function MyAccountPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader
-        number="02"
-        eyebrow="Lead Intelligence Terminal / Account"
-        title={
-          <>
-            Your <em className="text-brand-ink">account</em>.
-          </>
-        }
-        subtitle="Update your profile and change your sign-in password. Your name and email are managed by the admin."
-        meta={
-          <>
-            <MetaItem label="Signed in as" value={rep.email} />
-            <MetaItem
-              label="Status"
-              value={rep.is_active ? "Active" : "Inactive"}
-              accent={rep.is_active}
-            />
-          </>
-        }
-      />
+      <h1 className="sr-only">Your account — profile and password</h1>
+
+      {/* 04 matches the rail's code for Account on the rep nav. */}
+      <StatStrip number="04" className="mb-5">
+        <Stat label="Signed in as" value={rep.email} />
+        <Stat
+          label="Status"
+          value={rep.is_active ? "Active" : "Inactive"}
+          tone={rep.is_active ? "brand" : "quiet"}
+        />
+      </StatStrip>
+
+      <p className="mb-5 max-w-2xl text-[12.5px] leading-relaxed text-ink-dim">
+        Update your profile and change your sign-in password. Your name and email
+        are managed by the admin.
+      </p>
 
       {forced && (
-        <div className="mb-8 border border-signal-hot/40 bg-signal-hot/[0.06] px-4 py-3">
-          <div className="mono text-[10px] uppercase tracking-wider text-signal-hot flex items-center gap-1.5">
+        <div className="mb-4 rounded-lg bg-surface-2 px-4 py-3">
+          <div className="mono flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-signal-hot">
             <span className="dot bg-signal-hot" />
             Temporary password
           </div>
-          <p className="text-[13px] text-ink-2 mt-1.5 leading-relaxed max-w-2xl">
+          <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-ink-2">
             You&apos;re signed in with a temporary password set by your admin.
             Choose your own password below to continue to your leads.
           </p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
         {/* MAIN */}
-        <div className="space-y-10 min-w-0">
-          <section>
-            <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-line">
-              <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-                A
-              </span>
-              <h2 className="display-serif text-xl text-ink leading-none">
-                Profile
-              </h2>
-            </div>
-            <div className="border border-line bg-surface p-5">
-              <RepProfileForm
-                fullName={rep.full_name}
-                email={rep.email}
-                telegramUsername={rep.telegram_username}
-                speciality={rep.speciality}
-                territory={rep.territory}
-                availability={rep.availability ?? "looking"}
-              />
-            </div>
+        <div className="flex min-w-0 flex-col gap-4">
+          <section className="panel p-[18px] lg:p-5">
+            <h2 className="mb-3.5 text-[13.5px] font-bold text-ink">Profile</h2>
+            <RepProfileForm
+              fullName={rep.full_name}
+              email={rep.email}
+              telegramUsername={rep.telegram_username}
+              speciality={rep.speciality}
+              territory={rep.territory}
+              availability={rep.availability ?? "looking"}
+            />
           </section>
 
-          <section>
-            <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-line">
-              <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-                B
-              </span>
-              <h2 className="display-serif text-xl text-ink leading-none">
-                Password
-              </h2>
-            </div>
-            <div className="border border-line bg-surface p-5">
-              <ChangePasswordForm forced={forced} />
-            </div>
+          <section className="panel p-[18px] lg:p-5">
+            <h2 className="mb-3.5 text-[13.5px] font-bold text-ink">Password</h2>
+            <ChangePasswordForm forced={forced} />
           </section>
         </div>
 
         {/* SIDE */}
         <aside>
-          <div className="border border-line bg-surface p-5 sticky top-20">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="display-serif text-xl text-ink-2 w-10 h-10 border border-line-strong flex items-center justify-center shrink-0 bg-surface-2">
+          <section className="panel sticky top-5 p-[18px] lg:p-5">
+            <div className="mb-3.5 flex items-start gap-3">
+              <div className="display-serif flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-2 text-[16px] text-ink-2">
                 {initials(rep.full_name)}
               </div>
               <div className="min-w-0">
-                <div className="text-[14px] font-medium text-ink truncate">
+                <div className="truncate text-[13.5px] font-medium text-ink">
                   {rep.full_name}
                 </div>
                 {rep.speciality && (
-                  <div className="text-[12px] text-ink-dim truncate">
+                  <div className="truncate text-[12px] text-ink-dim">
                     {rep.speciality}
                   </div>
                 )}
               </div>
             </div>
-            <div className="space-y-1.5 pt-3 border-t border-line mono text-[11px]">
-              <div className="flex items-center gap-2 text-ink-2 truncate">
+            <div className="mono space-y-1.5 border-t border-line-soft pt-3 text-[11px]">
+              <div className="flex items-center gap-2 truncate text-ink-2">
                 <Mail className="h-3 w-3 shrink-0 text-ink-faint" strokeWidth={1.75} />
                 <span className="truncate">{rep.email}</span>
               </div>
               {rep.telegram_username && (
-                <div className="flex items-center gap-2 text-ink-dim truncate">
+                <div className="flex items-center gap-2 truncate text-ink-dim">
                   <Send className="h-3 w-3 shrink-0 text-ink-faint" strokeWidth={1.75} />
                   <span className="truncate">{rep.telegram_username}</span>
                 </div>
               )}
               {rep.territory && (
-                <div className="flex items-center gap-2 text-ink-dim truncate">
+                <div className="flex items-center gap-2 truncate text-ink-dim">
                   <MapPin className="h-3 w-3 shrink-0 text-ink-faint" strokeWidth={1.75} />
                   <span className="truncate">{rep.territory}</span>
                 </div>
               )}
             </div>
-            <div className="pt-4 mt-4 border-t border-line">
-              <p className="text-[11px] text-ink-faint leading-relaxed">
+            <div className="mt-4 border-t border-line-soft pt-4">
+              <p className="text-[11px] leading-relaxed text-ink-faint">
                 Need to change your name, email, or territory? Ping your admin —
                 only they can update those fields.
               </p>
             </div>
-          </div>
+          </section>
         </aside>
       </div>
     </div>

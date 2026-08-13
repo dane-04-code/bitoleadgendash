@@ -119,20 +119,6 @@ export default async function SettingsPage() {
           />
         </Section>
 
-        <Section
-          title="Design system"
-          hint="Live tokens, read from the running theme — these follow light and dark."
-        >
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            <Swatch name="Brand" token="--accent" className="bg-brand" />
-            <Swatch name="Rail" token="--rail" className="bg-rail" />
-            <Swatch name="Ground" token="--bg" className="bg-bg" />
-            <Swatch name="Surface" token="--surface" className="bg-surface" />
-            <Swatch name="Ink" token="--ink" className="bg-ink" />
-            <Swatch name="Score · hot" token="--heat-high" className="bg-heat-high" />
-          </div>
-        </Section>
-
         <Section title="About" hint="LeadIntelligence — lead terminal for BITO UAE.">
           <Row label="Version" value="0.1.0" />
           <Row label="Stack" value="Next.js 14 · Supabase" />
@@ -215,32 +201,3 @@ function Note({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Swatch({
-  name,
-  token,
-  className,
-}: {
-  name: string;
-  token: string;
-  className: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-lg bg-surface-2 p-2.5">
-      <span
-        className={cn(
-          "h-9 w-9 shrink-0 rounded-md ring-1 ring-inset ring-line-strong/60",
-          className
-        )}
-        aria-hidden
-      />
-      <span className="min-w-0">
-        <span className="block truncate text-[12.5px] font-medium text-ink">
-          {name}
-        </span>
-        <span className="mono block truncate text-[10px] text-ink-faint">
-          {token}
-        </span>
-      </span>
-    </div>
-  );
-}

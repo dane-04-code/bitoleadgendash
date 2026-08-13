@@ -5,7 +5,7 @@ import { AddRepForm } from "@/components/add-rep-form";
 import { SetPasswordDialog } from "@/components/set-password-dialog";
 import { DeleteRepDialog } from "@/components/delete-rep-dialog";
 import { cn, initials } from "@/lib/utils";
-import { PageHeader, MetaItem } from "@/components/page-header";
+import { StatStrip, Stat } from "@/components/stat-strip";
 import { REP_AVAILABILITY_LABELS } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -21,38 +21,31 @@ export default async function RepsPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader
-        number="03"
-        eyebrow="Lead Intelligence Terminal / Team"
-        title={
-          <>
-            The <em className="text-brand-ink">closers</em>.
-          </>
-        }
-        subtitle="Your sales reps and their territories. Open a rep to see their full book of work and recent activity."
-        meta={
-          <>
-            <MetaItem label="Active" value={active.length} accent />
-            <MetaItem label="Looking for leads" value={looking} />
-            <MetaItem label="Total reps" value={reps.length} />
-            <MetaItem label="Leads routed" value={totalLeads} />
-          </>
-        }
-      />
+      <h1 className="sr-only">Team — sales reps and their territories</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
-        <div className="space-y-6 min-w-0">
-          <section aria-labelledby="active-heading">
-            <div className="flex items-baseline gap-2.5 mb-2.5">
-              <h2 id="active-heading" className="text-[15px] font-bold tracking-tight text-ink">
+      {/* 04 matches the rail's code for Team. */}
+      <StatStrip number="04" className="mb-5">
+        <Stat label="Active" value={active.length} tone="brand" />
+        <Stat label="Looking for leads" value={looking} />
+        <Stat label="Total reps" value={reps.length} />
+        <Stat label="Leads routed" value={totalLeads} />
+      </StatStrip>
+
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <section className="panel p-[18px] lg:p-5" aria-labelledby="active-heading">
+            <div className="mb-3.5 flex items-baseline justify-between gap-3">
+              <h2 id="active-heading" className="text-[13.5px] font-bold text-ink">
                 Active
               </h2>
-              <span className="text-[12px] text-ink-dim">{active.length}</span>
+              <span className="mono tabular text-[11px] text-ink-faint">
+                {active.length}
+              </span>
             </div>
             {active.length === 0 ? (
               <EmptyReps />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 border-t border-l border-line">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {active.map((r) => (
                   <RepCard key={r.id} rep={r} count={counts[r.id] || 0} />
                 ))}
@@ -61,17 +54,19 @@ export default async function RepsPage() {
           </section>
 
           {inactive.length > 0 && (
-            <section aria-labelledby="inactive-heading">
-              <div className="flex items-baseline gap-2.5 mb-2.5">
-                <h2
-                  id="inactive-heading"
-                  className="text-[15px] font-bold tracking-tight text-ink"
-                >
+            <section
+              className="panel p-[18px] lg:p-5"
+              aria-labelledby="inactive-heading"
+            >
+              <div className="mb-3.5 flex items-baseline justify-between gap-3">
+                <h2 id="inactive-heading" className="text-[13.5px] font-bold text-ink">
                   Inactive
                 </h2>
-                <span className="text-[12px] text-ink-dim">{inactive.length}</span>
+                <span className="mono tabular text-[11px] text-ink-faint">
+                  {inactive.length}
+                </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 border-t border-l border-line">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {inactive.map((r) => (
                   <RepCard key={r.id} rep={r} count={counts[r.id] || 0} muted />
                 ))}
@@ -81,19 +76,13 @@ export default async function RepsPage() {
         </div>
 
         <aside>
-          <div className="border border-line bg-surface lg:sticky lg:top-5">
-            <header className="border-b border-line px-4 py-3">
-              <h2 className="text-[14px] font-bold text-ink leading-tight">
-                Add a rep
-              </h2>
-              <p className="text-[12px] text-ink-dim mt-1 leading-relaxed">
-                Reps with a Telegram username receive lead notifications instantly.
-              </p>
-            </header>
-            <div className="p-4">
-              <AddRepForm />
-            </div>
-          </div>
+          <section className="panel p-[18px] lg:sticky lg:top-5 lg:p-5">
+            <h2 className="text-[13.5px] font-bold text-ink">Add a rep</h2>
+            <p className="mb-3.5 mt-1 text-[12.5px] leading-relaxed text-ink-dim">
+              Reps with a Telegram username receive lead notifications instantly.
+            </p>
+            <AddRepForm />
+          </section>
         </aside>
       </div>
     </div>
@@ -112,9 +101,14 @@ function RepCard({
   const looking = rep.availability !== "not_looking";
 
   return (
-    <div className={cn("bg-surface p-3.5 group border-r border-b border-line", muted && "opacity-70")}>
+    <div
+      className={cn(
+        "group rounded-lg bg-surface-2 p-3.5 transition-colors hover:bg-surface-3",
+        muted && "opacity-70"
+      )}
+    >
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 border border-line-strong flex items-center justify-center shrink-0 bg-surface-2">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface">
           <span className="text-[12px] font-bold text-ink-2">
             {initials(rep.full_name)}
           </span>
@@ -123,22 +117,22 @@ function RepCard({
         <div className="min-w-0 flex-1">
           <Link
             href={`/reps/${rep.id}`}
-            className="inline-flex items-center gap-1 text-[14px] font-bold text-ink hover:text-brand transition-colors leading-tight"
+            className="inline-flex items-center gap-1 text-[13.5px] font-bold leading-tight text-ink transition-colors hover:text-brand-ink"
           >
             <span className="truncate">{rep.full_name}</span>
             <ArrowUpRight
-              className="h-3.5 w-3.5 shrink-0 text-ink-faint group-hover:text-brand transition-colors"
+              className="h-3.5 w-3.5 shrink-0 text-ink-faint transition-colors group-hover:text-brand-ink"
               strokeWidth={2}
             />
           </Link>
 
           {rep.speciality && (
-            <p className="text-[12px] text-ink-dim mt-0.5 truncate">
+            <p className="mt-0.5 truncate text-[12px] text-ink-dim">
               {rep.speciality}
             </p>
           )}
 
-          <div className="flex items-center gap-2.5 flex-wrap mt-1.5 text-[10.5px] font-semibold uppercase tracking-wider">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-[10.5px] font-semibold uppercase tracking-wider">
             <span
               className={cn(
                 "inline-flex items-center gap-1.5",
@@ -161,20 +155,20 @@ function RepCard({
 
         <Link
           href={`/reps/${rep.id}`}
-          className="text-right shrink-0 hover:text-brand transition-colors"
+          className="shrink-0 text-right transition-colors hover:text-brand-ink"
           aria-label={`${count} leads held by ${rep.full_name}`}
         >
-          <div className="display-number text-[22px] text-ink leading-none">
+          <div className="display-number text-[22px] leading-none text-ink">
             {count}
           </div>
           <div className="label-xs mt-1">Leads</div>
         </Link>
       </div>
 
-      <div className="space-y-1 pt-2.5 mt-2.5 border-t border-line text-[11.5px]">
+      <div className="mt-2.5 space-y-1 border-t border-line-soft pt-2.5 text-[11.5px]">
         <a
           href={`mailto:${rep.email}`}
-          className="flex items-center gap-2 text-ink-2 hover:text-brand transition-colors truncate"
+          className="flex items-center gap-2 truncate text-ink-2 transition-colors hover:text-brand-ink"
         >
           <Mail className="h-3 w-3 shrink-0 text-ink-faint" strokeWidth={1.75} />
           <span className="truncate">{rep.email}</span>
@@ -193,7 +187,7 @@ function RepCard({
         )}
       </div>
 
-      <div className="pt-2.5 mt-2.5 border-t border-line flex items-center gap-2">
+      <div className="mt-2.5 flex items-center gap-2 border-t border-line-soft pt-2.5">
         <SetPasswordDialog
           repId={rep.id}
           repName={rep.full_name}
@@ -208,9 +202,9 @@ function RepCard({
 
 function EmptyReps() {
   return (
-    <div className="border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
-      <h3 className="text-[14px] font-bold text-ink">No active reps yet</h3>
-      <p className="text-[12.5px] text-ink-dim max-w-xs mx-auto mt-1.5 leading-relaxed">
+    <div className="rounded-lg bg-surface-2 px-6 py-12 text-center">
+      <h3 className="text-[13.5px] font-bold text-ink">No active reps yet</h3>
+      <p className="mx-auto mt-1.5 max-w-xs text-[12.5px] leading-relaxed text-ink-dim">
         Use the form to onboard your first rep and start routing leads to them.
       </p>
     </div>
