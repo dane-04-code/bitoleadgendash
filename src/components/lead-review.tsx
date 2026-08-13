@@ -140,7 +140,7 @@ export function LeadReviewCard({
       <div className="flex items-center justify-between border-t border-line px-4 py-2.5">
         <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
           {error ? (
-            <span className="text-signal-bad normal-case tracking-normal">{error}</span>
+            <span className="text-signal-hot normal-case tracking-normal">{error}</span>
           ) : review?.updated_at ? (
             <>
               {review.reviewed_by ? `${review.reviewed_by} · ` : ""}

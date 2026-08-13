@@ -26,6 +26,7 @@ export default async function MyPage() {
   if (rep.must_change_password) redirect("/my/account");
 
   const firstName = rep.full_name.split(/\s+/)[0] || rep.full_name;
+  const liveQuotes = leads.filter((l) => l.status === "quote").length;
 
   return (
     <div className="animate-fade-in">
@@ -37,52 +38,24 @@ export default async function MyPage() {
             Welcome back, <em className="text-brand-ink">{firstName}</em>.
           </>
         }
-        subtitle="The leads routed to you. Triage, work them, update their status as they move."
+        subtitle="The leads routed to you. Drag a card to move it through the stages."
         meta={
           <>
-            <MetaItem label="Open" value={stats.open} accent />
-            <MetaItem label="Hot" value={stats.hot} />
-            <MetaItem label="Won" value={stats.won} />
-            <MetaItem label="Total assigned" value={stats.total} />
+            <MetaItem label="In play" value={stats.open} accent />
+            <MetaItem label="Hot · 80+" value={stats.hot} tone="warn" />
+            <MetaItem
+              label="Live quotes"
+              value={liveQuotes}
+              hint="Quotes you've issued that are still open"
+            />
+            <MetaItem label="Won" value={stats.won} tone="good" />
+            <MetaItem label="Dead" value={stats.dead} tone="bad" />
+            <MetaItem label="Total" value={stats.total} />
           </>
         }
       />
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 border-y border-line divide-x divide-line bg-surface mb-10">
-        <Stat label="In play" value={stats.open} accent="ink" />
-        <Stat label="Hot · 80+" value={stats.hot} accent="hot" />
-        <Stat label="Won" value={stats.won} accent="good" />
-        <Stat label="Dead" value={stats.dead} accent="faint" />
-      </section>
-
       <RepLeadsView leads={leads} />
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent: "ink" | "hot" | "warm" | "good" | "cold" | "faint";
-}) {
-  const colorMap: Record<typeof accent, string> = {
-    ink: "text-ink",
-    hot: "text-signal-hot",
-    warm: "text-signal-warm",
-    good: "text-signal-good",
-    cold: "text-signal-cold",
-    faint: "text-ink-faint",
-  };
-  return (
-    <div className="px-5 sm:px-6 py-5 sm:py-6">
-      <div className="eyebrow mb-3">{label}</div>
-      <div className={`display-number text-5xl sm:text-6xl ${colorMap[accent]}`}>
-        {value}
-      </div>
     </div>
   );
 }

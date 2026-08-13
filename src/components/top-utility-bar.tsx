@@ -23,10 +23,14 @@ export function TopUtilityBar({ role }: { role: "admin" | "rep" }) {
       ? { code: role === "admin" ? "01" : "A", label: "Lead Detail" }
       : null);
 
-  const [time, setTime] = React.useState<string>(() => formatTime(new Date()));
+  // The clock only renders after mount. Rendering it on the server produces a
+  // different minute than the client and breaks hydration.
+  const [time, setTime] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const id = setInterval(() => setTime(formatTime(new Date())), 30_000);
+    const tick = () => setTime(formatTime(new Date()));
+    tick();
+    const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
   }, []);
 

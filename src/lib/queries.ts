@@ -1,7 +1,7 @@
 import { getSupabaseServerClient } from "./supabase/server";
 import {
   isMockMode,
-  MOCK_LEADS,
+  mockLeads,
   MOCK_REPS,
   mockDashboardStats,
   mockLeadById,
@@ -99,7 +99,7 @@ const ASSIGNED_STATUSES: LeadStatus[] = [
   "assigned",
   "contacted",
   "meeting",
-  "proposal",
+  "quote",
 ];
 
 /** Optional filters applied to the inbox list view. */
@@ -169,7 +169,7 @@ export async function getLeadInbox(
   const cutoff = recentCutoffISO();
 
   if (isMockMode()) {
-    return [...MOCK_LEADS]
+    return [...mockLeads()]
       .filter((l) => Boolean(l.archived) === showArchived)
       .filter((l) => matchesView(l, view, cutoff))
       .filter((l) => matchesFilters(l, filters))
@@ -262,7 +262,7 @@ export async function getLeadInbox(
 export async function getLeadFilterFacets(): Promise<{ industries: string[] }> {
   if (isMockMode()) {
     const industries = Array.from(
-      new Set(MOCK_LEADS.map((l) => l.industry).filter((v): v is string => Boolean(v)))
+      new Set(mockLeads().map((l) => l.industry).filter((v): v is string => Boolean(v)))
     ).sort();
     return { industries };
   }
@@ -288,7 +288,7 @@ export async function getLeadFilterFacets(): Promise<{ industries: string[] }> {
  */
 export async function getActiveLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter(
+    return mockLeads().filter(
       (l) => !l.archived && UNOWNED_STATUSES.includes(l.status)
     ).length;
   }
@@ -308,7 +308,7 @@ export async function getActiveLeadCount(): Promise<number> {
 /** Count of leads currently on the marketplace (status = listed). */
 export async function getListedLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter((l) => !l.archived && l.status === "listed").length;
+    return mockLeads().filter((l) => !l.archived && l.status === "listed").length;
   }
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
@@ -325,7 +325,7 @@ export async function getListedLeadCount(): Promise<number> {
 
 /** Count of archived (archived = true) leads — drives the "Archive" tab badge. */
 export async function getArchivedLeadCount(): Promise<number> {
-  if (isMockMode()) return MOCK_LEADS.filter((l) => l.archived).length;
+  if (isMockMode()) return mockLeads().filter((l) => l.archived).length;
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
     .from("leads")
@@ -341,7 +341,7 @@ export async function getArchivedLeadCount(): Promise<number> {
 /** Count of active-but-dead leads killed by a manager. */
 export async function getKilledLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter((l) => !l.archived && l.status === "dead").length;
+    return mockLeads().filter((l) => !l.archived && l.status === "dead").length;
   }
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
@@ -356,11 +356,51 @@ export async function getKilledLeadCount(): Promise<number> {
   return count ?? 0;
 }
 
+/**
+ * Quotes issued and still open — the "live quote orders" figure asked for in
+ * the 2026-07-11 meeting. Archived leads are excluded so the number reflects
+ * quotes actually in play.
+ */
+export async function getLiveQuoteCount(): Promise<number> {
+  if (isMockMode()) {
+    return mockLeads().filter((l) => !l.archived && l.status === "quote").length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "quote");
+  if (error) {
+    console.error("getLiveQuoteCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+/** Count of quotes that closed as won. */
+export async function getWonLeadCount(): Promise<number> {
+  if (isMockMode()) {
+    return mockLeads().filter((l) => !l.archived && l.status === "won").length;
+  }
+  const supabase = getSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("archived", false)
+    .eq("status", "won");
+  if (error) {
+    console.error("getWonLeadCount error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 /** Count of active leads that arrived within the recency window — drives the "New this week" badge. */
 export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<number> {
   const cutoff = recentCutoffISO(days);
   if (isMockMode()) {
-    return MOCK_LEADS.filter(
+    return mockLeads().filter(
       (l) => !l.archived && l.created_at >= cutoff
     ).length;
   }
@@ -380,7 +420,7 @@ export async function getRecentLeadCount(days = RECENT_WINDOW_DAYS): Promise<num
 /** Count of active leads still awaiting assignment (status = new). */
 export async function getUnassignedLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter((l) => !l.archived && l.status === "new").length;
+    return mockLeads().filter((l) => !l.archived && l.status === "new").length;
   }
   const supabase = getSupabaseServerClient();
   const { count, error } = await supabase
@@ -398,7 +438,7 @@ export async function getUnassignedLeadCount(): Promise<number> {
 /** Count of active leads currently owned and being worked by a rep. */
 export async function getAssignedLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter(
+    return mockLeads().filter(
       (l) => !l.archived && ASSIGNED_STATUSES.includes(l.status)
     ).length;
   }
@@ -418,7 +458,7 @@ export async function getAssignedLeadCount(): Promise<number> {
 /** Count of active leads a rep has returned to the admin. */
 export async function getReturnedLeadCount(): Promise<number> {
   if (isMockMode()) {
-    return MOCK_LEADS.filter((l) => !l.archived && l.status === "returned")
+    return mockLeads().filter((l) => !l.archived && l.status === "returned")
       .length;
   }
   const supabase = getSupabaseServerClient();
@@ -590,6 +630,8 @@ export async function getAllFeedback(): Promise<Feedback[]> {
 }
 
 export async function getRepById(id: string): Promise<Rep | null> {
+  if (isMockMode()) return MOCK_REPS.find((r) => r.id === id) ?? null;
+
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("reps")
@@ -609,6 +651,33 @@ export type RepInboxLead = Lead & {
 };
 
 export async function getLeadsForRep(repId: string): Promise<RepInboxLead[]> {
+  if (isMockMode()) {
+    const { MOCK_ASSIGNMENTS } = await import("./mock-data");
+    const mine = MOCK_ASSIGNMENTS.filter((a) => a.rep_id === repId);
+    const seenMock = new Set<string>();
+    const out: RepInboxLead[] = [];
+    for (const a of mine) {
+      if (seenMock.has(a.lead_id)) continue;
+      const lead = mockLeads().find((l) => l.id === a.lead_id);
+      if (!lead) continue;
+      seenMock.add(a.lead_id);
+      const { rep_name: _drop, ...rest } = lead;
+      out.push({
+        ...(rest as Lead),
+        assigned_at: a.assigned_at,
+        assignment_notes: a.notes ?? null,
+      });
+    }
+    out.sort((a, b) => {
+      const aDone = a.status === "won" || a.status === "dead";
+      const bDone = b.status === "won" || b.status === "dead";
+      if (aDone !== bDone) return aDone ? 1 : -1;
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime();
+    });
+    return out;
+  }
+
   const supabase = getSupabaseServerClient();
   // Pull every assignment for this rep, then expand the lead. A lead may have
   // multiple assignments over time (re-assignments) — dedupe by lead id and
@@ -714,6 +783,13 @@ export async function getActiveReps(): Promise<Rep[]> {
 export type RepWithStatus = Omit<Rep, "password"> & { has_password: boolean };
 
 export async function getAllReps(): Promise<RepWithStatus[]> {
+  if (isMockMode()) {
+    return MOCK_REPS.map((r) => {
+      const { password: _pw, ...rest } = r as Rep & { password?: string | null };
+      return { ...(rest as Omit<Rep, "password">), has_password: true };
+    });
+  }
+
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("reps")
@@ -731,6 +807,19 @@ export async function getAllReps(): Promise<RepWithStatus[]> {
 }
 
 export async function getRepLeadCounts(): Promise<Record<string, number>> {
+  if (isMockMode()) {
+    const { MOCK_ASSIGNMENTS } = await import("./mock-data");
+    const tally: Record<string, number> = {};
+    const pairSeen = new Set<string>();
+    for (const a of MOCK_ASSIGNMENTS) {
+      const key = `${a.rep_id}:${a.lead_id}`;
+      if (pairSeen.has(key)) continue;
+      pairSeen.add(key);
+      tally[a.rep_id] = (tally[a.rep_id] ?? 0) + 1;
+    }
+    return tally;
+  }
+
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("assignments")
@@ -750,6 +839,32 @@ export type PipelineLead = Lead & {
 };
 
 export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLead[]>> {
+  if (isMockMode()) {
+    const { MOCK_ASSIGNMENTS } = await import("./mock-data");
+    const repByLead = new Map(
+      MOCK_ASSIGNMENTS.map((a) => [a.lead_id, a.rep?.full_name ?? null])
+    );
+    const mockBuckets: Record<LeadStatus, PipelineLead[]> = {
+      new: [], listed: [], assigned: [], contacted: [], meeting: [],
+      quote: [], won: [], dead: [], returned: [],
+    };
+    for (const lead of mockLeads()) {
+      if (lead.archived) continue;
+      const { rep_name: _ignored, ...rest } = lead;
+      const stamp = lead.updated_at || lead.created_at;
+      mockBuckets[lead.status].push({
+        ...(rest as Lead),
+        rep_name: repByLead.get(lead.id) ?? lead.rep_name ?? null,
+        days_in_stage: Math.max(
+          0,
+          Math.floor((Date.now() - new Date(stamp).getTime()) / 86400000)
+        ),
+        last_status_change: stamp,
+      });
+    }
+    return mockBuckets;
+  }
+
   const supabase = getSupabaseServerClient();
 
   const { data: leads, error } = await supabase
@@ -779,7 +894,7 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
     assigned: [],
     contacted: [],
     meeting: [],
-    proposal: [],
+    quote: [],
     won: [],
     dead: [],
     returned: [],
@@ -812,4 +927,93 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
   }
 
   return buckets;
+}
+
+// ─── Salesman profile ──────────────────────────────────────────────────────
+
+export type RepActivityEvent = {
+  id: string;
+  lead_id: string;
+  company_name: string;
+  kind: "assigned" | "stage";
+  from_status: LeadStatus | null;
+  to_status: LeadStatus | null;
+  note: string | null;
+  at: string;
+};
+
+/**
+ * Recent movements on the leads a rep holds — assignments plus stage changes,
+ * merged into one reverse-chronological feed. This is what tells an admin
+ * whether a salesman has gone quiet, which is the point of the profile.
+ */
+export async function getRepActivity(
+  repId: string,
+  limit = 40
+): Promise<RepActivityEvent[]> {
+  const leads = await getLeadsForRep(repId);
+  if (leads.length === 0) return [];
+
+  const nameById = new Map(leads.map((l) => [l.id, l.company_name]));
+  const leadIds = leads.map((l) => l.id);
+  const events: RepActivityEvent[] = [];
+
+  for (const lead of leads) {
+    events.push({
+      id: `assn-${lead.id}-${lead.assigned_at}`,
+      lead_id: lead.id,
+      company_name: lead.company_name,
+      kind: "assigned",
+      from_status: null,
+      to_status: null,
+      note: lead.assignment_notes,
+      at: lead.assigned_at,
+    });
+  }
+
+  if (isMockMode()) {
+    const { mockPipelineUpdates } = await import("./mock-data");
+    for (const u of mockPipelineUpdates()) {
+      if (!nameById.has(u.lead_id)) continue;
+      events.push({
+        id: `pu-${u.id}`,
+        lead_id: u.lead_id,
+        company_name: nameById.get(u.lead_id)!,
+        kind: "stage",
+        from_status: u.old_status,
+        to_status: u.new_status,
+        note: u.note,
+        at: u.updated_at,
+      });
+    }
+  } else {
+    const supabase = getSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("pipeline_updates")
+      .select("id, lead_id, old_status, new_status, note, updated_at")
+      .in("lead_id", leadIds)
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("getRepActivity error", error);
+    } else {
+      for (const u of (data || []) as any[]) {
+        if (!nameById.has(u.lead_id)) continue;
+        events.push({
+          id: `pu-${u.id}`,
+          lead_id: u.lead_id,
+          company_name: nameById.get(u.lead_id)!,
+          kind: "stage",
+          from_status: u.old_status,
+          to_status: u.new_status,
+          note: u.note,
+          at: u.updated_at,
+        });
+      }
+    }
+  }
+
+  events.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  return events.slice(0, limit);
 }

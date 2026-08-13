@@ -12,9 +12,11 @@ import {
   UserCog,
   MessageSquare,
   Store,
+  Search,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useCommandPalette } from "@/components/command-palette";
 
 const ADMIN_NAV = [
   { href: "/dashboard",   label: "Inbox", code: "01", icon: LayoutGrid },
@@ -39,6 +41,7 @@ export type SidebarUser =
 export function Sidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
   const nav = user.role === "admin" ? ADMIN_NAV : REP_NAV;
+  const { open } = useCommandPalette();
 
   return (
     <aside className="hidden lg:flex h-screen w-[232px] shrink-0 flex-col border-r border-line bg-surface sticky top-0">
@@ -57,6 +60,20 @@ export function Sidebar({ user }: { user: SidebarUser }) {
             </div>
           </div>
         </Link>
+      </div>
+
+      <div className="px-2.5 pt-4">
+        <button
+          type="button"
+          onClick={open}
+          className="w-full flex items-center gap-2 rounded-sm border border-line bg-bg px-2.5 py-2 text-[12px] text-ink-dim hover:border-line-strong hover:text-ink transition-colors"
+        >
+          <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="mono text-[10px] text-ink-faint border border-line px-1 py-px">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       <nav className="flex-1 px-2.5 py-4">

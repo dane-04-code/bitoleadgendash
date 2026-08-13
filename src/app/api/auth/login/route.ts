@@ -8,6 +8,15 @@ import {
   verifyPasswordHash,
 } from "@/lib/auth-edge";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { isMockMode, MOCK_REPS } from "@/lib/mock-data";
+
+/**
+ * Demo-mode rep password. Only ever consulted when isMockMode() is true —
+ * i.e. no real Supabase project is configured — so it cannot be used against
+ * live data. It exists so the rep-side of the app (their board, account page,
+ * marketplace claiming) is reachable in a local demo.
+ */
+const MOCK_REP_PASSWORD = "bito-demo";
 
 type LoginBody = { email?: string; password?: string };
 
@@ -38,6 +47,22 @@ export async function POST(req: NextRequest) {
 
   // Rep login (email present)
   if (email) {
+    if (isMockMode()) {
+      const rep = MOCK_REPS.find(
+        (r) => r.email?.toLowerCase() === email && r.is_active
+      );
+      if (!rep || password !== MOCK_REP_PASSWORD) {
+        return NextResponse.json(
+          { error: "No active rep with that email, or wrong password." },
+          { status: 401 }
+        );
+      }
+      const token = await createRepSession(rep.id);
+      const res = NextResponse.json({ ok: true, role: "rep" });
+      setCookie(res, token);
+      return res;
+    }
+
     const supabase = getSupabaseServerClient();
     const { data: rep, error } = await supabase
       .from("reps")

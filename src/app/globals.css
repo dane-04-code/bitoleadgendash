@@ -181,6 +181,7 @@
     font-feature-settings: "ss01", "ss02", "zero", "tnum";
   }
 
+  .label-xs,
   .eyebrow {
     font-family: var(--font-mono), ui-monospace, monospace;
     font-size: 10px;
@@ -204,6 +205,46 @@
 }
 
 @layer utilities {
+  /* Elevation + drag feedback. These support the kanban board and the command
+     palette overlay; they carry no brand colour of their own, taking their tint
+     from --ink so they sit correctly on whatever palette is loaded. */
+  .lift-1 { box-shadow: 0 1px 2px hsl(var(--ink) / 0.06), 0 1px 1px hsl(var(--ink) / 0.04); }
+  .lift-2 { box-shadow: 0 2px 4px hsl(var(--ink) / 0.07), 0 4px 12px hsl(var(--ink) / 0.07); }
+  .lift-3 { box-shadow: 0 4px 8px hsl(var(--ink) / 0.10), 0 12px 28px hsl(var(--ink) / 0.12); }
+  .dark .lift-1 { box-shadow: 0 1px 2px hsl(0 0% 0% / 0.5); }
+  .dark .lift-2 { box-shadow: 0 2px 5px hsl(0 0% 0% / 0.5), 0 6px 16px hsl(0 0% 0% / 0.45); }
+  .dark .lift-3 { box-shadow: 0 6px 12px hsl(0 0% 0% / 0.6), 0 16px 36px hsl(0 0% 0% / 0.5); }
+
+  .row-hit { transition: background-color 90ms linear; }
+  .row-hit:hover { background: hsl(var(--surface-2) / 0.7); }
+
+  /* Moving a lead across the board: the card lifts out of the column, and where
+     it lands the new position settles back from an already-visible state —
+     never a fade-in that hides content. */
+  .card-lift {
+    box-shadow: 0 8px 16px hsl(var(--ink) / 0.12), 0 18px 40px hsl(var(--ink) / 0.14);
+    transform: scale(1.02) rotate(0.4deg);
+    transition:
+      transform 140ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 140ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .dark .card-lift {
+    box-shadow: 0 8px 16px hsl(0 0% 0% / 0.6), 0 18px 40px hsl(0 0% 0% / 0.5);
+  }
+
+  .card-settle { animation: card-settle 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes card-settle {
+    from {
+      transform: translateY(-4px) scale(0.985);
+      border-color: hsl(var(--accent));
+      background: hsl(var(--accent-bg));
+    }
+    to {
+      transform: none;
+    }
+  }
+
   .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--line-strong));

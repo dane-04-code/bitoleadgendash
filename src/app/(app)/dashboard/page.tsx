@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CornerDownRight } from "lucide-react";
 import {
   getDashboardStats,
   getLeadInbox,
@@ -11,6 +11,8 @@ import {
   getAssignedLeadCount,
   getReturnedLeadCount,
   getLeadFilterFacets,
+  getLiveQuoteCount,
+  getWonLeadCount,
   hasFilters,
 } from "@/lib/queries";
 import type { InboxView, LeadInboxFilters } from "@/lib/queries";
@@ -31,7 +33,7 @@ import {
   archivedReasonLabel,
   type LeadStatus,
 } from "@/lib/supabase/types";
-import { formatRelative, daysBetween, firstName } from "@/lib/utils";
+import { cn, formatRelative, daysBetween, firstName } from "@/lib/utils";
 import { AssignDialog } from "@/components/assign-dialog";
 import { KillLeadButton } from "@/components/kill-lead-button";
 import { PageHeader, MetaItem } from "@/components/page-header";
@@ -90,6 +92,8 @@ export default async function DashboardPage({
     assignedCount,
     returnedCount,
     facets,
+    liveQuoteCount,
+    wonCount,
   ] = await Promise.all([
     getDashboardStats(),
     getLeadInbox(60, view, filters),
@@ -101,6 +105,8 @@ export default async function DashboardPage({
     getAssignedLeadCount(),
     getReturnedLeadCount(),
     getLeadFilterFacets(),
+    getLiveQuoteCount(),
+    getWonLeadCount(),
   ]);
 
   // The "top signal" hero only makes sense for the full, unfiltered active inbox.
@@ -119,52 +125,54 @@ export default async function DashboardPage({
         subtitle="Live warehouse-expansion intelligence, ranked. Triage the top of the stack first."
         meta={
           <>
-            <MetaItem label="Reps online" value={reps.length} />
-            <MetaItem label="Total tracked" value={leads.length} />
-            <MetaItem label="Region" value="GCC · UAE / KSA / QAT" />
+            {/* Six, not seven: a 3-column mobile grid leaves an orphan at 7,
+                and "Awaiting" largely restates "New today" + "Assigned". */}
+            <MetaItem label="New today" value={stats.totalToday} accent />
+            <MetaItem label="Hot · 80+" value={stats.hot} tone="warn" />
+            <MetaItem label="Assigned" value={stats.assigned} />
+            <MetaItem
+              label="Live quotes"
+              value={liveQuoteCount}
+              hint="Quotes issued and still open"
+            />
+            <MetaItem label="Won" value={wonCount} tone="good" />
+            <MetaItem label="Dead" value={killedCount} tone="bad" />
           </>
         }
       />
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 border-y border-line divide-x divide-line bg-surface mb-10">
-        <Stat label="New today"        value={stats.totalToday} accent="ink" />
-        <Stat label="Hot leads · 80+"  value={stats.hot}        accent="hot" trend />
-        <Stat label="Assigned"         value={stats.assigned}   accent="good" />
-        <Stat label="Awaiting"         value={stats.awaiting}   accent="warm" />
-      </section>
-
       {top && (
-        <section className="mb-10 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start border border-line bg-surface p-6 corner-marks">
-          <div className="min-w-0">
-            <div className="eyebrow text-brand-ink mb-3">
-              Top Signal · Highest Score
+        <section
+          aria-label="Highest scoring lead"
+          className="mb-5 flex flex-col sm:flex-row sm:items-center gap-4 border border-line bg-surface lift-1 px-4 py-3.5"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/leads/${top.id}?from=active`}
+                className="text-[17px] font-bold leading-tight tracking-tight text-ink hover:text-brand transition-colors"
+              >
+                {top.company_name}
+              </Link>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-signal-warm border border-signal-warm/40 bg-signal-warm/[0.07] px-1.5 py-0.5">
+                Top signal
+              </span>
             </div>
-            <Link
-              href={`/leads/${top.id}?from=active`}
-              className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-ink hover:text-brand-ink transition-colors"
-            >
-              {top.company_name}
-            </Link>
             {top.signal_summary && (
-              <p className="text-[13px] text-ink-dim mt-3 leading-relaxed max-w-2xl">
+              <p className="text-[12.5px] text-ink-dim mt-1 leading-snug line-clamp-2 max-w-3xl">
                 {top.signal_summary}
               </p>
             )}
-            <div className="flex items-center gap-x-6 gap-y-1 flex-wrap mt-4 mono text-[11px] uppercase tracking-wider text-ink-faint">
+            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1.5 text-[11px] text-ink-faint">
               {top.location && <span>{top.location}</span>}
-              {top.industry && <span>{top.industry}</span>}
-              {top.signal_type && (
-                <span className="text-brand-ink">
-                  {String(top.signal_type).replace(/_/g, " ")}
-                </span>
-              )}
+              {top.industry && <span>· {top.industry}</span>}
               {top.signal_source &&
                 (top.source_url ? (
                   <a
                     href={top.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 hover:text-brand-ink transition-colors"
+                    className="inline-flex items-center gap-1 hover:text-brand transition-colors"
                   >
                     via {top.signal_source}
                     <ArrowUpRight className="h-3 w-3" />
@@ -172,61 +180,53 @@ export default async function DashboardPage({
                 ) : (
                   <span>via {top.signal_source}</span>
                 ))}
-              <span>{formatRelative(top.created_at)}</span>
+              <span>· {formatRelative(top.created_at)}</span>
             </div>
           </div>
-          <div className="flex flex-col items-start lg:items-end gap-4 shrink-0">
-            <ScoreBadge score={top.score} size="lg" />
-            <div className="flex items-center gap-2">
-              <AssignDialog
-                leadId={top.id}
-                leadName={top.company_name}
-                reps={reps}
-                currentRepName={top.rep_name ?? null}
-                triggerVariant="default"
-              />
-              <Button asChild variant="outline" size="default">
-                <Link href={`/leads/${top.id}?from=active`}>
-                  Open
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <ScoreBadge score={top.score} size="default" />
+            <AssignDialog
+              leadId={top.id}
+              leadName={top.company_name}
+              reps={reps}
+              currentRepName={top.rep_name ?? null}
+              triggerVariant="default"
+              triggerSize="sm"
+            />
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/leads/${top.id}?from=active`}>
+                Open
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
           </div>
         </section>
       )}
 
       <section>
-        <div className="flex items-baseline justify-between mb-4 gap-4 flex-wrap">
-          <div className="flex items-baseline gap-3">
-            <h2 className="display-serif text-2xl text-ink leading-none">
-              {VIEW_TITLES[view]}
-            </h2>
-            <span className="mono text-[11px] uppercase tracking-wider text-ink-faint">
-              {isNew
-                ? `${leads.length} ${
-                    leads.length === 1 ? "signal" : "signals"
-                  } from the last 7 days`
-                : `${leads.length} ${archived ? "archived" : "signals"}`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="inline-flex border border-line rounded-sm overflow-hidden mono text-[10px] uppercase tracking-wider flex-wrap">
-              <TabLink view="new" current={view} label="New this week" count={recentCount} />
-              <TabLink view="active" current={view} label="Leads" count={activeCount} />
-              <TabLink view="assigned" current={view} label="Assigned" count={assignedCount} />
-              <TabLink view="returned" current={view} label="Returned" count={returnedCount} />
-              <TabLink view="archived" current={view} label="Archived" count={archivedCount} />
-              <TabLink view="killed" current={view} label="Killed" count={killedCount} />
-            </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/pipeline">
-                View pipeline
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
+        <div className="flex items-end justify-between mb-3 gap-3 flex-wrap border-b border-line">
+          <nav
+            aria-label="Inbox views"
+            className="flex items-end overflow-x-auto scrollbar-thin -mb-px"
+          >
+            <TabLink view="new" current={view} label="New this week" count={recentCount} />
+            <TabLink view="active" current={view} label="Leads" count={activeCount} />
+            <TabLink view="assigned" current={view} label="Assigned" count={assignedCount} />
+            <TabLink view="returned" current={view} label="Returned" count={returnedCount} />
+            <TabLink view="archived" current={view} label="Archived" count={archivedCount} />
+            <TabLink view="killed" current={view} label="Killed" count={killedCount} />
+          </nav>
+          <Button asChild variant="ghost" size="sm" className="mb-1.5">
+            <Link href="/pipeline">
+              View pipeline
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </div>
+
+        <p className="sr-only" aria-live="polite">
+          {VIEW_TITLES[view]} — {leads.length} lead{leads.length === 1 ? "" : "s"}
+        </p>
 
         <LeadFilters industries={facets.industries} />
 
@@ -256,16 +256,73 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className="border border-line bg-surface">
+        <div className="border border-line bg-surface lift-1">
           {leads.length === 0 ? (
             <EmptyInbox archived={archived} killed={killed} filtered={filtersActive} />
           ) : (
+          <>
+            {/* Phones get a card list: an eight-column table at 390px is a
+                horizontal-scroll trap, and reps work these on their phones. */}
+            <ul className="sm:hidden divide-y divide-line">
+              {leads.map((lead) => (
+                <li key={lead.id} className="p-3">
+                  <Link
+                    href={`/leads/${lead.id}?from=${view}`}
+                    className="block group"
+                  >
+                    <div className="flex items-start justify-between gap-2.5">
+                      <span className="text-[14px] font-semibold text-ink leading-snug group-hover:text-brand transition-colors">
+                        {lead.company_name}
+                      </span>
+                      <ScoreBadge score={lead.score} size="sm" showLabel={false} />
+                    </div>
+                    {lead.signal_summary && (
+                      <p className="text-[12px] text-ink-dim mt-1 line-clamp-2 leading-snug">
+                        {lead.signal_summary}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 flex-wrap mt-2">
+                      <StatusPill status={lead.status} repName={lead.rep_name} />
+                      {lead.location && (
+                        <span className="text-[11px] text-ink-faint">
+                          {lead.location}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-ink-faint ml-auto">
+                        {formatRelative(lead.created_at)}
+                      </span>
+                    </div>
+                  </Link>
+                  {!archived && !killed && (
+                    <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-line">
+                      <AssignDialog
+                        leadId={lead.id}
+                        leadName={lead.company_name}
+                        reps={reps}
+                        currentRepName={lead.rep_name ?? null}
+                        triggerSize="sm"
+                        triggerVariant="secondary"
+                      />
+                      <KillLeadButton leadId={lead.id} leadName={lead.company_name} />
+                      <Button asChild size="sm" variant="ghost" className="ml-auto">
+                        <Link href={`/leads/${lead.id}?from=${view}`}>
+                          Open
+                          <ArrowUpRight className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden sm:block">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 text-center">#</TableHead>
-                  <TableHead>Company / Signal</TableHead>
-                  <TableHead className="w-[120px]">Score</TableHead>
+                  <TableHead className="w-10 text-center">#</TableHead>
+                  <TableHead className="min-w-[280px]">Company / Signal</TableHead>
+                  <TableHead className="w-[96px]">Score</TableHead>
                   {archived ? (
                     <>
                       <TableHead className="hidden sm:table-cell w-[220px]">Reason</TableHead>
@@ -273,13 +330,13 @@ export default async function DashboardPage({
                     </>
                   ) : (
                     <>
-                      <TableHead className="hidden sm:table-cell w-[130px]">Source</TableHead>
-                      <TableHead className="hidden lg:table-cell w-[140px]">Location</TableHead>
-                      <TableHead className="hidden xl:table-cell w-[140px]">Industry</TableHead>
+                      <TableHead className="hidden xl:table-cell w-[120px]">Source</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[130px]">Location</TableHead>
+                      <TableHead className="hidden 2xl:table-cell w-[150px]">Industry</TableHead>
                     </>
                   )}
-                  <TableHead className="w-[150px]">Status</TableHead>
-                  <TableHead className="text-right w-[180px]">Action</TableHead>
+                  <TableHead className="w-[140px]">Status</TableHead>
+                  <TableHead className="text-right w-[170px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -291,9 +348,9 @@ export default async function DashboardPage({
                     <TableCell>
                       <Link
                         href={`/leads/${lead.id}?from=${view}`}
-                        className="block hover:text-brand-ink transition-colors max-w-md"
+                        className="block hover:text-brand transition-colors max-w-md"
                       >
-                        <div className="text-[14px] font-medium text-ink truncate">
+                        <div className="text-[13.5px] font-semibold text-ink truncate">
                           {lead.company_name}
                         </div>
                         {lead.signal_summary && (
@@ -301,23 +358,39 @@ export default async function DashboardPage({
                             {lead.signal_summary}
                           </div>
                         )}
-                        <div className="flex items-center gap-3 mt-1.5 mono text-[10px] uppercase tracking-wider text-ink-faint">
+                        {/* One nowrap line. Left to wrap, this meta strip
+                            doubled every row's height in a narrow column. */}
+                        <div className="flex items-center gap-2 mt-1 mono text-[10px] uppercase tracking-wider text-ink-faint whitespace-nowrap overflow-hidden">
                           {lead.signal_type && (
-                            <span className="text-brand-ink/80">
+                            <span className="text-brand shrink-0">
                               {String(lead.signal_type).replace(/_/g, " ")}
                             </span>
                           )}
-                          <span>{formatRelative(lead.created_at)}</span>
+                          <span className="shrink-0">
+                            {formatRelative(lead.created_at)}
+                          </span>
                           {lead.last_article_check && (
                             <span
-                              className={articleCheckClass(lead.last_article_check)}
-                              title="Source article last re-verified"
+                              className={cn(
+                                "shrink-0 hidden lg:inline-flex items-center gap-1",
+                                articleCheckClass(lead.last_article_check)
+                              )}
+                              title={`Source article last re-verified ${formatRelative(
+                                lead.last_article_check
+                              )}`}
                             >
-                              article ✓ {formatRelative(lead.last_article_check)}
+                              <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                              article
                             </span>
                           )}
                           {lead.rep_name && (
-                            <span>→ {lead.rep_name}</span>
+                            <span className="inline-flex items-center gap-1 truncate">
+                              <CornerDownRight
+                                className="h-3 w-3 shrink-0"
+                                strokeWidth={2}
+                              />
+                              {lead.rep_name}
+                            </span>
                           )}
                         </div>
                       </Link>
@@ -328,7 +401,7 @@ export default async function DashboardPage({
                     {archived ? (
                       <>
                         <TableCell className="hidden sm:table-cell">
-                          <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.06] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
+                          <span className="inline-flex items-center border border-signal-warm/40 bg-signal-warm/[0.07] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-signal-warm">
                             {archivedReasonLabel(lead.archived_reason)}
                           </span>
                         </TableCell>
@@ -342,13 +415,13 @@ export default async function DashboardPage({
                       </>
                     ) : (
                       <>
-                        <TableCell className="hidden sm:table-cell mono text-[12px]">
+                        <TableCell className="hidden xl:table-cell mono text-[12px]">
                           <SourceLink source={lead.signal_source} url={lead.source_url} />
                         </TableCell>
                         <TableCell className="hidden lg:table-cell mono text-[12px] text-ink-2 truncate">
                           {lead.location || <span className="text-ink-faint">—</span>}
                         </TableCell>
-                        <TableCell className="hidden xl:table-cell mono text-[12px] text-ink-2 truncate">
+                        <TableCell className="hidden 2xl:table-cell mono text-[12px] text-ink-2 truncate">
                           {lead.industry || <span className="text-ink-faint">—</span>}
                         </TableCell>
                       </>
@@ -383,6 +456,8 @@ export default async function DashboardPage({
                 ))}
               </TableBody>
             </Table>
+            </div>
+          </>
           )}
         </div>
       </section>
@@ -417,51 +492,22 @@ function TabLink({
   return (
     <Link
       href={href}
-      className={`px-3 py-1.5 border-l border-line first:border-l-0 transition-colors ${
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-[12.5px] border-b-2 transition-colors ${
         active
-          ? "bg-brand/[0.08] text-brand-ink"
-          : "text-ink-faint hover:text-ink-dim"
+          ? "border-brand text-ink font-semibold"
+          : "border-transparent text-ink-dim hover:text-ink"
       }`}
     >
-      {label} ({count})
+      {label}
+      <span
+        className={`mono text-[11px] tabular ${
+          active ? "text-brand" : "text-ink-faint"
+        }`}
+      >
+        {count}
+      </span>
     </Link>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  accent,
-  trend,
-}: {
-  label: string;
-  value: number;
-  accent: "ink" | "hot" | "warm" | "good" | "cold";
-  trend?: boolean;
-}) {
-  const colorMap: Record<typeof accent, string> = {
-    ink: "text-ink",
-    hot: "text-signal-hot",
-    warm: "text-signal-warm",
-    good: "text-signal-good",
-    cold: "text-signal-cold",
-  };
-  return (
-    <div className="px-5 sm:px-6 py-5 sm:py-6 relative">
-      <div className="eyebrow mb-3">{label}</div>
-      <div className="flex items-baseline gap-3">
-        <span
-          className={`display-number text-5xl sm:text-6xl ${colorMap[accent]}`}
-        >
-          {value}
-        </span>
-        {trend && (
-          <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-            ↗ live
-          </span>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -498,18 +544,20 @@ function StatusPill({
   status: string;
   repName?: string | null;
 }) {
+  // Filled chips. A column of hairline outlines all reads the same at a glance;
+  // a filled block gives each stage its own weight down the page.
   const map: Record<string, string> = {
-    new: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
-    listed: "border-brand/45 text-brand-ink bg-brand/[0.06]",
-    assigned: "border-signal-warm/40 text-signal-warm bg-signal-warm/[0.06]",
-    contacted: "border-signal-cold/40 text-signal-cold bg-signal-cold/[0.06]",
-    meeting: "border-brand/45 text-brand-ink bg-brand/[0.06]",
-    proposal: "border-brand/45 text-brand-ink bg-brand/[0.06]",
-    won: "border-signal-good/40 text-signal-good bg-signal-good/[0.06]",
-    dead: "border-line text-ink-faint",
-    returned: "border-signal-hot/40 text-signal-hot bg-signal-hot/[0.06]",
+    new: "bg-signal-cold text-white",
+    listed: "bg-brand text-white",
+    assigned: "bg-signal-warm text-white",
+    contacted: "bg-signal-cold text-white",
+    meeting: "bg-brand text-white",
+    quote: "bg-brand-ink text-white",
+    won: "bg-signal-good text-white",
+    dead: "bg-ink-faint text-white",
+    returned: "bg-signal-hot text-white",
   };
-  const cls = map[status] || "border-line text-ink-dim";
+  const cls = map[status] || "bg-ink-faint text-white";
   const baseLabel =
     LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status;
   // When a lead is assigned to a rep, name them: "Assigned to Layla".
@@ -519,7 +567,7 @@ function StatusPill({
       : baseLabel;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider whitespace-nowrap ${cls}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${cls}`}
     >
       {label}
     </span>

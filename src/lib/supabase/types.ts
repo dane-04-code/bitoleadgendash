@@ -4,7 +4,7 @@ export type LeadStatus =
   | "assigned"
   | "contacted"
   | "meeting"
-  | "proposal"
+  | "quote"
   | "won"
   | "dead"
   | "returned";
@@ -15,23 +15,44 @@ export const LEAD_STATUSES: LeadStatus[] = [
   "assigned",
   "contacted",
   "meeting",
-  "proposal",
+  "quote",
   "won",
   "dead",
   "returned",
 ];
 
+/**
+ * Display labels. The stage formerly called `proposal` is now `quote` in both
+ * the UI and the database — the team's own word for it (meeting 2026-07-11).
+ * The stored values were migrated on 2026-08-13; see
+ * `supabase/migrations/0014_lead_status_quote_rename.sql`.
+ *
+ * `leads.status` is a plain `text` column with no check constraint and no enum,
+ * so nothing outside these values is enforced by the database. Anything writing
+ * leads from upstream (the Hermes pipeline) must use this vocabulary.
+ */
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   new: "New",
   listed: "Listed",
   assigned: "Assigned",
   contacted: "Contacted",
   meeting: "Meeting",
-  proposal: "Proposal",
+  quote: "Quote",
   won: "Won",
   dead: "Dead",
   returned: "Returned",
 };
+
+/** Quotes still in play — the "live quote orders" counter from the meeting. */
+export const LIVE_QUOTE_STATUS: LeadStatus = "quote";
+
+/** Stages where a deal is still winnable, i.e. not won/dead/returned. */
+export const OPEN_STATUSES: LeadStatus[] = [
+  "assigned",
+  "contacted",
+  "meeting",
+  "quote",
+];
 
 /**
  * Statuses where a lead has no current rep owner — these are the ones that
@@ -49,7 +70,7 @@ export const UNOWNED_STATUSES: LeadStatus[] = ["new", "listed", "returned"];
 export const REP_SETTABLE_STATUSES: LeadStatus[] = [
   "contacted",
   "meeting",
-  "proposal",
+  "quote",
   "won",
   "dead",
 ];
@@ -60,7 +81,7 @@ export const ADMIN_SETTABLE_STATUSES: LeadStatus[] = [
   "assigned",
   "contacted",
   "meeting",
-  "proposal",
+  "quote",
   "won",
   "dead",
 ];

@@ -62,19 +62,46 @@ export function PageHeader({
   );
 }
 
+/**
+ * Tones for the counter strip. These carry meaning, not decoration — a won
+ * count reads green and a dead count reads red at a glance, which is the whole
+ * point of the counters asked for in the 2026-07-11 meeting.
+ */
+const META_TONE = {
+  good: "text-signal-good",
+  warn: "text-signal-warm",
+  bad: "text-signal-hot",
+} as const;
+
 export function MetaItem({
   label,
   value,
   accent,
+  tone,
+  hint,
 }: {
   label: string;
   value: React.ReactNode;
   accent?: boolean;
+  tone?: keyof typeof META_TONE;
+  /** Plain-language explanation, surfaced as a native tooltip on the label. */
+  hint?: string;
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-ink-faint">{label}</span>
-      <span className={cn("text-ink-2", accent && "text-brand-ink")}>
+      <span
+        className={cn("text-ink-faint", hint && "cursor-help border-b border-dotted border-line-strong")}
+        title={hint}
+      >
+        {label}
+      </span>
+      <span
+        className={cn(
+          "text-ink-2 tabular",
+          accent && "text-brand-ink",
+          tone && META_TONE[tone]
+        )}
+      >
         {value}
       </span>
     </div>

@@ -15,7 +15,6 @@ import {
   isLeadOwnedByRep,
   getLeadNotes,
   getLeadReview,
-  getDealProfile,
   getDealSale,
   getRepById,
   getNextInboxLeadId,
@@ -32,7 +31,7 @@ import { ClaimButton } from "@/components/claim-button";
 import { UnclaimButton } from "@/components/unclaim-button";
 import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
-import { DealProfileDialog } from "@/components/deal-profile-panel";
+import { OrderProfileDialog } from "@/components/order-profile-panel";
 import { LeadReviewCard } from "@/components/lead-review";
 import { ScoreBreakdown } from "@/components/ui/score-breakdown";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
@@ -87,11 +86,10 @@ export default async function LeadDetailPage({
     repOwns = await isLeadOwnedByRep(params.id, session.subject);
     if (!repOwns && lead.status !== "listed") notFound();
   }
-  const [reps, notes, review, dealProfile, dealSale, nextLeadId] = await Promise.all([
+  const [reps, notes, review, dealSale, nextLeadId] = await Promise.all([
     isAdmin ? getActiveReps() : Promise.resolve([]),
     getLeadNotes(params.id),
     getLeadReview(params.id),
-    getDealProfile(params.id),
     getDealSale(params.id),
     isAdmin ? getNextInboxLeadId(params.id, inboxView) : Promise.resolve(null),
   ]);
@@ -101,7 +99,8 @@ export default async function LeadDetailPage({
   const emailDrafts = outreach.filter((o) => o.channel === "email");
   const otherDrafts = outreach.filter((o) => o.channel !== "linkedin" && o.channel !== "email");
   const latestBrief = call_briefs[0];
-  const shortId = lead.id.split("-")[0]?.toUpperCase();
+  // Mock ids look like "lead-29"; take the trailing segment, not the leading word.
+  const shortId = lead.id.split("-").pop()?.toUpperCase();
 
   return (
     <div className="animate-fade-in pb-12">
@@ -116,14 +115,14 @@ export default async function LeadDetailPage({
       {lead.archived && (
         <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
           <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.08] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
-            âš‘ Archived
+            Archived
           </span>
           <span className="text-[12px] text-ink-dim">
             {archivedReasonLabel(lead.archived_reason)}
           </span>
           {lead.archived_at && (
             <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-              Â· archived {formatRelative(lead.archived_at)}
+              · archived {formatRelative(lead.archived_at)}
             </span>
           )}
         </div>
@@ -133,7 +132,7 @@ export default async function LeadDetailPage({
       <header className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 pb-8 mb-8 border-b border-line">
         <div className="min-w-0">
           <div className="flex items-center gap-3 mono text-[10px] uppercase tracking-wider text-ink-faint mb-4">
-            <span>Lead Â· {shortId}</span>
+            <span>Lead · {shortId}</span>
             <span className="text-ink-faint/40">/</span>
             {lead.signal_type && (
               <span className="text-brand-ink">
@@ -144,7 +143,7 @@ export default async function LeadDetailPage({
             <StatusInline status={lead.status} />
           </div>
 
-          <h1 className="text-[30px] sm:text-[40px] font-bold leading-[1.05] tracking-tight text-ink">
+          <h1 className="text-[22px] sm:text-[26px] font-bold leading-tight tracking-tight text-ink">
             {lead.company_name}
           </h1>
 
@@ -192,8 +191,10 @@ export default async function LeadDetailPage({
           )}
           <ScoreBadge score={lead.score} size="lg" />
           <div className="flex items-center gap-2 flex-wrap lg:justify-end">
-            {(isAdmin || repOwns) && (
-              <DealProfileDialog leadId={lead.id} leadStatus={lead.status} profile={dealProfile} sale={dealSale} />
+            {/* Order details exist only for a closed sale — the panel stays
+                hidden until the lead is Won (meeting 2026-07-11). */}
+            {(isAdmin || repOwns) && lead.status === "won" && (
+              <OrderProfileDialog leadId={lead.id} sale={dealSale} />
             )}
             {isAdmin ? (
               <>
@@ -231,7 +232,7 @@ export default async function LeadDetailPage({
             )}
           </div>
           {currentAssignment?.rep && (
-            <div className="text-right">
+            <div className="sm:text-right">
               <div className="eyebrow mb-1.5">Owner</div>
               <div className="text-[13px] text-ink">
                 {currentAssignment.rep.full_name}
@@ -248,7 +249,7 @@ export default async function LeadDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
         {/* MAIN COLUMN */}
         <div className="space-y-10 min-w-0">
-          <Section eyebrow="Why this is a lead" code="A">
+          <Section eyebrow="Why this is a lead">
             {lead.score_breakdown ? (
               <ScoreBreakdown breakdown={lead.score_breakdown} />
             ) : lead.score_reason ? (
@@ -259,7 +260,7 @@ export default async function LeadDetailPage({
           </Section>
 
           {lead.bito_products && lead.bito_products.length > 0 && (
-            <Section eyebrow="BITO products matched" code="B">
+            <Section eyebrow="BITO products matched">
               <div className="flex flex-wrap gap-2">
                 {lead.bito_products.map((p) => (
                   <span
@@ -274,7 +275,7 @@ export default async function LeadDetailPage({
             </Section>
           )}
 
-          <Section eyebrow="Contacts" code="C" count={contacts.length}>
+          <Section eyebrow="Contacts" count={contacts.length}>
             {contacts.length === 0 ? (
               <p className="text-[13px] text-ink-faint italic">
                 No contacts captured yet.
@@ -288,7 +289,7 @@ export default async function LeadDetailPage({
             )}
           </Section>
 
-          <Section eyebrow="Outreach drafts" code="D">
+          <Section eyebrow="Outreach drafts">
             <div className="space-y-6">
               <DraftBlock
                 heading="LinkedIn DM"
@@ -307,7 +308,7 @@ export default async function LeadDetailPage({
             </div>
           </Section>
 
-          <Section eyebrow="Call brief" code="E">
+          <Section eyebrow="Call brief">
             {!latestBrief ? (
               <p className="text-[13px] text-ink-faint italic">
                 No call brief generated yet.
@@ -327,7 +328,7 @@ export default async function LeadDetailPage({
             )}
           </Section>
 
-          <Section eyebrow="Notes" code="F" count={notes.length}>
+          <Section eyebrow="Notes" count={notes.length}>
             <LeadNotes leadId={lead.id} notes={notes} />
           </Section>
         </div>
@@ -335,7 +336,6 @@ export default async function LeadDetailPage({
         {/* SIDE COLUMN */}
         <aside className="space-y-8 lg:border-l lg:border-line lg:pl-8 min-w-0">
           <div>
-            <div className="eyebrow mb-3">Manual review</div>
             <LeadReviewCard leadId={lead.id} review={review} />
           </div>
 
@@ -370,9 +370,16 @@ export default async function LeadDetailPage({
                     <span className="dot bg-brand mt-1.5 ml-px relative z-10" />
                     <div>
                       <div className="text-[12px] text-ink">
-                        <span className="text-ink-dim">{u.old_status || "â€”"}</span>
-                        <span className="mx-1.5 text-ink-faint">â†’</span>
-                        <span className="font-medium">{u.new_status}</span>
+                        <span className="text-ink-dim">
+                          {u.old_status ? LEAD_STATUS_LABELS[u.old_status] : "—"}
+                        </span>
+                        <ArrowRight
+                          className="inline h-3 w-3 mx-1.5 text-ink-faint align-[-1px]"
+                          strokeWidth={2}
+                        />
+                        <span className="font-medium">
+                          {LEAD_STATUS_LABELS[u.new_status]}
+                        </span>
                       </div>
                       <div className="mono text-[10px] uppercase tracking-wider text-ink-faint mt-0.5">
                         {formatRelative(u.updated_at)}
@@ -405,27 +412,20 @@ export default async function LeadDetailPage({
 
 function Section({
   eyebrow,
-  code,
   count,
   children,
 }: {
   eyebrow: string;
-  code?: string;
   count?: number;
   children: React.ReactNode;
 }) {
   return (
     <section>
-      <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-line">
-        {code && (
-          <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-            {code}
-          </span>
-        )}
-        <h2 className="display-serif text-xl text-ink leading-none">{eyebrow}</h2>
+      <div className="flex items-baseline gap-3 mb-3 pb-2 border-b border-line">
+        <h2 className="text-[15px] font-bold tracking-tight text-ink">{eyebrow}</h2>
         {count !== undefined && (
-          <span className="mono text-[10px] uppercase tracking-wider text-ink-faint ml-auto">
-            {count} entries
+          <span className="text-[12px] text-ink-dim ml-auto">
+            {count} {count === 1 ? "entry" : "entries"}
           </span>
         )}
       </div>
@@ -520,7 +520,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
     <div>
       <dt className="eyebrow mb-1.5">{label}</dt>
       <dd className="text-[13px] text-ink-2">
-        {value || <span className="text-ink-faint">â€”</span>}
+        {value || <span className="text-ink-faint">—</span>}
       </dd>
     </div>
   );
@@ -533,7 +533,7 @@ function StatusInline({ status }: { status: string }) {
     assigned: "text-signal-warm",
     contacted: "text-signal-cold",
     meeting: "text-brand-ink",
-    proposal: "text-brand-ink",
+    quote: "text-brand-ink",
     won: "text-signal-good",
     dead: "text-ink-faint",
     returned: "text-signal-hot",
