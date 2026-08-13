@@ -4,9 +4,10 @@
 
 /* ─────────────────────────────────────────────────────────────────────────────
    BITO LeadIntelligence — teal console.
-   Palette and shape taken from the approved `Lead Inbox` comp: a mint ground,
-   flat white cards, a single-hue teal ramp, and soft corners. Every value below
-   is a token; components never hard-code a colour.
+   Palette and shape from the approved `Lead Inbox` and `Pipeline` comps: a mint
+   ground, flat white cards, a teal brand ramp, and soft corners. Score and
+   stage carry their own tones, each paired with a word so meaning never rests
+   on colour. Every value below is a token; components never hard-code a colour.
    ────────────────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -54,12 +55,6 @@
     --rail-ink-3:   184  29% 70%;    /* #9cc6c9 —  5.7:1 */
     --rail-mark:    185  61% 79%;    /* #a8e4ea —  7.6:1 */
 
-    /* Score tiers ride the teal ramp; the tier word always ships with the dot,
-       so nothing here is conveyed by colour alone. */
-    --tier-hot:     183 100% 18%;
-    --tier-warm:    183 100% 25%;
-    --tier-cold:    180   7% 39%;
-
     /* Stage tones, from the Pipeline comp. Each column carries one, as a dot
        beside a written stage name — the dot narrows it, the label states it. */
     --stage-new:        183 100% 25%;  /* #00797f */
@@ -72,11 +67,17 @@
     --stage-dead:         8  50% 46%;  /* #b04a3a */
     --stage-returned:   180   7% 63%;  /* #9aa8a8 */
 
-    /* Score heat on the board: red hot, amber warm, grey cold. The dot is
-       redundant emphasis — the score itself is printed beside it. */
+    /* Score heat: red hot, amber warm, grey cold — one ramp for the whole
+       console. The vivid values are for dots and fills; the -ink variants are
+       for the tier *word*, because the comp's amber and grey read at 2.9:1 and
+       2.7:1 as text. The word always ships with the dot, so nothing is
+       carried by colour alone. */
     --heat-high:          8  50% 46%;
     --heat-mid:          38  73% 45%;
     --heat-low:         180   8% 59%;
+    --heat-high-ink:      8  50% 46%;  /* 5.4:1 on white */
+    --heat-mid-ink:      38  80% 30%;  /* 5.8:1 */
+    --heat-low-ink:     180   7% 39%;  /* 5.6:1 */
 
     /* Semantic status — UX convention, not brand */
     --good:         135 29% 44%;     /* #4f8f5f */
@@ -165,10 +166,9 @@
     --heat-high:          8  62% 63%;
     --heat-mid:          38  72% 60%;
     --heat-low:         180  9% 58%;
-
-    --tier-hot:     185 50% 66%;
-    --tier-warm:    185 45% 53%;
-    --tier-cold:    180  9% 64%;
+    --heat-high-ink:      8  62% 63%;
+    --heat-mid-ink:      38  72% 60%;
+    --heat-low-ink:     180  9% 58%;
 
     --good:         135 38% 58%;
     --warn:          39 72% 62%;

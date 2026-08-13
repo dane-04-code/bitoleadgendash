@@ -80,11 +80,6 @@ const config: Config = {
           2: "hsl(var(--surface-2))",
           3: "hsl(var(--surface-3))",
         },
-        tier: {
-          hot: "hsl(var(--tier-hot))",
-          warm: "hsl(var(--tier-warm))",
-          cold: "hsl(var(--tier-cold))",
-        },
         stage: {
           new: "hsl(var(--stage-new))",
           listed: "hsl(var(--stage-listed))",
@@ -100,6 +95,9 @@ const config: Config = {
           high: "hsl(var(--heat-high))",
           mid: "hsl(var(--heat-mid))",
           low: "hsl(var(--heat-low))",
+          "high-ink": "hsl(var(--heat-high-ink))",
+          "mid-ink": "hsl(var(--heat-mid-ink))",
+          "low-ink": "hsl(var(--heat-low-ink))",
         },
         signal: {
           hot: "hsl(var(--hot))",

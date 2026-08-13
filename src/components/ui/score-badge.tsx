@@ -1,13 +1,15 @@
 import { cn, scoreTier } from "@/lib/utils";
 
 /**
- * The score ramp rides the single teal hue, so the tier word ships with the
- * dot at every size — the tier is never carried by colour alone.
+ * One heat ramp across the whole console — red hot, amber warm, grey cold —
+ * matching the pipeline board. The dot takes the vivid tone; the word takes
+ * the darker -ink variant, since the vivid amber and grey read under 3:1 as
+ * text. The word ships at every size, so the tier is never colour alone.
  */
 const TIER = {
-  hot: { dot: "bg-tier-hot", text: "text-tier-hot", label: "Hot" },
-  warm: { dot: "bg-tier-warm", text: "text-tier-warm", label: "Warm" },
-  cold: { dot: "bg-tier-cold", text: "text-tier-cold", label: "Cold" },
+  hot: { dot: "bg-heat-high", text: "text-heat-high-ink", label: "Hot" },
+  warm: { dot: "bg-heat-mid", text: "text-heat-mid-ink", label: "Warm" },
+  cold: { dot: "bg-heat-low", text: "text-heat-low-ink", label: "Cold" },
 } as const;
 
 export function ScoreBadge({

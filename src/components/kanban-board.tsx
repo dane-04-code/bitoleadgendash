@@ -43,7 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { moveLeadToStatus } from "@/app/actions";
-import { cn, regionOf } from "@/lib/utils";
+import { cn, regionOf, scoreTier } from "@/lib/utils";
 import { PILL_CONTROL, PILL_GHOST } from "@/lib/styles";
 
 export type KanbanLead = {
@@ -101,12 +101,15 @@ const STAGE_DOT: Record<LeadStatus, string> = {
   returned: "bg-stage-returned",
 };
 
-/** Score heat. The dot restates the number printed beside it. */
-function heatDot(score: number): string {
-  if (score >= 80) return "bg-heat-high";
-  if (score >= 60) return "bg-heat-mid";
-  return "bg-heat-low";
-}
+/**
+ * Score heat. Thresholds come from scoreTier so a lead cannot be "hot" on the
+ * inbox and "warm" here; the dot restates the number printed beside it.
+ */
+const HEAT_DOT = {
+  hot: "bg-heat-high",
+  warm: "bg-heat-mid",
+  cold: "bg-heat-low",
+} as const;
 
 export function KanbanBoard({
   columns,
@@ -658,7 +661,7 @@ function Card({
           {lead.company_name}
         </Link>
         <span className="flex shrink-0 items-center gap-1.5">
-          <span className={cn("dot", heatDot(lead.score))} />
+          <span className={cn("dot", HEAT_DOT[scoreTier(lead.score)])} />
           <span className="display-number text-[13px] tabular text-ink">
             {lead.score}
           </span>
