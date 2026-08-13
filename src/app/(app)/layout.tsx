@@ -1,8 +1,17 @@
 import { redirect } from "next/navigation";
-import { Sidebar, MobileTopbar, type SidebarUser } from "@/components/sidebar";
+import {
+  Sidebar,
+  MobileTopbar,
+  type SidebarUser,
+  type NavCounts,
+} from "@/components/sidebar";
 import { TopUtilityBar } from "@/components/top-utility-bar";
 import { getSession } from "@/lib/auth";
-import { getRepById } from "@/lib/queries";
+import {
+  getRepById,
+  getActiveLeadCount,
+  getAssignedLeadCount,
+} from "@/lib/queries";
 import { CommandPaletteProvider } from "@/components/command-palette";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -10,8 +19,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session) redirect("/login");
 
   let user: SidebarUser;
+  let counts: NavCounts | undefined;
+
   if (session.role === "admin") {
     user = { role: "admin", label: "Admin" };
+    // Two cheap count queries so the rail carries live weight rather than
+    // decorative numerals. Reps get no badges — their counts would cost a full
+    // lead fetch on every page.
+    const [inbox, pipeline] = await Promise.all([
+      getActiveLeadCount(),
+      getAssignedLeadCount(),
+    ]);
+    counts = { "/dashboard": inbox, "/pipeline": pipeline };
   } else {
     const rep = await getRepById(session.subject);
     if (!rep) redirect("/api/auth/logout");
@@ -26,14 +45,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <CommandPaletteProvider role={session.role}>
       <div className="flex min-h-screen">
-        <Sidebar user={user} />
+        <Sidebar user={user} counts={counts} />
         <div className="flex flex-1 flex-col min-w-0">
           <MobileTopbar user={user} />
-          <TopUtilityBar role={session.role} />
-          <main className="flex-1 min-w-0 px-5 sm:px-8 lg:px-10 py-6 lg:py-8 w-full">
+          <main className="flex-1 min-w-0 w-full px-4 sm:px-6 lg:px-[30px] pt-5 lg:pt-[26px] pb-10">
+            <TopUtilityBar role={session.role} />
             {children}
           </main>
-          <footer className="border-t border-line px-5 sm:px-8 lg:px-10 py-3 mono text-[10px] uppercase tracking-wider text-ink-faint flex items-center justify-between">
+          <footer className="px-4 sm:px-6 lg:px-[30px] py-4 mono text-[9.5px] uppercase tracking-[0.14em] text-ink-ghost flex items-center justify-between gap-4">
             <span>BITO UAE / LeadIntelligence v0.1.0</span>
             <span>{new Date().getFullYear()} · GCC Region</span>
           </footer>

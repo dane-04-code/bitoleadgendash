@@ -47,23 +47,33 @@ const config: Config = {
         brand: {
           DEFAULT: "hsl(var(--accent))",
           ink: "hsl(var(--accent-ink))",
+          deep: "hsl(var(--accent-deep))",
+          soft: "hsl(var(--accent-soft))",
           bg: "hsl(var(--accent-bg))",
         },
+        flare: "hsl(var(--flare))",
         ink: {
           DEFAULT: "hsl(var(--ink))",
           2: "hsl(var(--ink-2))",
           dim: "hsl(var(--ink-dim))",
           faint: "hsl(var(--ink-faint))",
+          ghost: "hsl(var(--ink-ghost))",
         },
         bg: "hsl(var(--bg))",
         line: {
           DEFAULT: "hsl(var(--line))",
+          soft: "hsl(var(--line-soft))",
           strong: "hsl(var(--line-strong))",
         },
         surface: {
           DEFAULT: "hsl(var(--surface))",
           2: "hsl(var(--surface-2))",
           3: "hsl(var(--surface-3))",
+        },
+        tier: {
+          hot: "hsl(var(--tier-hot))",
+          warm: "hsl(var(--tier-warm))",
+          cold: "hsl(var(--tier-cold))",
         },
         signal: {
           hot: "hsl(var(--hot))",
@@ -73,13 +83,14 @@ const config: Config = {
         },
       },
       borderRadius: {
+        xl: "var(--radius-xl)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 1px)",
-        sm: "2px",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        serif: ["var(--font-serif)", "Georgia", "serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "Menlo", "monospace"],
       },
       keyframes: {
