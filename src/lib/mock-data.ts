@@ -724,6 +724,43 @@ export function mockUpdateFeedbackStatus(
   if (fb) fb.status = status;
 }
 
+// ─── Rep signup (mock mode) ───────────────────────────────────────────────
+
+export function mockFindRepByEmail(email: string): Rep | undefined {
+  const needle = email.trim().toLowerCase();
+  return MOCK_REPS.find((r) => r.email?.toLowerCase() === needle);
+}
+
+/**
+ * Register a rep in the in-memory set so the sign-up screen completes without
+ * a database. The fixtures live in module scope, so the account survives until
+ * the dev server restarts — long enough to walk the rep flow, and it cannot
+ * leak into a real project because callers gate on isMockMode().
+ *
+ * No password is stored: mock rep login accepts the shared demo password for
+ * any active fixture, so persisting a hash here would be dead weight that
+ * reads like a real credential.
+ */
+export function mockAddRep(entry: {
+  full_name: string;
+  email: string;
+}): Rep {
+  const rep: Rep = {
+    id: `rep-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    full_name: entry.full_name,
+    email: entry.email,
+    telegram_username: null,
+    telegram_chat_id: null,
+    speciality: null,
+    territory: null,
+    is_active: true,
+    availability: "looking",
+    created_at: new Date().toISOString(),
+  };
+  MOCK_REPS.push(rep);
+  return rep;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 export function mockDashboardStats(): DashboardStats {

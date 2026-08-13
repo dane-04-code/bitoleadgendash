@@ -6,6 +6,7 @@ import {
   SESSION_MAX_AGE_SECONDS,
 } from "@/lib/auth-edge";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { isMockMode, mockAddRep, mockFindRepByEmail } from "@/lib/mock-data";
 
 type SignupBody = {
   full_name?: string;
@@ -61,6 +62,24 @@ export async function POST(req: NextRequest) {
       { error: "Password must be at least 8 characters." },
       { status: 400 }
     );
+  }
+
+  // ── Mock mode: no database to write to ──────────────────────────────────
+  // Mirrors the live path below — same duplicate check, same session, same
+  // response shape — so the rep sign-up flow is walkable in the local demo.
+  // Without this the route reaches for placeholder.supabase.co and 500s.
+  if (isMockMode()) {
+    if (mockFindRepByEmail(email)) {
+      return NextResponse.json(
+        { error: "An account with that email already exists. Try signing in." },
+        { status: 409 }
+      );
+    }
+    const rep = mockAddRep({ full_name: fullName, email });
+    const token = await createRepSession(rep.id);
+    const res = NextResponse.json({ ok: true, role: "rep" });
+    setCookie(res, token);
+    return res;
   }
 
   const supabase = getSupabaseServerClient();
