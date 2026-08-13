@@ -52,7 +52,12 @@ export function Sidebar({
   const { open } = useCommandPalette();
 
   return (
-    <aside className="hidden lg:flex h-screen w-[236px] shrink-0 flex-col gap-6 border-r border-rail-edge bg-rail px-4 pt-[22px] pb-[18px] sticky top-0">
+    /* The teal plane is painted by the outer wrapper, which stretches to the
+       full document height; the inner column is what sticks. With the paint on
+       the sticky element itself, a page taller than the viewport showed mint
+       ground below the rail. */
+    <aside className="hidden w-[236px] shrink-0 border-r border-rail-edge bg-rail lg:block">
+      <div className="sticky top-0 flex h-screen flex-col gap-6 px-4 pt-[22px] pb-[18px]">
       <Link
         href={user.role === "admin" ? "/dashboard" : "/my"}
         className="flex items-center gap-[11px] rounded-md px-1.5"
@@ -168,6 +173,7 @@ export function Sidebar({
             Sign out
           </button>
         </form>
+        </div>
       </div>
     </aside>
   );
