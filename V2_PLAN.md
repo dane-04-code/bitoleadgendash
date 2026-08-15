@@ -151,7 +151,27 @@ the commitment**. v2 extends that system; it does not reopen it.
 | 3 | B7, C11, C12 | Close the phone, mobile, and notification gaps. |
 | 4 | D13–D15 | Visual consistency once the surfaces have stopped moving. |
 
-## 6. Security decision required
+## 6. Security — RESOLVED 2026-08-16
+
+> **DONE.** RLS is enabled with deny-by-default on all 13 tables and migration
+> `0015` is applied to production. Verified after the fact:
+>
+> - Acting as `anon`: `leads` 0, `reps` 0, `contacts` 0 — fully denied.
+> - Acting as `service_role`: `leads` 101, `reps` 10, `contacts` 172,
+>   `outreach` 255 — unaffected. `service_role` has `rolbypassrls = true`;
+>   `anon` and `authenticated` do not.
+> - `feedback_anon_all` dropped; `update_updated_at` search_path pinned.
+> - No data was touched: `leads` last modified 2026-08-13, before this work.
+>
+> Hermes was migrated to the service-role key first and confirmed live in the
+> edge logs (`Python-urllib/3.11` authenticating as `service_role`,
+> 2026-08-15 21:32:51) before anything was applied. It has no direct Postgres
+> connection, so the REST path was the whole surface.
+>
+> **Still outstanding: rotate the anon key** — see step 6 below. It no longer
+> grants data access, so this is now hygiene rather than urgency.
+
+### Original analysis (retained for context)
 
 Nine tables have **RLS disabled** and the app connects with the **anon key**:
 `leads`, `contacts`, `reps`, `assignments`, `outreach`, `pipeline_updates`,
