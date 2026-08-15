@@ -163,6 +163,12 @@ Three further advisories: `assignment_pings`, `deal_profiles`, and `deal_sales`
 have RLS *enabled with no policies*, and `public.update_updated_at` has a mutable
 `search_path`.
 
+**Additional finding (2026-08-15).** `feedback` was listed as safe because RLS is
+enabled on it. It is not: it carries a PERMISSIVE policy `feedback_anon_all`
+granting `anon` and `authenticated` ALL commands with `USING (true)`, which makes
+the RLS decorative. Verified against the live project `epyumxjezftahosvegmn`.
+Migration `0015` drops it.
+
 This is a real exposure, not a lint nit. It is also **not safe to auto-fix** —
 enabling RLS without policies would block the app entirely.
 
@@ -170,20 +176,27 @@ enabling RLS without policies would block the app entirely.
 database.** Order of operations matters, because doing this in the wrong order
 takes the app down:
 
-1. Add a `SUPABASE_SERVICE_ROLE_KEY` environment variable (local and hosting).
-   Dane must supply this from the Supabase dashboard — it is a secret and must
-   never reach `NEXT_PUBLIC_*` or the browser.
-2. Point the server-side Supabase client (`src/lib/supabase/server.ts`) at the
-   service-role key. All reads and writes already live in server actions and
-   server queries, so this is a contained change.
-3. Confirm no data access happens from the browser client
-   (`src/lib/supabase/browser.ts`). Audit before proceeding.
-4. Only then enable RLS on all thirteen tables with **deny-anon-by-default**
-   policies. The service-role key bypasses RLS, so the app keeps working while
-   the anon key stops being able to read anything.
-5. Add policies for `assignment_pings`, `deal_profiles`, `deal_sales` (RLS
-   already on, no policies) and pin `search_path` on `public.update_updated_at`.
-6. Rotate the anon key afterwards, since the old one has been in browsers.
+1. **BLOCKED — needs Dane.** Add a `SUPABASE_SERVICE_ROLE_KEY` environment
+   variable (local and hosting). Dane must supply this from the Supabase
+   dashboard — it is a secret and must never reach `NEXT_PUBLIC_*` or the
+   browser.
+2. **DONE (2026-08-15).** `src/lib/supabase/server.ts` now prefers
+   `SUPABASE_SERVICE_ROLE_KEY`, falling back to the anon key with a console
+   warning so nothing breaks before step 1 lands.
+3. **DONE (2026-08-15) — audit passed.** `getSupabaseBrowserClient` has zero
+   callers anywhere in `src/`. The only client component that imports from
+   `@/lib/queries` (`src/components/rep-leads-view.tsx`) uses `import type`,
+   which is erased at compile time. All data access is server-side.
+4. **WRITTEN, NOT APPLIED** — `supabase/migrations/0015_enable_rls_deny_anon.sql`.
+   Enables RLS on the nine tables with no policies at all, which denies `anon`
+   by default. The service-role key bypasses RLS, so the app keeps working while
+   the anon key stops being able to read anything. **Do not apply before step 1.**
+5. **WRITTEN, NOT APPLIED** — same migration drops `feedback_anon_all` and pins
+   `search_path` on `public.update_updated_at`. `assignment_pings`,
+   `deal_profiles` and `deal_sales` are already deny-by-default; the migration
+   asserts it idempotently.
+6. **TODO after 4** — rotate the anon key, since the old one has been in
+   browsers.
 
 `reps` is the priority table regardless of sequencing — it holds PBKDF2 password
 hashes and is currently readable by anyone with the public key.
