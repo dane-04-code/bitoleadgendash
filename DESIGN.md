@@ -1,373 +1,360 @@
 ---
 name: BITO LeadIntelligence
-description: A single-hue teal CRM console for BITO UAE — square corners, hairline structure, Quicksand throughout.
+description: A single-hue teal sales console — deep-teal rail, white panels on a mint ground, Barlow with a condensed numeral voice, softly rounded corners.
 colors:
-  teal-100: "#00797f"
-  teal-130: "#00565b"
-  teal-150: "#00464a"
-  teal-40: "#4fa3a8"
+  teal: "#00797f"
+  teal-ink: "#00565b"
+  teal-deep: "#00464a"
+  teal-soft: "#4fa3a8"
   teal-wash: "#e7edec"
-  teal-ground: "#f2f6f5"
-  brand-white: "#ffffff"
+  mint-ground: "#eef2f2"
+  surface: "#ffffff"
+  surface-2: "#f2f6f5"
+  surface-3: "#e7edec"
+  rail: "#00464a"
+  rail-hover: "#00595e"
+  rail-active: "#00797f"
+  rail-edge: "#003a3d"
+  rail-ink: "#f2fafa"
+  rail-ink-2: "#b3d4d6"
+  rail-ink-3: "#9cc6c9"
+  rail-mark: "#a8e4ea"
   flare-orange: "#e06c00"
   ink: "#1c1f1f"
-  ink-2: "#3d4646"
+  ink-2: "#4d5d5d"
   ink-dim: "#5c6a6a"
   ink-faint: "#6f7c7c"
-  line: "#d4dbda"
-  line-strong: "#a9b6b5"
+  ink-ghost: "#a8b5b5"
+  line: "#dde6e5"
+  line-soft: "#f0f4f3"
+  line-strong: "#cfdad9"
+  heat-high: "#b04a3a"
+  heat-mid: "#c98a1f"
+  heat-low: "#8fa0a0"
+  heat-high-ink: "#b04a3a"
+  heat-mid-ink: "#8a5d0f"
+  heat-low-ink: "#5c6a6a"
+  stage-won: "#0f7a42"
+  stage-dead: "#b04a3a"
   signal-good: "#4f8f5f"
   signal-warn: "#cf9a3a"
-  signal-bad: "#b8503f"
-  signal-hot: "#b8503f"
-  signal-warm: "#cf9a3a"
   signal-cold: "#546b85"
   dark-ground: "#0e1618"
   dark-surface: "#151f21"
-  dark-accent: "#4fb4bd"
+  dark-teal: "#4fb4bd"
 typography:
-  page-title:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "21px"
+  display:
+    fontFamily: "Barlow Condensed, Barlow, ui-sans-serif, sans-serif"
+    fontSize: "62px"
+    fontWeight: 700
+    lineHeight: 0.85
+    letterSpacing: "0"
+    fontFeature: "\"lnum\", \"tnum\""
+  headline:
+    fontFamily: "Barlow Condensed, Barlow, ui-sans-serif, sans-serif"
+    fontSize: "30px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "0"
+  metric:
+    fontFamily: "Barlow Condensed, Barlow, ui-sans-serif, sans-serif"
+    fontSize: "34px"
+    fontWeight: 700
+    lineHeight: 1
+    fontFeature: "\"lnum\", \"tnum\""
+  title:
+    fontFamily: "Barlow, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "14.5px"
     fontWeight: 700
     lineHeight: 1.25
-    letterSpacing: "-0.02em"
-  section-title:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "17px"
-    fontWeight: 700
-    lineHeight: 1.3
-    letterSpacing: "-0.02em"
-  metric:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "19px"
-    fontWeight: 700
-    lineHeight: 0.95
-    letterSpacing: "-0.03em"
-    fontFeature: "\"tnum\" 1"
+    letterSpacing: "normal"
   body:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Barlow, ui-sans-serif, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
   body-sm:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "12px"
+    fontFamily: "Barlow, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "12.5px"
     fontWeight: 400
     lineHeight: 1.45
     letterSpacing: "normal"
+  label:
+    fontFamily: "IBM Plex Mono, ui-monospace, Menlo, monospace"
+    fontSize: "10px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "0.14em"
+    fontFeature: "\"zero\", \"tnum\""
   data:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "12px"
+    fontFamily: "IBM Plex Mono, ui-monospace, Menlo, monospace"
+    fontSize: "11px"
     fontWeight: 500
     lineHeight: 1.4
-    letterSpacing: "0.015em"
-    fontFeature: "\"tnum\" 1"
-  label:
-    fontFamily: "Quicksand, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "10.5px"
-    fontWeight: 600
-    lineHeight: 1.1
-    letterSpacing: "0.07em"
+    fontFeature: "\"zero\", \"tnum\""
 rounded:
-  none: "0px"
-  all: "0px"
+  sm: "5px"
+  md: "9px"
+  lg: "11px"
+  xl: "14px"
+  full: "9999px"
 spacing:
-  hair: "2px"
-  xs: "4px"
-  sm: "6px"
-  md: "10px"
-  lg: "14px"
-  xl: "20px"
-  gutter-mobile: "16px"
-  gutter-desktop: "32px"
+  card: "12px"
+  panel-x: "16px"
+  gutter: "30px"
+  section: "20px"
 components:
   button-primary:
-    backgroundColor: "{colors.teal-100}"
-    textColor: "{colors.brand-white}"
-    rounded: "{rounded.none}"
+    backgroundColor: "{colors.teal}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.md}"
     padding: "0 14px"
     height: "36px"
     typography: "{typography.body}"
   button-primary-hover:
-    backgroundColor: "{colors.teal-130}"
-    textColor: "{colors.brand-white}"
+    backgroundColor: "{colors.teal-ink}"
+    textColor: "{colors.surface}"
   button-secondary:
-    backgroundColor: "{colors.teal-wash}"
+    backgroundColor: "{colors.surface-2}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.none}"
+    rounded: "{rounded.md}"
     padding: "0 14px"
     height: "36px"
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.ink-dim}"
-    rounded: "{rounded.none}"
+    rounded: "{rounded.md}"
+    height: "36px"
+  button-sm:
+    rounded: "{rounded.md}"
     padding: "0 10px"
     height: "28px"
-  button-outline:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink-2}"
-    rounded: "{rounded.none}"
-    padding: "0 10px"
-    height: "28px"
-  table-head:
-    backgroundColor: "{colors.teal-wash}"
-    textColor: "{colors.ink-faint}"
-    typography: "{typography.label}"
-    height: "32px"
-    padding: "0 12px"
-  table-cell:
-    backgroundColor: "{colors.brand-white}"
-    textColor: "{colors.ink-2}"
-    typography: "{typography.body}"
-    padding: "8px 12px"
-  card-surface:
-    backgroundColor: "{colors.brand-white}"
+  panel:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.xl}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.none}"
-    padding: "14px 16px"
-  status-pill:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink-dim}"
-    rounded: "{rounded.none}"
+  kanban-card:
+    backgroundColor: "{colors.surface-2}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+    padding: "12px"
+  kanban-card-hover:
+    backgroundColor: "{colors.surface-3}"
+  chip-stage:
+    backgroundColor: "{colors.teal}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.sm}"
     padding: "2px 6px"
     typography: "{typography.label}"
+  badge-outline:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.sm}"
+    padding: "2px 6px"
   input-search:
-    backgroundColor: "{colors.teal-ground}"
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.none}"
-    padding: "8px 10px"
-    typography: "{typography.body-sm}"
+    rounded: "{rounded.lg}"
+    padding: "10px 12px 10px 40px"
+  nav-item:
+    backgroundColor: "transparent"
+    textColor: "{colors.rail-ink-2}"
+    rounded: "{rounded.md}"
+    padding: "10px"
   nav-item-active:
-    backgroundColor: "{colors.teal-wash}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.none}"
-    padding: "7px 10px"
+    backgroundColor: "{colors.rail-active}"
+    textColor: "{colors.rail-ink}"
+    rounded: "{rounded.md}"
 ---
 
 # Design System: BITO LeadIntelligence
 
-> [!WARNING]
-> **STALE — do not build from this document.** It was generated from the build
-> shipped 2026-08-12. The `ui-overhaul/inbox` branch then rebuilt the console on
-> the Claude Design comps, which replaced the visual language. These sections
-> are now false:
->
-> | This document says | The shipped tokens say |
-> |---|---|
-> | Zero corner radius, "without exception" | `--radius-sm` 5px → `--radius-xl` 14px |
-> | "Circles do not exist"; status dot is a 7px square | `.dot` is `border-radius: 50%` |
-> | Quicksand only; Barlow "must never be reintroduced" | Barlow + Barlow Condensed + IBM Plex Mono |
-> | `.mono` is Quicksand, not a monospace | `.mono` is `ui-monospace, Menlo` |
-> | Hairline borders separate everything; panels bordered | `.panel` is borderless, soft-cornered |
->
-> Until this file is regenerated from the current build, treat
-> `src/app/globals.css` and `tailwind.config.ts` as the source of truth for
-> shape, type and colour. The *reasoning* below — density split, one-hue rule,
-> status never by colour alone, offset-not-halo depth — still holds and carried
-> over into the comps.
-
 ## Overview
 
-**Creative North Star: "The Ruled Ledger"**
+**Creative North Star: "The Teal Control Room"**
 
-This is CRM canon played straight at the Attio/Linear craft bar. The console is drawn the way a good ledger is drawn: everything sits on a ruled grid of cool hairlines, panels are plain white on a faint teal-washed ground, and nothing has a rounded corner anywhere. There is exactly one brand hue — BITO teal — and it earns its appearances by marking what is active, what is selected, and what the operator should press. The data is the page; chrome takes one line and hands the viewport to the table.
+LeadIntelligence is a working console, not a marketing surface. The whole product reads as one instrument: a deep-teal navigation rail holding the left edge, a flat mint ground, and white panels floating on it with soft corners and almost no shadow. Nothing decorates. Every tone in the palette is either brand (teal), structure (mint/ink/hairline), or meaning (score heat, stage, semantic status), and the three families never trade places.
 
-The build refuses the AI-dashboard arrangement it was pushed toward: no row of same-size stat cards floating over a gradient, no glassmorphism, no halo glows. Counters live in one bordered strip divided by hairlines. Depth is real offset plus blur, tuned per theme, and it appears only where something is genuinely above the page — a drag overlay, the command palette. Everything else is flat and separated by a 1px line.
+Density is deliberately split by the work being done. Tables and lists run tight — 13px body, 11px mono metadata, hairline dividers, rows that light up on hover — because an operator triages dozens of leads in a sitting and scanning speed is the whole job. Kanban cards are the exception: roomier, 12px of internal padding on an 11px-radius tile, sized as a drag target rather than as a data row. The two densities are the same system applied to two different physical acts.
 
-Density is deliberately split. Tables and lists are tight (32px header rows, 8px cell padding, 13px body) because a manager scans dozens of leads at once. Kanban cards are roomier because they are drag targets that a hand has to grab. That split was chosen by the operator and is the system, not an inconsistency.
+The brand is expressed through colour and type only. BITO's mark is never placed in the interface; the sidebar holds an empty, width-reserved slot so it could be, without a relayout. Both light and dark themes ship, and the dark theme is the same teal on deep petrol ink, never a second identity.
 
 **Key Characteristics:**
-- One brand hue (BITO teal) plus white; orange survives only on tiny components
-- Zero corner radius on every element, everywhere
-- Quicksand as the only typeface, at four weights
-- Hairline structure over shadow: 1px cool borders separate everything
-- Dense tables, roomier kanban cards
-- Exactly one authored motion moment: the kanban stage change
-- A reserved, empty logo slot — no mark is drawn
+- One brand hue (BITO teal `#00797f`), four steps, plus a matched deep-teal rail ramp.
+- Mint ground, white panels, borderless cards; hairlines only inside a panel.
+- Barlow for everything readable, Barlow Condensed for numerals and titles, IBM Plex Mono for metadata.
+- Softly rounded corners on a four-step scale (5 / 9 / 11 / 14px); status dots fully round.
+- Flat at rest — depth is offset-plus-blur tinted from ink, reserved for things genuinely lifted.
+- Colour never carries meaning alone; every tint ships with its word.
 
 ## Colors
 
-A single-hue palette: BITO teal on white, with a cool near-neutral ramp derived from the same hue and a small set of non-brand semantic signals.
+A single teal hue against a cool-grey ink ladder and a mint ground, with two small, strictly-bounded meaning ramps (score heat and stage) that are never mistaken for brand.
 
 ### Primary
-- **BITO Teal** (`{colors.teal-100}`): The one brand colour. Primary CTAs, active nav marker and rail, selected rows, focus rings, links on hover, the caret, and the 20%-alpha selection highlight. Sampled from the real BITO logo asset; it is the identity and nothing else may compete with it.
-- **Teal Deep Hover** (`{colors.teal-130}`): Primary button hover only.
-- **Teal Deepest** (`{colors.teal-150}`): Reserved deep end of the ramp; used for text-on-wash where the base teal is too light.
-- **Teal Tint** (`{colors.teal-40}`): Mid-stage kanban stage dots and secondary teal marks that must read as brand but not as an action.
-- **Teal Wash** (`{colors.teal-wash}`): Panel and table-header fill, active nav item background, selected command-palette row. The brand as a surface, at wash strength only.
-- **Teal Ground** (`{colors.teal-ground}`): The page ground behind every white panel. This is what keeps a white-card layout from looking like a blank document.
+- **BITO Teal** (`{colors.teal}`): The brand. Primary buttons, active rail item, focus rings, links and hover states on record titles, the selection highlight. On white it carries text at weight; it is the only hue permitted to fill a large region, and only in the rail.
+- **Teal Ink** (`{colors.teal-ink}`): The darker step. Primary-button hover, teal text on white where the base step would be marginal, `meeting`-stage chips.
+- **Teal Deep** (`{colors.teal-deep}`): The rail's resting plane and the deepest stage chip (`quote`). The most saturated dark in the system.
+- **Teal Soft** (`{colors.teal-soft}`): The light step, for de-emphasised brand marks and the `assigned` stage.
+- **Teal Wash** (`{colors.teal-wash}`): The 8%-strength brand surface — active-drop columns on the board, command-palette selection, the settle flash after a card lands.
 
-### Secondary
-- **Flare Orange** (`{colors.flare-orange}`): The one non-teal identity accent, permitted on tiny components only — the "Top signal" flag and equivalent hairline-bordered badges. Never a surface, never a fill larger than a badge, never a second brand colour. This is an explicit, operator-approved exception to BRANDING.md's blanket no-orange rule, scoped to this app alone.
+### Secondary — the rail ramp
+The one region the brand hue owns outright. Every pair is measured, not eyeballed.
+- **Rail** (`{colors.rail}`) with **Rail Hover** (`{colors.rail-hover}`) and **Rail Active** (`{colors.rail-active}`): the navigation plane and its two states.
+- **Rail Ink** (`{colors.rail-ink}`, 10.0:1 on rail), **Rail Ink 2** (`{colors.rail-ink-2}`, 6.7:1), **Rail Ink 3** (`{colors.rail-ink-3}`, 5.7:1), **Rail Mark** (`{colors.rail-mark}`, 7.6:1): the rail's own four-step text ladder. On an *active* item only Rail Ink clears 4.5:1, so the item's numeral and count badge ride full ink there instead of dimming.
+- **Rail Edge** (`{colors.rail-edge}`): the hairline that separates rail from ground in dark mode, where the two sit only 1.4:1 apart.
+
+### Tertiary — meaning ramps
+- **Score heat** — **Heat High** (`{colors.heat-high}`), **Heat Mid** (`{colors.heat-mid}`), **Heat Low** (`{colors.heat-low}`): red / amber / grey, one ramp for the whole console. The vivid values fill dots only. The `-ink` variants (`{colors.heat-high-ink}`, `{colors.heat-mid-ink}`, `{colors.heat-low-ink}`) set the tier *word*, because the vivid amber and grey read at 2.9:1 and 2.7:1 as text on white.
+- **Stage tones**: nine, one per pipeline stage, drawn mostly from the teal ramp with **Stage Won** (`{colors.stage-won}`) and **Stage Dead** (`{colors.stage-dead}`) stepping outside it. They appear as a dot beside a written stage name, or as a chip whose label states the stage.
+- **Flare Orange** (`{colors.flare-orange}`): the one non-teal accent, permitted for elements smaller than a badge — a flag, a hairline, a single figure. Currently held in reserve; no shipped surface uses it.
 
 ### Neutral
-- **Ink** (`{colors.ink}`): Primary text — company names, headings, metric figures.
-- **Ink 2** (`{colors.ink-2}`): Table cell body, secondary structural text.
-- **Ink Dim** (`{colors.ink-dim}`): Subtitles, signal summaries, ghost-button rest state. Darkened from BRANDING.md's muted grey specifically so small text clears 4.5:1 on white.
-- **Ink Faint** (`{colors.ink-faint}`): Field labels, timestamps, table head text, footer. **Large or secondary text only** — this is the original brand muted value, retained because it is correct at label scale and above but not for body copy on white.
-- **Line** (`{colors.line}`) / **Line Strong** (`{colors.line-strong}`): The cool hairlines that do all the structural work. `line` is the default border on every element (set globally); `line-strong` marks hover borders, avatars, the palette frame, and scrollbar thumbs.
-
-### Tertiary
-Semantic status colours are UX convention, deliberately outside the brand: **good** (`{colors.signal-good}`), **warn** (`{colors.signal-warn}`), **bad** (`{colors.signal-bad}`). Lead-score signals are a separate scale on the same logic: **hot**, **warm**, and **cold** (`{colors.signal-cold}`, a muted slate chosen to stay out of teal's way).
+- **Mint Ground** (`{colors.mint-ground}`): the page. Flat — no texture, no grid.
+- **Surface** (`{colors.surface}`) / **Surface 2** (`{colors.surface-2}`) / **Surface 3** (`{colors.surface-3}`): white panel, row-hover wash, and the resting tint for chips and kanban cards.
+- **Ink ladder** — **Ink** (`{colors.ink}`) for headings and record names, **Ink 2** (`{colors.ink-2}`) for secondary cells, **Ink Dim** (`{colors.ink-dim}`) for small body copy, **Ink Faint** (`{colors.ink-faint}`) for labels and metadata, **Ink Ghost** (`{colors.ink-ghost}`) for rules, row numerals and empty-state glyphs. Every step through Ink Faint clears 4.5:1 on both white and the mint ground.
+- **Line** (`{colors.line}`) for section rules, **Line Soft** (`{colors.line-soft}`) for dividers inside a panel, **Line Strong** (`{colors.line-strong}`) for input edges, scrollbar thumbs and the oversized page numeral.
 
 ### Named Rules
+**The One Hue Rule.** BITO teal is the only brand colour. Any new brand-flavoured tone must be a step on the existing teal ramp — deep, ink, base, soft, wash — never a new hue.
 
-**The One Hue Rule.** BITO teal and white are the only brand colours. Any new accent must be a step on the teal ramp (`{colors.teal-150}` → `{colors.teal-40}`), never a new hue.
+**The Never-Colour-Alone Rule.** No state is legible by colour alone. A score tier ships its dot *and* its word; a stage chip ships its tint *and* the stage name. If removing colour removes meaning, the component is wrong.
 
-**The Tiny-Flare Rule.** Orange appears only on elements smaller than a badge — a flag, a hairline border, a single figure. If an orange region is large enough to read as a surface, it is wrong.
+**The One Score Ramp Rule.** The console has exactly one score ramp: red hot (≥80), amber warm (≥50), grey cold. It is the same ramp in the inbox, on the board, in the command palette and on the lead page. There is no teal score ramp and there must never be one — teal means brand and action, never temperature.
 
-**The Non-Brand Signal Rule.** Status and score colours are never drawn from the teal ramp and never treated as brand. Teal means "active/actionable"; green/amber/red mean "state of the world."
+**The Vivid-Dot / Ink-Word Rule.** Vivid heat tones fill dots and fills only; the `-ink` variants set text. Never set a tier word in the vivid amber or grey.
 
-**The Dark-Ramp Rule.** In dark mode the accent is a lifted teal that must stay inside the brand ramp — between teal 40 and the base — lifted only as far as AA against near-black text requires (measured 7.2:1 against `--primary-foreground`). Never brighten dark-mode teal past the ramp to gain contrast; flip the foreground instead.
+**The Tiny-Flare Rule.** Orange appears only on elements smaller than a badge. If an orange region reads as a surface, it is wrong.
 
-**The Contrast-Split Rule.** `--ink-dim` is the small-text grey; `--ink-faint` is the label grey. Never use `--ink-faint` for body copy on white.
+**The Contrast-Split Rule.** Ink Dim is the small-text grey; Ink Faint is the label grey; Ink Ghost is decorative and must never carry meaning on its own.
 
 ## Typography
 
-**Display Font:** Quicksand (with ui-sans-serif, system-ui fallback)
-**Body Font:** Quicksand
-**Label / Data Font:** Quicksand, with tabular numerals locked on
+**Display Font:** Barlow Condensed (600, 700), exposed as `.display-number` and `.display-serif`
+**Body Font:** Barlow (400, 500, 600, 700)
+**Label/Mono Font:** IBM Plex Mono (400, 500, 600), exposed as `.mono`, `.label-xs`
 
-**Character:** One geometric humanist sans carries the entire console. Quicksand's round, even counters keep a dense operator surface from feeling punishing, and its geometric numerals hold a metric strip well at 700 weight with tight tracking. There is no second typeface anywhere in the build — figures align through `font-variant-numeric: tabular-nums`, not through a monospace.
-
-Two class names in the codebase are historical misnomers, kept because 100+ call sites reference them; both are documented here by their real behaviour:
-- `.mono` is **not** a monospace font. It is Quicksand with tabular numerals and +0.015em tracking — the dense-data voice.
-- `.display-serif` is **not** a serif. It is Quicksand at 700 with -0.02em tracking and balanced wrapping — the heading voice.
+**Character:** Barlow is a low-contrast industrial grotesque — plain, dense, unbothered — and its condensed cut gives the console its one theatrical gesture: an oversized page numeral and big metric figures that anchor a screen without adding a second personality. IBM Plex Mono carries every piece of metadata: identifiers, counts, timestamps, uppercase micro-labels. Three families, one voice: technical, current, unornamented.
 
 ### Hierarchy
-- **Page title** (700, 19px mobile / 21px desktop, 1.25, -0.02em tracking): One line at the top of a surface. Deliberately small; the table is the page.
-- **Section title** (700, 17px, -0.02em): Hero-lead company name, panel headings.
-- **Metric** (700, 19px, 0.95 line-height, -0.03em, tabular): Counter figures in the stat strip; scales to 48px for the single large score readout on a lead detail.
-- **Body** (400/500, 13px, 1.5): Table cells, palette rows, nav items.
-- **Body small** (400, 12px–12.5px, 1.45): Subtitles, signal summaries, card meta.
-- **Data** (500, 11–12px, +0.015em, tabular): Counts, day-in-stage figures, dates, scores, keyboard hints.
-- **Label** (600, 10.5px, +0.07em, uppercase, ink-faint): Column headers, field names, footer, stat-strip captions.
+- **Display** (Barlow Condensed 700, 62px, line-height 0.85, tabular): the page numeral in the header strip and the 140px numeral on the not-found page. Decorative wayfinding; hidden from assistive tech.
+- **Headline** (Barlow Condensed 700, 26–30px, line-height 1.1): the lead-detail title, auth pages, rep pages.
+- **Metric** (Barlow Condensed 700, 22–52px, tabular): counter figures in the stat strip, the large score on a lead.
+- **Title** (Barlow 700, 13.5–14.5px, line-height 1.25): record names in table rows and kanban cards. The densest heading level in the product.
+- **Body** (Barlow 400, 13px): table cells and form text.
+- **Body Small** (Barlow 400, 11.5–12.5px, line-height 1.45): signal summaries, secondary lines under a record name.
+- **Label** (IBM Plex Mono 500, 9.5–11px, uppercase, tracking 0.06–0.16em): column headers, field labels, counter labels, stage chips, rail meta.
+- **Data** (IBM Plex Mono 400/500, 11px, tabular, `zero` slashed): identifiers, day counts, timestamps.
 
 ### Named Rules
+**The Three-Family Rule.** Barlow, Barlow Condensed, IBM Plex Mono. Nothing else. No serif, no system display face, no fourth family for emphasis. Note that `.display-serif` is a legacy class name only — it renders Barlow Condensed, not a serif.
 
-**The One Typeface Rule.** Quicksand only, at 400/500/600/700. Barlow was an earlier unverified assumption and must never be reintroduced. No serif, no monospace, no system display face.
+**The Tabular Numeral Rule.** Every figure that can appear in a column — scores, counts, days, dates, currency — carries tabular numerals via `font-variant-numeric`, applied globally to tables, `.tabular`, `.stat` and code. Numbers align by feature setting, never by a second font.
 
-**The Tabular Numeral Rule.** Every figure that can appear in a column — scores, counts, days, dates, currency — carries tabular numerals. Numbers align by feature setting, never by a second font.
+**The Label-Not-Kicker Rule.** The uppercase mono micro-label names a column, a field, or a counter. It is not a kicker: it does not sit above a heading to introduce it.
 
-**The Label-Not-Kicker Rule.** The 10.5px uppercase label style names a column, a field, or a counter. It is never set above a heading as a kicker or eyebrow; the page header component explicitly accepts and discards a kicker prop for that reason.
+**The Condensed-For-Figures Rule.** Barlow Condensed is for numerals and page titles only. It never sets body copy, labels, or button text.
 
 ## Layout
 
-A fixed 228px left rail (sticky, full height, white on the teal ground, right hairline) plus a fluid main column. The rail carries the reserved logo slot, wordmark, ⌘K search trigger, nav, and the account/theme/sign-out block. Below `lg` the rail is replaced by a sticky top bar with a horizontally scrollable tab rail — every destination stays reachable without a hamburger.
+The shell is a fixed 236px deep-teal rail on the left (`lg` and up) beside a fluid content column; below `lg` the rail collapses into a sticky teal top bar with icon-only targets that scroll horizontally rather than clipping. Content sits in a 30px gutter on desktop, 24px at `sm`, 16px on mobile, with a 26px top inset and a mono footer strip in Ink Ghost.
 
-Main content is gutter-padded `16px` at mobile, `24px` at `sm`, `32px` at `lg`, with `20px`/`28px` vertical. There is no max-width clamp: the triage table runs full width, which is the point of the first viewport. A hairline footer closes every page in label type.
+Every page opens with the same header: an oversized condensed numeral pinned to the left edge (hidden below `sm`, hidden from screen readers) with a baseline-aligned counter strip beside it — mono label above condensed figure, 32–40px apart. Content below sits in white `.panel` cards with 14px corners and no border.
 
-**Density.** Tables run 32px header rows and `8px 12px` cells at 13px. Lists and nav rows sit around 28–34px. Kanban columns are a fixed 264px with `6px` gutters and `6px` internal padding, and their cards are visibly roomier than a table row — they are drag targets.
+The spacing rhythm is small and consistent: 2px–6px inside chips, 10–14px inside interactive controls, 12px inside kanban cards, 16–24px inside panels, 20px between a header and the panel it introduces. Tables progressively disclose columns rather than scrolling: secondary columns appear at `lg`, `xl` and `2xl` and are hidden below.
 
-**Responsive behaviour.**
-- The triage table becomes a divided card list below `sm`; an eight-column table at 390px is a horizontal-scroll trap.
-- The stat strip is a two-column grid on a phone, with a trailing odd cell spanning both columns so no dead cell renders. From `sm` up it becomes an inline-flex strip that hugs its counters instead of ruling an empty half-width box across the page.
-- Table columns drop progressively by breakpoint (`lg`, `xl`, `2xl`) rather than compressing.
-- The kanban board scrolls horizontally, bleeding to the gutter edges.
+**The Density Split Rule.** Tables and lists run at CRM density — 13px cells, 11px mono metadata, hairline dividers, full-row hover. Kanban cards run looser — 12px padding, 11px radius, a two-line summary — because they are drag targets held under a pointer, not rows to be scanned. Never harmonise the two.
 
-### Named Rules
-
-**The Action-In-Row Rule.** The primary action for a record lives in that record's own row or card, never in a detached toolbar above the list.
-
-**The Strip-Not-Cards Rule.** Counters render as one bordered strip divided by hairlines. Never a row of same-size stat cards, and never over a gradient.
+**The Panel-Not-Page Rule.** Content lives inside white panels on the mint ground. The ground itself never carries text other than the page header strip and the footer.
 
 ## Elevation & Depth
 
-The system is flat by default. Separation comes from 1px cool hairlines and the white-panel-on-teal-ground relationship, not from shadow. Shadows exist only for things genuinely lifted off the page, and they are always a real vertical offset plus blur — never a zero-offset halo, never a hard offset block.
+The system is functionally flat. Separation comes from tone — white panel against mint ground — not from shadow. The resting shadow (`lift-1`) is a whisper that only keeps a white card from dissolving into the ground; real elevation is reserved for surfaces that are genuinely above the page: dialogs, the command palette, and a kanban card under the pointer. Every shadow is tinted from a deep teal-grey ink, never neutral black, so depth stays inside the palette.
 
 ### Shadow Vocabulary
-- **lift-1** (`box-shadow: 0 1px 2px hsl(183 40% 8% / 0.06), 0 1px 1px hsl(183 40% 8% / 0.04)`): Barely-there seat for a resting raised element.
-- **lift-2** (`box-shadow: 0 2px 4px hsl(183 40% 8% / 0.07), 0 4px 12px hsl(183 40% 8% / 0.07)`): Menus and small popovers.
-- **lift-3** (`box-shadow: 0 4px 8px hsl(183 40% 8% / 0.10), 0 12px 28px hsl(183 40% 8% / 0.12)`): Modal-tier — the command palette.
-- **card-lift** (`box-shadow: 0 8px 16px hsl(183 40% 8% / 0.12), 0 18px 40px hsl(183 40% 8% / 0.14)` with `scale(1.02) rotate(0.4deg)`): The kanban drag overlay only.
-
-Every shadow is re-tuned in dark mode against a near-black teal-charcoal rather than reused at light-mode alpha.
+- **Resting** (`box-shadow: 0 1px 2px hsl(var(--shadow-ink) / 0.04)`): white panels on the ground. Barely perceptible by design.
+- **Floating** (`0 2px 4px .../0.06, 0 6px 16px .../0.08`): popovers, menus, the command palette.
+- **Lifted** (`0 4px 8px .../0.10, 0 14px 32px .../0.13`): dialogs and other modal surfaces.
+- **Dragged** (`0 8px 16px .../0.12, 0 18px 40px .../0.14` with `scale(1.02) rotate(0.4deg)`): a kanban card held under the pointer. The only place in the product where a surface tilts.
+- **Dark mode**: the same offsets at 0.45–0.6 alpha against near-black, because a 4% shadow disappears on a dark ground.
 
 ### Named Rules
+**The Offset-Not-Halo Rule.** Depth is always offset plus blur, tinted with the brand's ink. No zero-offset glow, no coloured halo, no hard offset shadow.
 
-**The Offset-Not-Halo Rule.** Depth is always offset + blur tinted with the brand hue. No zero-offset glow, no coloured halo, no hard offset shadow.
+**The Lift-Only-When-Lifted Rule.** A surface earns a shadow only while it is above the page: dragged, floating or modal. Resting panels stay flat.
 
-**The Lift-Only-When-Lifted Rule.** A surface gets a shadow only while it is above the page: dragged, or modal. Resting panels are flat with a hairline.
+**The Settle-Not-Fade Rule.** A card that lands in a new column settles from an already-visible state — a 4px rise and a teal wash decaying over 420ms — never a fade-in that hides content. Both drag lift and settle are disabled under `prefers-reduced-motion`.
 
 ## Shapes
 
-Zero corner radius, everywhere, without exception. Every Tailwind radius token — including `rounded-full` — resolves to `0px`, so no component can accidentally round itself. Circles do not exist in this system: the status dot is a 7px square, avatars are square, badges are square-cornered hairline boxes.
+Corners are softly rounded on a four-step scale, and the step encodes the size of the thing: 5px for chips, badges and inline mono tags; 9px for buttons, nav items and icon targets; 11px for controls, filter pills and kanban cards; 14px for the panel a whole table sits in. Nothing is square, and nothing is a pill except by intent — the only fully-round shapes are the 6px status dot and the 28px avatar disc.
 
-Form language is rectangles separated by hairlines. Panels are white rectangles bordered `1px` in `line` on the teal ground. Badges and pills are rectangles with a 40%-alpha border of their own semantic colour and a 6–7% fill of the same. The active nav item is marked by a 2px teal bar flush to the left edge; active tabs by a 2px teal bottom border.
+Panels are borderless: they separate from the ground by tone. Borders appear inside a panel as hairline dividers (Line Soft) between rows, and around low-emphasis controls (secondary, outline buttons and badges) at Line or Line Strong. Focus is a 2px teal outline at 2px offset with a 5px radius, applied globally.
 
-### Named Rules
+Iconography is Lucide line icons at 14–16px, stroke weight 1.75, always paired with a text label except in the mobile rail where each target carries an `aria-label`.
 
-**The Zero-Radius Rule.** Nothing in this product has a rounded corner. If a shape needs softening, it gets more padding, not a radius.
+**The Radius-By-Scale Rule.** Radius grows with the element: chip 5, control 9, card 11, panel 14. Never mix — a chip inside a panel does not inherit the panel's corner.
+
+**The Borderless-Panel Rule.** A panel separates by tone, not by an outline. If a panel needs a border to be visible, the tone behind it is wrong.
 
 ## Components
 
 ### Buttons
-- **Shape:** Square (0px), 36px default height, 28px small, 44px large.
-- **Primary:** Teal fill with a matching teal border and theme-flipped foreground text (white in light, near-black in dark — hardcoding white fails AA against the lifted dark teal). Hover deepens to teal 130.
-- **Hover / Focus:** 150ms transition on background, colour, and border only — buttons never move. Focus shows a 1px teal ring with a 2px surface-coloured offset.
-- **Secondary:** Teal-wash fill, ink text, hairline border; hovers to the next wash step.
-- **Ghost:** Transparent with a transparent border (so it never shifts on hover), ink-dim text warming to ink over a wash background. This is the default in-row action.
-- **Outline:** Hairline border on transparent, border strengthens on hover.
-- **Destructive:** 10%-alpha bad fill, bad text, 30%-alpha bad border. Never a solid red button.
+- **Shape:** softly rounded (9px), 36px tall by default, 28px in `sm`, 44px in `lg`.
+- **Primary:** BITO teal fill, white label, matching teal border, 13px Barlow medium with 14px side padding and a 14px leading icon.
+- **Hover / Focus:** background moves to Teal Ink over 150ms; focus is a 1px teal ring at 2px offset against the surface.
+- **Secondary:** Surface 2 fill with a Line border, Ink label, hovering to Surface 3.
+- **Ghost:** transparent with an Ink Dim label; hover fills Surface 2 and darkens the label to Ink.
+- **Outline:** transparent with a Line border; hover strengthens the border to Line Strong.
+- **Destructive:** Signal Hot at 10% fill with a 30% border and Hot text — never a solid red button.
+- **Disabled:** 50% opacity, pointer events off.
 
-### Chips / Pills
-- **Status pill:** Uppercase 10px label, 600 weight, `2px 6px` padding, square, with a 40–45% alpha border and a 6% fill of its own status colour. Dead status drops to a plain hairline and faint ink — a closed lead loses its colour.
-- **Score badge:** A 7px square dot in the tier colour, a zero-padded tabular figure, and an uppercase tier word in faint ink. At large size it becomes a 48px tabular figure with the tier word beside it.
+### Chips
+- **Stage chip:** solid tint from the stage map with white (or Teal Deep on the wash) text, 5px corners, 9.5px uppercase mono at 0.06em tracking, 6px/2px padding. The stage word is always present; when a lead is assigned the chip names the rep ("Assigned to Layla").
+- **Badge:** 5px corners, 11px mono, bordered and transparent by default; the tinted variants (hot / warm / cold / success / accent) use a 40–45% border over a 6–7% fill of the same tone.
 
 ### Cards / Containers
-- **Corner style:** Square (0px).
-- **Background:** White (`{colors.brand-white}`) on the teal ground; secondary panels in teal wash.
-- **Shadow strategy:** None at rest — hairline border only. See Elevation.
-- **Border:** 1px `line`; `line-strong` on hover for interactive cards.
-- **Internal padding:** `12–16px` for panels, `8px` for kanban card bodies.
+- **Panel** — the container everything else sits in. White, 14px corners, no border, `overflow: hidden` so table rows clip to the corner. Resting shadow only.
+- **Kanban card** — Surface 2, 11px corners, 12px padding, a bold 13.5px record name, a two-line 11.5px summary, and a mono footer row. Hover lifts 2px and deepens to Surface 3; the card is the drag handle.
+- **Internal padding:** 16–24px in panels, 12px in cards, 46px vertical in empty states.
 
 ### Inputs / Fields
-- **Style:** Square, 1px `line` border, ground-coloured or transparent fill, 12–14px text, faint placeholder.
-- **Focus:** Global 2px teal outline at 1px offset; the caret is teal. Inputs inside a framed surface (the palette) drop their own border and rely on the frame.
+- **Style:** borderless — Surface fill, 11px corners, 10px vertical padding, 13px medium text, a 14px Ink Ghost leading icon inset 16px, placeholder in Ink Faint at regular weight.
+- **Focus:** the field fills to Surface 3 and takes the global 2px teal outline. No glow.
+- **Filter pills:** the same 11px-cornered control shape, used for every select in a filter bar.
 
 ### Navigation
-- Rail items are 13px, `7px 10px`, ink-dim with faint 16px stroked icons at 1.75 weight. Active items take a teal-wash background, ink text at 600, a teal icon, and a 2px teal bar on the left edge. Mobile tabs use a 2px teal bottom border instead. Hover is a wash background with no motion.
+- **Style:** a 236px deep-teal plane painted by the outer wrapper (so a tall page never reveals mint ground below it) with a sticky inner column. Each item is a 9px-cornered row carrying a two-digit mono code, a 14px line icon, a 13.5px label and an optional live mono count.
+- **Default / hover / active:** Rail Ink 2 label on the plane; hover fills Rail Hover and brightens to Rail Ink; active fills Rail Active, sets the label semibold, and promotes numeral and badge to full Rail Ink.
+- **Brand block:** a reserved, empty 28px logo slot beside the "LeadIntelligence" wordmark and a mono "BITO UAE · GCC" line. The mark itself is never placed.
+- **Mobile:** the rail becomes a sticky teal top bar of 32px icon targets that scrolls horizontally.
 
-### Data Table (signature)
-Sticky teal-wash header in uppercase label type; body rows at 13px with tabular figures, a `border-b` hairline, and a 75ms wash hover. The row is the unit of work: rank number, company plus a one-line clamped signal summary plus a nowrap meta line, score badge, status pill, and the action cluster right-aligned in the row itself. Below `sm` the whole table is replaced by a divided card list carrying the same fields.
+### Score Badge (signature)
+The console's most-repeated component and the carrier of the score ramp. Small and default sizes render a 6px round dot in the vivid heat tone, the score in condensed tabular figures at 13.5–16px in full Ink, then the tier word in 9–10px uppercase mono in the matching `-ink` tone. The large size drops the dot and sets the score itself at 52px in the tier's ink tone beside the word. The word ships at every size.
 
-### Kanban Board (signature)
-Fixed 264px columns, each with a bordered header carrying a square stage dot, the stage name, a lock icon when the stage is not a drop target, and a tabular count. Column bodies tint to teal wash with a 50%-alpha teal border while a valid drag is over them; non-droppable columns sit at a dimmer wash. Cards are white with a hairline, a dedicated grip handle, a two-line company name, score dot, rep or location, and a days-in-stage figure that turns warm past 14 days and hot past 30.
-
-**The single authored motion moment** in the entire app is the stage change: the drag overlay takes `card-lift` (scale 1.02, 0.4° rotation, deep offset shadow, 140ms), and the landed card plays `card-settle` — 420ms exponential ease-out (`cubic-bezier(0.16, 1, 0.3, 1)`) from an already-visible state, starting teal-bordered and teal-washed and resolving to rest. It never fades content in from zero. All authored transition and animation is neutralised under `prefers-reduced-motion: reduce`.
-
-### Command Palette (signature)
-A 576px-max framed panel at 12vh, `line-strong` border, `lift-3` shadow, over a 25% ink scrim (60% black in dark). Search row, grouped results under uppercase labels, an active row on teal wash with a teal icon and a teal return glyph, tabular score at the right, and a hairline footer of bordered `kbd` hints. Opens on ⌘K/Ctrl-K or `/` anywhere outside a text field.
-
-### Logo Slot
-A reserved, deliberately **empty** flex box (`min-height: 28px`, 32px in the rail, 28px compact) marked `aria-hidden`. BITO has supplied no reversed mark, so the build holds the space at the correct size rather than inventing one.
+### Stat Strip (signature)
+The shared page header: an oversized condensed numeral in Line Strong pinned to the left edge, `aria-hidden`, with counters running along its baseline — an 11px mono uppercase label above a 34px condensed figure, optionally toned brand / good / bad / warn. Counters are one strip, never a row of equal-sized stat cards.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** build every new surface from BITO teal, white, and the cool hairline neutrals; take new accents from the teal ramp (`#00464a` → `#4fa3a8`).
-- **Do** set every corner to 0px, including things that "want" to be circles — dots, avatars, badges.
-- **Do** use Quicksand only, at 400/500/600/700.
-- **Do** lock tabular numerals on every figure that can appear in a column.
-- **Do** separate surfaces with a 1px `line` hairline before reaching for any shadow.
-- **Do** put a record's primary action inside its own row or card.
-- **Do** use `--ink-dim` for small text on white and reserve `--ink-faint` for labels and large or secondary text.
-- **Do** keep dark-mode teal inside the brand ramp and flip the foreground to near-black to hold AA.
-- **Do** render counters as one bordered, hairline-divided strip.
-- **Do** keep tables and lists dense and kanban cards roomier — the density split is intentional.
-- **Do** hold the logo slot empty until BITO supplies a mark.
+- **Do** derive every colour from a token. Components never hard-code a hex.
+- **Do** ship the word with the tint — score tier, pipeline stage, semantic status.
+- **Do** use the `-ink` heat variants for any tier text, and the vivid heat tones only for dots and fills.
+- **Do** keep tables and lists at CRM density and kanban cards roomy; they are the same system serving two different acts.
+- **Do** pick the radius from the element's scale: 5px chip, 9px control, 11px card, 14px panel.
+- **Do** keep depth as offset-plus-blur tinted from ink, and only on surfaces that are actually above the page.
+- **Do** reserve the logo slot and leave it empty; the brand shows through colour and type.
+- **Do** carry both themes: any new token needs a dark-mode value in the same `.dark` block.
 
 ### Don't:
-- **Don't** introduce a second brand hue. One teal, one white.
-- **Don't** let orange become a surface, a fill, or a second identity colour — badge-scale elements only.
-- **Don't** round anything, ever.
-- **Don't** reintroduce Barlow, a serif, a monospace, or any system display face; `.mono` and `.display-serif` are Quicksand under legacy names.
-- **Don't** set the 10.5px uppercase label above a heading as a kicker or eyebrow.
-- **Don't** use a zero-offset glow, a coloured halo, or a hard offset shadow; depth is offset + blur.
-- **Don't** shadow a resting panel.
-- **Don't** arrange same-size stat cards over a gradient ground.
-- **Don't** animate anything beyond the kanban stage change and the sub-150ms colour transitions already in the system.
-- **Don't** draw a status or score colour from the teal ramp — teal means actionable, not "good."
-- **Don't** place a BITO logo anywhere.
+- **Don't** introduce a second brand hue. New brand tones are steps on the teal ramp.
+- **Don't** build a second score ramp. There is one — red / amber / grey at 80 and 50 — and it is never teal.
+- **Don't** let orange fill a surface; it is permitted only on elements smaller than a badge.
+- **Don't** put a border on a panel, or a shadow on a resting one.
+- **Don't** use a zero-offset glow, a coloured halo, or a hard offset shadow.
+- **Don't** set body copy, labels or button text in Barlow Condensed, and don't add a fourth font family.
+- **Don't** use Ink Ghost for anything that carries meaning.
+- **Don't** set a mono micro-label above a heading as a kicker or eyebrow.
+- **Don't** place the BITO logo anywhere in the UI.
