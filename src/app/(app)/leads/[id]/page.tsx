@@ -32,6 +32,7 @@ import { ClaimButton } from "@/components/claim-button";
 import { UnclaimButton } from "@/components/unclaim-button";
 import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
+import { OutreachUsedToggle } from "@/components/outreach-used-toggle";
 import { OrderProfileDialog } from "@/components/order-profile-panel";
 import { LeadReviewCard } from "@/components/lead-review";
 import { ScoreBreakdown } from "@/components/ui/score-breakdown";
@@ -306,16 +307,23 @@ export default async function LeadDetailPage({
               <DraftBlock
                 heading="LinkedIn DM"
                 drafts={linkedinDrafts}
+                leadId={lead.id}
                 emptyMessage="No LinkedIn DM drafted yet."
               />
               <DraftBlock
                 heading="Email"
                 drafts={emailDrafts}
+                leadId={lead.id}
                 emptyMessage="No email drafted yet."
                 showSubject
               />
               {otherDrafts.length > 0 && (
-                <DraftBlock heading="Other" drafts={otherDrafts} emptyMessage="" />
+                <DraftBlock
+                  heading="Other"
+                  drafts={otherDrafts}
+                  leadId={lead.id}
+                  emptyMessage=""
+                />
               )}
             </div>
           </Section>
@@ -541,28 +549,44 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function DraftBlock({
   heading,
   drafts,
+  leadId,
   emptyMessage,
   showSubject,
 }: {
   heading: string;
-  drafts: { id: string; subject: string | null; body: string; created_at: string }[];
+  drafts: {
+    id: string;
+    subject: string | null;
+    body: string;
+    used: boolean;
+    created_at: string;
+  }[];
+  leadId: string;
   emptyMessage: string;
   showSubject?: boolean;
 }) {
   if (drafts.length === 0 && !emptyMessage) return null;
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <h3 className="text-[12.5px] font-semibold text-ink">{heading}</h3>
         {drafts[0] && (
-          <CopyButton
-            value={
-              showSubject && drafts[0].subject
-                ? `Subject: ${drafts[0].subject}\n\n${drafts[0].body}`
-                : drafts[0].body
-            }
-            label={`Copy ${heading.toLowerCase()}`}
-          />
+          <div className="flex items-center gap-3">
+            <OutreachUsedToggle
+              outreachId={drafts[0].id}
+              leadId={leadId}
+              used={drafts[0].used}
+              channelLabel={heading}
+            />
+            <CopyButton
+              value={
+                showSubject && drafts[0].subject
+                  ? `Subject: ${drafts[0].subject}\n\n${drafts[0].body}`
+                  : drafts[0].body
+              }
+              label={`Copy ${heading.toLowerCase()}`}
+            />
+          </div>
         )}
       </div>
       {drafts.length === 0 ? (

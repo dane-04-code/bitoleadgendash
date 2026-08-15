@@ -4,6 +4,7 @@ import { getAllReps, getRepLeadCounts, type RepWithStatus } from "@/lib/queries"
 import { AddRepForm } from "@/components/add-rep-form";
 import { SetPasswordDialog } from "@/components/set-password-dialog";
 import { DeleteRepDialog } from "@/components/delete-rep-dialog";
+import { RepActiveToggle } from "@/components/rep-active-toggle";
 import { cn, initials } from "@/lib/utils";
 import { StatStrip, Stat } from "@/components/stat-strip";
 import { REP_AVAILABILITY_LABELS } from "@/lib/supabase/types";
@@ -193,6 +194,11 @@ function RepCard({
           repName={rep.full_name}
           repEmail={rep.email}
           hasPassword={rep.has_password}
+        />
+        <RepActiveToggle
+          repId={rep.id}
+          repName={rep.full_name}
+          isActive={rep.is_active}
         />
         <DeleteRepDialog repId={rep.id} repName={rep.full_name} leadCount={count} />
       </div>
