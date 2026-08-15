@@ -882,6 +882,11 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
       )
     `
     )
+    // Archived leads are noise the manager already dismissed — the mock branch
+    // above skips them and every other lead query filters them out. Without
+    // this the board showed 29 in New against production where only 1 was
+    // live, and the header stats counted all of them.
+    .eq("archived", false)
     .order("updated_at", { ascending: false });
 
   if (error) {
