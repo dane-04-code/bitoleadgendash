@@ -72,10 +72,10 @@ Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but
 Binding, from `Danes Brain/Projects/Bito Consulting/Plans/BRANDING.md` (colours sampled from the real logo asset, verified 5 Aug 2026) plus operator decisions on 2026-08-12:
 
 - **BITO teal `#00797f`** and **white** are the brand. Tonal ramp: `#00565b`, `#00464a`, `#4fa3a8`, `#e7edec`, `#f2f6f5`.
-- **Quicksand** is the typeface (headings 600/700, body 400/500). It replaces an earlier unverified Barlow assumption — do not reintroduce Barlow.
+- **Barlow / Barlow Condensed** are the typefaces, with IBM Plex Mono for figures — wired in `src/app/layout.tsx`. This supersedes the earlier Quicksand-only rule (2026-08-13): the Claude Design comps Dane approved for the console are set in Barlow, and the comp is the commitment. Do not "restore" Quicksand without asking.
 - **Orange `#e06c00` is permitted for tiny components only** (a CTA, a hot flag) — never a base surface or a second identity colour. This is a deliberate, operator-approved exception to BRANDING.md's "no orange, anywhere" rule, scoped to this app.
 - **Do not place the BITO logo anywhere.** Reserve a defined space for it in the layout, left empty. Colours and fonts only.
-- **Components must not be rounded.** Square corners.
+- **Corners are rounded**, on the comp's scale: `--radius-sm` 5px through `--radius-xl` 14px, status dots fully round. This supersedes the earlier "square corners, without exception" rule (2026-08-13), for the same reason as the typeface above.
 - Semantic status colours are UX convention, not brand: good `#4f8f5f`, warning `#cf9a3a`, bad `#b8503f`. Ink `#1c1f1f`, muted `#6f7c7c`.
 
 **Convention is the commitment (standing preference, 2026-08-12).** The operator asked for the familiar CRM path — "take inspiration from popular CRM tools", "don't sway too hard away from what we already have". This surface executes the category standard at full fidelity, without irony or smuggled quirk. The craft bar is **Attio/Linear density for tables and lists, with roomier kanban cards sized for comfortable drag targets**. Future work on this product inherits that bar rather than reopening the aesthetic.

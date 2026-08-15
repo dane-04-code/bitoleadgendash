@@ -17,6 +17,12 @@
 .DS_Store
 *.pem
 
+# design tooling cache (generated, not source)
+.impeccable/
+
+# brand source assets — kept local; the logo is deliberately not used in the app
+branding and logo/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

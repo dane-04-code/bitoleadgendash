@@ -81,10 +81,13 @@ Tables: `leads`, `contacts`, `reps`, `assignments`, `outreach`,
 
 ## Design
 
-`DESIGN.md` documents the shipped design system; `PRODUCT.md` holds the product
-contract. Both are binding. Summary: BITO teal `#00797f` on white, Quicksand,
-**square corners everywhere**, orange `#e06c00` for tiny accents only, no logo
-anywhere, light and dark themes.
+`PRODUCT.md` holds the product contract and is binding. Summary: BITO teal
+`#00797f` on white, **Barlow / Barlow Condensed**, rounded corners (5–14px),
+orange `#e06c00` for tiny accents only, no logo anywhere, light and dark themes.
+
+`DESIGN.md` is **stale** — it documents the pre-overhaul system and carries a
+warning banner to that effect. Until it is regenerated, `src/app/globals.css`
+and `tailwind.config.ts` are the source of truth for shape, type and colour.
 
 ## Further reading
 
