@@ -8,9 +8,9 @@ const PAGE_LABELS: Record<string, { code: string; label: string }> = {
   "/pipeline": { code: "02", label: "Pipeline" },
   "/marketplace": { code: "03", label: "Marketplace" },
   "/reps": { code: "04", label: "Team" },
-  "/feedback": { code: "·", label: "Feedback" },
-  "/settings": { code: "·", label: "Settings" },
-  "/my": { code: "A", label: "My leads" },
+  "/feedback": { code: "05", label: "Feedback" },
+  "/settings": { code: "06", label: "Settings" },
+  "/my": { code: "01", label: "My leads" },
 };
 
 export function TopUtilityBar({ role }: { role: "admin" | "rep" }) {
@@ -20,7 +20,7 @@ export function TopUtilityBar({ role }: { role: "admin" | "rep" }) {
       pathname === k || pathname.startsWith(`${k}/`)
     )?.[1] ||
     (pathname.startsWith("/leads")
-      ? { code: role === "admin" ? "01" : "A", label: "Lead Detail" }
+      ? { code: role === "admin" ? "01" : "01", label: "Lead detail" }
       : null);
 
   // The clock only renders after mount. Rendering it on the server produces a
@@ -35,28 +35,25 @@ export function TopUtilityBar({ role }: { role: "admin" | "rep" }) {
   }, []);
 
   return (
-    <div className="hidden lg:flex h-9 items-center justify-between border-b border-line bg-surface px-5 sm:px-8 lg:px-10 mono text-[10px] uppercase tracking-wider text-ink-faint">
-      <div className="flex items-center gap-5">
-        {matched && (
-          <span className="flex items-center gap-2">
-            <span className="text-ink-faint">{matched.code}</span>
-            <span className="text-ink-2">{matched.label}</span>
-          </span>
-        )}
-        <span className="hidden md:inline">Region · GCC</span>
-        <span className="hidden md:inline">Currency · AED</span>
-      </div>
-      <div className="flex items-center gap-5">
-        <span className="hidden md:inline">
-          {role === "admin" ? "Role · Admin" : "Role · Sales rep"}
+    <div className="mono hidden lg:flex items-center gap-4 text-[10px] font-medium uppercase tracking-[0.14em] text-ink-faint mb-[26px]">
+      {matched && (
+        <span className="text-brand">
+          {matched.code} {matched.label}
         </span>
-        <span className="hidden md:inline">UTC+04 / Asia · Dubai</span>
-        <span className="text-ink-2 tabular">{time}</span>
-        <span className="flex items-center gap-1.5 text-signal-good">
-          <span className="dot bg-signal-good" />
-          Online
-        </span>
-      </div>
+      )}
+      <span>Region · GCC</span>
+      <span>Currency · AED</span>
+      <span className="ml-auto">
+        {role === "admin" ? "Role · Admin" : "Role · Sales rep"}
+      </span>
+      <span>
+        Asia / Dubai
+        {time && <span className="tabular"> · {time}</span>}
+      </span>
+      <span className="flex items-center gap-1.5 text-brand">
+        <span className="dot bg-brand" />
+        Online
+      </span>
     </div>
   );
 }

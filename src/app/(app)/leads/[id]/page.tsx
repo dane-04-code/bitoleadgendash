@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
 import type { InboxView } from "@/lib/queries";
 import { getSession } from "@/lib/auth";
 import { ScoreBadge } from "@/components/ui/score-badge";
+import { StatusChip } from "@/components/ui/status-chip";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { AssignDialog } from "@/components/assign-dialog";
@@ -31,11 +32,12 @@ import { ClaimButton } from "@/components/claim-button";
 import { UnclaimButton } from "@/components/unclaim-button";
 import { ListToggleButton } from "@/components/list-toggle-button";
 import { LeadNotes } from "@/components/lead-notes";
+import { OutreachUsedToggle } from "@/components/outreach-used-toggle";
 import { OrderProfileDialog } from "@/components/order-profile-panel";
 import { LeadReviewCard } from "@/components/lead-review";
 import { ScoreBreakdown } from "@/components/ui/score-breakdown";
 import { LEAD_STATUS_LABELS, archivedReasonLabel } from "@/lib/supabase/types";
-import { formatRelative, initials } from "@/lib/utils";
+import { cn, formatRelative, initials } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -106,49 +108,55 @@ export default async function LeadDetailPage({
     <div className="animate-fade-in pb-12">
       <Link
         href={isAdmin ? dashboardHref(inboxView) : "/my"}
-        className="inline-flex items-center gap-1.5 mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-ink transition-colors mb-6"
+        className="eyebrow mb-4 inline-flex items-center gap-1.5 transition-colors hover:text-ink"
       >
-        <ArrowLeft className="h-3 w-3" />
+        <ArrowLeft className="h-3 w-3" strokeWidth={2} />
         {isAdmin ? "Back to inbox" : "Back to my leads"}
       </Link>
 
       {lead.archived && (
-        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 border border-signal-warm/30 bg-signal-warm/[0.05] px-4 py-3">
-          <span className="inline-flex items-center rounded-sm border border-signal-warm/40 bg-signal-warm/[0.08] px-1.5 py-0.5 mono text-[10px] uppercase tracking-wider text-signal-warm">
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg bg-surface-2 px-4 py-3">
+          <span className="mono inline-flex items-center rounded-sm bg-stage-assigned px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.06em] text-white">
             Archived
           </span>
-          <span className="text-[12px] text-ink-dim">
+          <span className="text-[12.5px] text-ink-dim">
             {archivedReasonLabel(lead.archived_reason)}
           </span>
           {lead.archived_at && (
-            <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-              · archived {formatRelative(lead.archived_at)}
+            <span className="eyebrow">
+              archived {formatRelative(lead.archived_at)}
             </span>
           )}
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 pb-8 mb-8 border-b border-line">
+      {/* HEADER — the record's identity panel. The score rides at the right as
+          the anchor numeral, matching the oversized numeral on the index pages. */}
+      <header className="panel mb-4 grid grid-cols-1 gap-6 p-[18px] lg:grid-cols-[1fr_auto] lg:gap-10 lg:p-6">
         <div className="min-w-0">
-          <div className="flex items-center gap-3 mono text-[10px] uppercase tracking-wider text-ink-faint mb-4">
-            <span>Lead · {shortId}</span>
-            <span className="text-ink-faint/40">/</span>
+          <div className="mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-2">
+            <span className="eyebrow">Lead · {shortId}</span>
             {lead.signal_type && (
-              <span className="text-brand-ink">
-                {String(lead.signal_type).replace(/_/g, " ")}
-              </span>
+              <>
+                <span className="text-ink-ghost">/</span>
+                <span className="eyebrow text-brand-ink">
+                  {String(lead.signal_type).replace(/_/g, " ")}
+                </span>
+              </>
             )}
-            <span className="text-ink-faint/40">/</span>
-            <StatusInline status={lead.status} />
+            <StatusChip
+              status={lead.status}
+              repName={currentAssignment?.rep?.full_name}
+              className="ml-0.5"
+            />
           </div>
 
-          <h1 className="text-[22px] sm:text-[26px] font-bold leading-tight tracking-tight text-ink">
+          <h1 className="display-serif text-[26px] leading-[1.1] text-ink sm:text-[30px]">
             {lead.company_name}
           </h1>
 
           {lead.signal_summary && (
-            <p className="text-[15px] text-ink-2 mt-5 max-w-2xl leading-relaxed">
+            <p className="mt-3.5 max-w-2xl text-[13.5px] leading-relaxed text-ink-2">
               {lead.signal_summary}
             </p>
           )}
@@ -158,21 +166,24 @@ export default async function LeadDetailPage({
               href={lead.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group/article inline-flex items-center gap-2.5 mt-5 border border-line bg-surface px-4 py-2.5 hover:border-brand/45 hover:bg-brand/[0.05] transition-colors"
+              className="mt-4 inline-flex max-w-full items-center gap-2.5 rounded-md bg-surface-2 px-3.5 py-2.5 transition-colors hover:bg-surface-3"
             >
-              <ExternalLink className="h-3.5 w-3.5 text-brand-ink shrink-0" strokeWidth={1.75} />
-              <span className="mono text-[11px] uppercase tracking-wider text-brand-ink">
+              <ExternalLink
+                className="h-3.5 w-3.5 shrink-0 text-brand-ink"
+                strokeWidth={1.75}
+              />
+              <span className="mono text-[11px] font-medium uppercase tracking-[0.12em] text-brand-ink">
                 Read source article
               </span>
               {lead.signal_source && (
-                <span className="text-[12px] text-ink-faint border-l border-line pl-2.5 truncate max-w-[220px]">
+                <span className="max-w-[220px] truncate text-[12px] text-ink-faint">
                   {lead.signal_source}
                 </span>
               )}
             </a>
           )}
 
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 mt-7 max-w-3xl">
+          <dl className="mt-6 grid max-w-3xl grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
             <Field label="Location" value={lead.location} />
             <Field label="Industry" value={lead.industry} />
             <Field label="Warehouse" value={lead.warehouse_size} />
@@ -180,7 +191,7 @@ export default async function LeadDetailPage({
           </dl>
         </div>
 
-        <aside className="flex flex-col items-start lg:items-end gap-5 shrink-0 lg:min-w-[280px]">
+        <aside className="flex shrink-0 flex-col items-start gap-5 lg:min-w-[280px] lg:items-end">
           {isAdmin && nextLeadId && (
             <Button asChild size="sm" variant="outline">
               <Link href={`/leads/${nextLeadId}?from=${inboxView}`}>
@@ -190,7 +201,7 @@ export default async function LeadDetailPage({
             </Button>
           )}
           <ScoreBadge score={lead.score} size="lg" />
-          <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             {/* Order details exist only for a closed sale — the panel stays
                 hidden until the lead is Won (meeting 2026-07-11). */}
             {(isAdmin || repOwns) && lead.status === "won" && (
@@ -232,12 +243,12 @@ export default async function LeadDetailPage({
             )}
           </div>
           {currentAssignment?.rep && (
-            <div className="sm:text-right">
+            <div className="lg:text-right">
               <div className="eyebrow mb-1.5">Owner</div>
-              <div className="text-[13px] text-ink">
+              <div className="text-[13px] font-medium text-ink">
                 {currentAssignment.rep.full_name}
               </div>
-              <div className="mono text-[10px] uppercase tracking-wider text-ink-faint mt-1">
+              <div className="eyebrow mt-1">
                 Since {formatRelative(currentAssignment.assigned_at)}
               </div>
             </div>
@@ -246,26 +257,30 @@ export default async function LeadDetailPage({
       </header>
 
       {/* MAIN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
         {/* MAIN COLUMN */}
-        <div className="space-y-10 min-w-0">
-          <Section eyebrow="Why this is a lead">
-            {lead.score_breakdown ? (
+        <div className="flex min-w-0 flex-col gap-4">
+          <Section title="Why this is a lead">
+            {/* An empty array is truthy — length-check it, or the rubric
+                renders nothing and swallows the score_reason fallback. */}
+            {lead.score_breakdown?.length ? (
               <ScoreBreakdown breakdown={lead.score_breakdown} />
             ) : lead.score_reason ? (
-              <p className="text-[15px] leading-relaxed text-ink-2">
+              <p className="text-[13.5px] leading-relaxed text-ink-2">
                 {lead.score_reason}
               </p>
-            ) : null}
+            ) : (
+              <Empty>No scoring rationale recorded for this lead yet.</Empty>
+            )}
           </Section>
 
           {lead.bito_products && lead.bito_products.length > 0 && (
-            <Section eyebrow="BITO products matched">
+            <Section title="BITO products matched">
               <div className="flex flex-wrap gap-2">
                 {lead.bito_products.map((p) => (
                   <span
                     key={p}
-                    className="inline-flex items-center gap-2 border border-line bg-surface px-2.5 py-1.5 mono text-[11px] uppercase tracking-wider text-ink-2"
+                    className="mono inline-flex items-center gap-2 rounded-md bg-surface-2 px-2.5 py-1.5 text-[11px] uppercase tracking-[0.1em] text-ink-2"
                   >
                     <span className="dot bg-brand" />
                     {p}
@@ -275,13 +290,11 @@ export default async function LeadDetailPage({
             </Section>
           )}
 
-          <Section eyebrow="Contacts" count={contacts.length}>
+          <Section title="Contacts" count={contacts.length}>
             {contacts.length === 0 ? (
-              <p className="text-[13px] text-ink-faint italic">
-                No contacts captured yet.
-              </p>
+              <Empty>No contacts captured yet.</Empty>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {contacts.map((c) => (
                   <ContactCard key={c.id} contact={c} />
                 ))}
@@ -289,103 +302,102 @@ export default async function LeadDetailPage({
             )}
           </Section>
 
-          <Section eyebrow="Outreach drafts">
-            <div className="space-y-6">
+          <Section title="Outreach drafts">
+            <div className="flex flex-col gap-5">
               <DraftBlock
                 heading="LinkedIn DM"
                 drafts={linkedinDrafts}
+                leadId={lead.id}
                 emptyMessage="No LinkedIn DM drafted yet."
               />
               <DraftBlock
                 heading="Email"
                 drafts={emailDrafts}
+                leadId={lead.id}
                 emptyMessage="No email drafted yet."
                 showSubject
               />
               {otherDrafts.length > 0 && (
-                <DraftBlock heading="Other" drafts={otherDrafts} emptyMessage="" />
+                <DraftBlock
+                  heading="Other"
+                  drafts={otherDrafts}
+                  leadId={lead.id}
+                  emptyMessage=""
+                />
               )}
             </div>
           </Section>
 
-          <Section eyebrow="Call brief">
+          <Section title="Call brief">
             {!latestBrief ? (
-              <p className="text-[13px] text-ink-faint italic">
-                No call brief generated yet.
-              </p>
+              <Empty>No call brief generated yet.</Empty>
             ) : (
-              <div className="border border-line bg-surface">
-                <div className="flex items-center justify-between border-b border-line px-4 py-2.5 bg-surface-2">
-                  <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
+              <div className="overflow-hidden rounded-lg bg-surface-2">
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <span className="eyebrow">
                     Generated {formatRelative(latestBrief.generated_at)}
                   </span>
                   <CopyButton value={latestBrief.brief_content} label="Copy brief" />
                 </div>
-                <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink-2 font-sans p-5">
+                <pre className="whitespace-pre-wrap px-4 pb-4 font-sans text-[13px] leading-relaxed text-ink-2">
                   {latestBrief.brief_content}
                 </pre>
               </div>
             )}
           </Section>
 
-          <Section eyebrow="Notes" count={notes.length}>
+          <Section title="Notes" count={notes.length}>
             <LeadNotes leadId={lead.id} notes={notes} />
           </Section>
         </div>
 
         {/* SIDE COLUMN */}
-        <aside className="space-y-8 lg:border-l lg:border-line lg:pl-8 min-w-0">
-          <div>
-            <LeadReviewCard leadId={lead.id} review={review} />
-          </div>
+        <aside className="flex min-w-0 flex-col gap-4">
+          <LeadReviewCard leadId={lead.id} review={review} />
 
           {currentAssignment?.notes && (
-            <div>
-              <div className="eyebrow mb-3">Assignment note</div>
-              <blockquote className="display-serif text-lg text-ink-2 leading-snug border-l-2 border-brand pl-4 italic">
+            <Section title="Assignment note">
+              <blockquote className="border-l-2 border-brand pl-3.5 text-[13px] italic leading-relaxed text-ink-2">
                 &ldquo;{currentAssignment.notes}&rdquo;
               </blockquote>
-            </div>
+            </Section>
           )}
 
-          <div>
-            <div className="eyebrow mb-3">Pipeline history</div>
+          <Section title="Pipeline history">
             {pipeline_updates.length === 0 ? (
-              <p className="text-[13px] text-ink-faint italic">
-                No status changes yet.
-              </p>
+              <Empty>No status changes yet.</Empty>
             ) : (
-              <ol className="space-y-0">
+              <ol>
                 {pipeline_updates.map((u, i) => (
                   <li
                     key={u.id}
-                    className="grid grid-cols-[20px_1fr] gap-3 relative pb-4"
+                    className="relative grid grid-cols-[14px_1fr] gap-3 pb-4 last:pb-0"
                   >
                     {i < pipeline_updates.length - 1 && (
                       <span
                         aria-hidden
-                        className="absolute left-[3px] top-3 bottom-0 w-px bg-line"
+                        className="absolute bottom-0 left-[3px] top-3.5 w-px bg-line"
                       />
                     )}
-                    <span className="dot bg-brand mt-1.5 ml-px relative z-10" />
-                    <div>
-                      <div className="text-[12px] text-ink">
+                    <span className="dot relative z-10 mt-1.5 bg-brand" />
+                    <div className="min-w-0">
+                      <div className="text-[12.5px] text-ink">
                         <span className="text-ink-dim">
                           {u.old_status ? LEAD_STATUS_LABELS[u.old_status] : "—"}
                         </span>
                         <ArrowRight
-                          className="inline h-3 w-3 mx-1.5 text-ink-faint align-[-1px]"
+                          className="mx-1.5 inline h-3 w-3 align-[-1px] text-ink-faint"
                           strokeWidth={2}
                         />
                         <span className="font-medium">
                           {LEAD_STATUS_LABELS[u.new_status]}
                         </span>
                       </div>
-                      <div className="mono text-[10px] uppercase tracking-wider text-ink-faint mt-0.5">
+                      <div className="eyebrow mt-1">
                         {formatRelative(u.updated_at)}
                       </div>
                       {u.note && (
-                        <div className="text-[12px] text-ink-dim mt-1.5 leading-snug">
+                        <div className="mt-1.5 text-[12.5px] leading-snug text-ink-dim">
                           {u.note}
                         </div>
                       )}
@@ -394,44 +406,51 @@ export default async function LeadDetailPage({
                 ))}
               </ol>
             )}
-          </div>
+          </Section>
 
-          <div>
-            <div className="eyebrow mb-3">Created</div>
+          <Section title="Created">
             <div className="mono text-[12px] text-ink-2">
               {new Date(lead.created_at).toLocaleString("en-GB", {
                 timeZone: "Asia/Dubai",
               })}
             </div>
-          </div>
+          </Section>
         </aside>
       </div>
     </div>
   );
 }
 
+/**
+ * A titled block on its own panel. The heading row holds still at the top so
+ * the eye finds the same anchor down the column, and the count sits at the
+ * right rather than inline with the title.
+ */
 function Section({
-  eyebrow,
+  title,
   count,
   children,
 }: {
-  eyebrow: string;
+  title: string;
   count?: number;
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <div className="flex items-baseline gap-3 mb-3 pb-2 border-b border-line">
-        <h2 className="text-[15px] font-bold tracking-tight text-ink">{eyebrow}</h2>
+    <section className="panel p-[18px] lg:p-5">
+      <div className="mb-3.5 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13.5px] font-bold text-ink">{title}</h2>
         {count !== undefined && (
-          <span className="text-[12px] text-ink-dim ml-auto">
-            {count} {count === 1 ? "entry" : "entries"}
-          </span>
+          <span className="mono text-[11px] tabular text-ink-faint">{count}</span>
         )}
       </div>
       {children}
     </section>
   );
+}
+
+/** Every v2 field can be absent, so an empty state is designed, never blank. */
+function Empty({ children }: { children: React.ReactNode }) {
+  return <p className="text-[12.5px] text-ink-faint">{children}</p>;
 }
 
 function ContactCard({
@@ -440,32 +459,33 @@ function ContactCard({
   contact: import("@/lib/supabase/types").Contact;
 }) {
   return (
-    <div className="bg-surface p-4 hover:bg-surface-2 transition-colors">
+    <div className="rounded-lg bg-surface-2 p-3.5 transition-colors hover:bg-surface-3">
       <div className="flex items-start gap-3">
-        <div className="display-serif text-xl text-ink-2 w-10 h-10 border border-line-strong flex items-center justify-center shrink-0">
+        <div className="display-serif flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface text-[15px] text-ink-2">
           {initials(c.full_name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[14px] font-medium text-ink truncate">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="truncate text-[13.5px] font-medium text-ink">
               {c.full_name}
             </span>
             {c.is_primary && (
-              <span className="mono text-[9px] uppercase tracking-wider text-brand-ink">
-                â—† Primary
+              <span className="mono inline-flex items-center gap-1.5 text-[9.5px] font-semibold uppercase tracking-[0.08em] text-brand-ink">
+                <span className="dot bg-brand" />
+                Primary
               </span>
             )}
           </div>
           {c.job_title && (
-            <p className="text-[12px] text-ink-dim mt-0.5">{c.job_title}</p>
+            <p className="mt-0.5 text-[12px] text-ink-dim">{c.job_title}</p>
           )}
 
-          <div className="flex flex-col gap-1.5 mt-3">
+          <div className="mt-3 flex flex-col gap-1.5">
             {c.email && (
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
                 <a
                   href={`mailto:${c.email}`}
-                  className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors min-w-0"
+                  className="mono inline-flex min-w-0 items-center gap-1.5 text-[11px] text-ink-2 transition-colors hover:text-brand-ink"
                 >
                   <Mail className="h-3 w-3 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{c.email}</span>
@@ -478,7 +498,7 @@ function ContactCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Compose in Outlook"
-                  className="inline-flex items-center gap-1 mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-brand-ink transition-colors shrink-0"
+                  className="mono inline-flex shrink-0 items-center gap-1 text-[10px] uppercase tracking-[0.1em] text-ink-faint transition-colors hover:text-brand-ink"
                 >
                   <Send className="h-3 w-3" strokeWidth={1.75} />
                   Outlook
@@ -486,10 +506,10 @@ function ContactCard({
               </div>
             )}
             {c.phone && (
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
                 <a
                   href={`tel:${c.phone}`}
-                  className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors min-w-0"
+                  className="mono inline-flex min-w-0 items-center gap-1.5 text-[11px] text-ink-2 transition-colors hover:text-brand-ink"
                 >
                   <Phone className="h-3 w-3 shrink-0" strokeWidth={1.75} />
                   <span className="truncate">{c.phone}</span>
@@ -502,7 +522,7 @@ function ContactCard({
                 href={c.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mono text-[11px] text-ink-2 hover:text-brand-ink transition-colors"
+                className="mono inline-flex items-center gap-1.5 text-[11px] text-ink-2 transition-colors hover:text-brand-ink"
               >
                 <Linkedin className="h-3 w-3" strokeWidth={1.75} />
                 LinkedIn
@@ -517,75 +537,77 @@ function ContactCard({
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="eyebrow mb-1.5">{label}</dt>
-      <dd className="text-[13px] text-ink-2">
+      <dd className="text-[12.5px] text-ink-2">
         {value || <span className="text-ink-faint">—</span>}
       </dd>
     </div>
   );
 }
 
-function StatusInline({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    new: "text-signal-cold",
-    listed: "text-brand-ink",
-    assigned: "text-signal-warm",
-    contacted: "text-signal-cold",
-    meeting: "text-brand-ink",
-    quote: "text-brand-ink",
-    won: "text-signal-good",
-    dead: "text-ink-faint",
-    returned: "text-signal-hot",
-  };
-  return (
-    <span className={map[status] || "text-ink-dim"}>
-      {LEAD_STATUS_LABELS[status as keyof typeof LEAD_STATUS_LABELS] || status}
-    </span>
-  );
-}
-
 function DraftBlock({
   heading,
   drafts,
+  leadId,
   emptyMessage,
   showSubject,
 }: {
   heading: string;
-  drafts: { id: string; subject: string | null; body: string; created_at: string }[];
+  drafts: {
+    id: string;
+    subject: string | null;
+    body: string;
+    used: boolean;
+    created_at: string;
+  }[];
+  leadId: string;
   emptyMessage: string;
   showSubject?: boolean;
 }) {
   if (drafts.length === 0 && !emptyMessage) return null;
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-[13px] font-medium text-ink">{heading}</h3>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <h3 className="text-[12.5px] font-semibold text-ink">{heading}</h3>
         {drafts[0] && (
-          <CopyButton
-            value={
-              showSubject && drafts[0].subject
-                ? `Subject: ${drafts[0].subject}\n\n${drafts[0].body}`
-                : drafts[0].body
-            }
-            label={`Copy ${heading.toLowerCase()}`}
-          />
+          <div className="flex items-center gap-3">
+            <OutreachUsedToggle
+              outreachId={drafts[0].id}
+              leadId={leadId}
+              used={drafts[0].used}
+              channelLabel={heading}
+            />
+            <CopyButton
+              value={
+                showSubject && drafts[0].subject
+                  ? `Subject: ${drafts[0].subject}\n\n${drafts[0].body}`
+                  : drafts[0].body
+              }
+              label={`Copy ${heading.toLowerCase()}`}
+            />
+          </div>
         )}
       </div>
       {drafts.length === 0 ? (
-        <p className="text-[12px] text-ink-faint italic">{emptyMessage}</p>
+        <Empty>{emptyMessage}</Empty>
       ) : (
-        <div className="border border-line bg-surface-2">
+        <div className="overflow-hidden rounded-lg bg-surface-2">
           {showSubject && drafts[0].subject && (
-            <div className="border-b border-line px-4 py-2.5 mono text-[11px] text-ink-dim">
+            <div
+              className={cn(
+                "mono px-4 pt-3 text-[11px] text-ink-dim",
+                "border-b border-line-soft pb-3"
+              )}
+            >
               <span className="text-ink-faint">Subject:</span>{" "}
               <span className="text-ink">{drafts[0].subject}</span>
             </div>
           )}
-          <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink-2 font-sans p-4">
+          <pre className="whitespace-pre-wrap px-4 py-3.5 font-sans text-[13px] leading-relaxed text-ink-2">
             {drafts[0].body}
           </pre>
-          <div className="border-t border-line px-4 py-2 mono text-[10px] uppercase tracking-wider text-ink-faint">
+          <div className="eyebrow px-4 pb-3">
             Generated {formatRelative(drafts[0].created_at)}
           </div>
         </div>
@@ -593,4 +615,3 @@ function DraftBlock({
     </div>
   );
 }
-

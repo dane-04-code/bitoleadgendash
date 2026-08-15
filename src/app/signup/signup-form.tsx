@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight } from "lucide-react";
 
+const FIELD = "h-11 rounded-md px-3.5 text-[13.5px]";
+
 export function SignupForm() {
   const router = useRouter();
   const [fullName, setFullName] = React.useState("");
@@ -41,8 +43,8 @@ export function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
         <Label htmlFor="full_name">Full name</Label>
         <Input
           id="full_name"
@@ -53,11 +55,11 @@ export function SignupForm() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Jane Doe"
-          className="h-11 text-[14px]"
+          className={FIELD}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label htmlFor="email">Work email</Label>
         <Input
           id="email"
@@ -68,47 +70,54 @@ export function SignupForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@bito.ae"
-          className="h-11 text-[14px]"
+          className={FIELD}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
-          className="h-11 text-[14px]"
-        />
-      </div>
+      {/* Password and code pair on one row: both are short, and the code comes
+          from the same handover conversation as the password rule. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="8+ characters"
+            className={FIELD}
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="code">Sign-up code</Label>
-        <Input
-          id="code"
-          name="code"
-          type="text"
-          required
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Provided by your admin"
-          className="h-11 text-[14px]"
-        />
+        <div className="space-y-1.5">
+          <Label htmlFor="code">Sign-up code</Label>
+          <Input
+            id="code"
+            name="code"
+            type="text"
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="From admin"
+            className={FIELD}
+          />
+        </div>
       </div>
 
       {errMsg && (
-        <div className="border-l-2 border-signal-hot bg-signal-hot/[0.06] px-3 py-2 text-[12px] text-signal-hot mono">
+        <p
+          role="alert"
+          className="rounded-md bg-signal-hot/[0.08] px-3 py-2 text-[12px] text-signal-hot"
+        >
           {errMsg}
-        </div>
+        </p>
       )}
 
-      <Button type="submit" className="w-full h-11" disabled={submitting}>
+      <Button type="submit" size="lg" className="h-12 w-full" disabled={submitting}>
         {submitting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -121,10 +130,6 @@ export function SignupForm() {
           </>
         )}
       </Button>
-
-      <p className="mono text-[10px] uppercase tracking-wider text-ink-faint text-center">
-        New reps · create your account with your work email
-      </p>
     </form>
   );
 }

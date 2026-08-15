@@ -10,9 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { LEAD_STATUSES, LEAD_STATUS_LABELS } from "@/lib/supabase/types";
+import { PILL_CONTROL, PILL_GHOST } from "@/lib/styles";
 
 const ANY = "__any__";
 
@@ -66,25 +65,24 @@ export function LeadFilters({ industries }: { industries: string[] }) {
     (minScore0 !== "0" && minScore0 !== "");
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {/* Search */}
-      <div className="relative flex-1 min-w-[200px] max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-faint pointer-events-none" />
-        <Input
+    <div className="flex flex-wrap items-center gap-2.5 mb-[18px]">
+      <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <Search
+          className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-ghost"
+          aria-hidden
+        />
+        <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search company or signal…"
-          className="pl-8 h-9"
+          aria-label="Search leads by company or signal"
+          className="w-full rounded-lg border-0 bg-surface py-2.5 pl-10 pr-3 text-[13px] font-medium text-ink placeholder:font-normal placeholder:text-ink-faint transition-colors focus:bg-surface-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-brand"
         />
       </div>
 
-      {/* Status */}
-      <Select
-        value={status0 || ANY}
-        onValueChange={(v) => push({ status: v })}
-      >
-        <SelectTrigger className="h-9 w-[150px]">
-          <SelectValue placeholder="Status" />
+      <Select value={status0 || ANY} onValueChange={(v) => push({ status: v })}>
+        <SelectTrigger className={PILL_CONTROL} aria-label="Filter by status">
+          <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ANY}>All statuses</SelectItem>
@@ -96,14 +94,13 @@ export function LeadFilters({ industries }: { industries: string[] }) {
         </SelectContent>
       </Select>
 
-      {/* Industry */}
       {industries.length > 0 && (
         <Select
           value={industry0 || ANY}
           onValueChange={(v) => push({ industry: v })}
         >
-          <SelectTrigger className="h-9 w-[180px]">
-            <SelectValue placeholder="Industry" />
+          <SelectTrigger className={PILL_CONTROL} aria-label="Filter by industry">
+            <SelectValue placeholder="All industries" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ANY}>All industries</SelectItem>
@@ -116,13 +113,12 @@ export function LeadFilters({ industries }: { industries: string[] }) {
         </Select>
       )}
 
-      {/* Min score */}
       <Select
         value={minScore0 || "0"}
         onValueChange={(v) => push({ minScore: v })}
       >
-        <SelectTrigger className="h-9 w-[140px]">
-          <SelectValue placeholder="Score" />
+        <SelectTrigger className={PILL_CONTROL} aria-label="Filter by minimum score">
+          <SelectValue placeholder="Any score" />
         </SelectTrigger>
         <SelectContent>
           {SCORE_OPTIONS.map((o) => (
@@ -134,20 +130,19 @@ export function LeadFilters({ industries }: { industries: string[] }) {
       </Select>
 
       {active && (
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
           onClick={() => {
             setQ("");
             router.replace(view ? `/dashboard?view=${view}` : "/dashboard", {
               scroll: false,
             });
           }}
+          className={PILL_GHOST}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3.5 w-3.5" aria-hidden />
           Clear
-        </Button>
+        </button>
       )}
     </div>
   );

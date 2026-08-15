@@ -300,9 +300,9 @@ export function CommandPaletteProvider({
                         <span
                           className={cn(
                             "mono text-[11px] font-bold shrink-0 tabular",
-                            tier === "hot" && "text-signal-hot",
-                            tier === "warm" && "text-signal-warm",
-                            tier === "cold" && "text-signal-cold"
+                            tier === "hot" && "text-heat-high-ink",
+                            tier === "warm" && "text-heat-mid-ink",
+                            tier === "cold" && "text-heat-low-ink"
                           )}
                         >
                           {item.score}

@@ -1,10 +1,16 @@
 import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PageHeader, MetaItem } from "@/components/page-header";
+import { StatStrip, Stat } from "@/components/stat-strip";
+import { ThemeChoice } from "@/components/theme-toggle";
+import { isMockMode } from "@/lib/mock-data";
+import { SESSION_MAX_AGE_SECONDS, SESSION_COOKIE } from "@/lib/auth-edge";
+import { getSession } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await getSession();
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseHost = (() => {
     try {
@@ -13,143 +19,185 @@ export default function SettingsPage() {
       return "Invalid URL";
     }
   })();
+
+  const mock = isMockMode();
+  const anonKeySet = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const passwordSet = Boolean(process.env.DASHBOARD_PASSWORD);
+  const signupCodeSet = Boolean(process.env.REP_SIGNUP_CODE);
+  const sessionDays = Math.round(SESSION_MAX_AGE_SECONDS / 86400);
 
   return (
-    <div className="animate-fade-in">
-      <PageHeader
-        number="04"
-        eyebrow="Lead Intelligence Terminal / Settings"
-        title={
-          <>
-            Configuration &amp; <em className="text-brand-ink">control</em>.
-          </>
-        }
-        subtitle="Environment health, branding, and session controls."
-        meta={
-          <>
-            <MetaItem label="Build" value="0.1.0" />
-            <MetaItem label="Region" value="GCC" />
-            <MetaItem label="Owner" value="BITO UAE" />
-          </>
-        }
-      />
+    <div>
+      <h1 className="sr-only">Settings — environment, access and appearance</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-line border border-line">
-        <Panel code="A" title="Supabase" hint="Database connection used by the dashboard.">
-          <Row label="Project host" value={supabaseHost} status={supabaseUrl ? "ok" : "missing"} />
+      <StatStrip number="06" className="mb-5">
+        <Stat
+          label="Data source"
+          value={mock ? "Mock" : "Live"}
+          tone={mock ? "warn" : "brand"}
+        />
+        <Stat label="Build" value="1.0.1" />
+        <Stat label="Region" value="GCC" />
+      </StatStrip>
+
+      <div className="mb-4 h-px bg-line" />
+
+      {/* One panel of headed sections rather than a grid of equal cards: this
+          screen is a list of facts to scan, and the label column keeps the
+          values in a single readable measure. */}
+      <div className="panel divide-y divide-line-soft">
+        <Section
+          title="Session"
+          hint="Who this browser is signed in as, and for how long."
+        >
+          <Row label="Signed in as" value={session?.role === "rep" ? "Sales rep" : "Admin"} />
+          <Row label="Stays signed in" value={`${sessionDays} days`} />
+          <Row label="Cookie" value={`${SESSION_COOKIE} · HMAC-signed`} />
+          <Action>
+            <form action="/api/auth/logout" method="post">
+              <button
+                type="submit"
+                className="flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2 text-[12.5px] font-medium text-ink-2 transition-colors hover:bg-surface-3 hover:text-brand-deep"
+              >
+                <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+                Sign out of this device
+              </button>
+            </form>
+          </Action>
+        </Section>
+
+        <Section title="Appearance" hint="Applies to this browser only.">
+          <Row label="Theme" control={<ThemeChoice />} />
+        </Section>
+
+        <Section
+          title="Data source"
+          hint="Where the dashboard reads leads from. Set in .env.local."
+        >
+          <Row
+            label="Mode"
+            value={mock ? "Mock data — no database" : "Live database"}
+            status={mock ? "warn" : "ok"}
+          />
+          {/* In mock mode these values exist but are placeholders, so a green
+              "ok" would read as a working database connection. */}
+          <Row
+            label="Project host"
+            value={supabaseHost}
+            status={mock ? "warn" : supabaseUrl ? "ok" : "missing"}
+          />
           <Row
             label="Anon key"
-            value={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Configured" : "Missing"}
-            status={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "ok" : "missing"}
+            value={
+              anonKeySet ? (mock ? "Placeholder value" : "Configured") : "Missing"
+            }
+            status={mock ? "warn" : anonKeySet ? "ok" : "missing"}
           />
-          <p className="mono text-[11px] text-ink-faint pt-3 mt-3 border-t border-line">
-            Manage these in your{" "}
-            <code className="text-brand-ink">.env.local</code> file.
-          </p>
-        </Panel>
+          {mock && (
+            <Note>
+              Placeholder Supabase values keep the app on the fixture set in{" "}
+              <code className="mono text-brand-ink">src/lib/mock-data.ts</code>.
+              This is the intended local demo path — every screen renders without
+              a database.
+            </Note>
+          )}
+        </Section>
 
-        <Panel code="B" title="Access" hint="Single shared password protects the dashboard.">
+        <Section
+          title="Access"
+          hint="This app does not use Supabase Auth. Credentials live in the environment."
+        >
           <Row
-            label="DASHBOARD_PASSWORD"
+            label="Admin password"
             value={passwordSet ? "Set" : "Not set — login disabled"}
             status={passwordSet ? "ok" : "missing"}
           />
-          <Row label="Session" value="HMAC-signed cookie · 14 days" status="ok" />
-          <form action="/api/auth/logout" method="post" className="pt-3 mt-3 border-t border-line">
-            <Button variant="secondary" size="sm" type="submit">
-              <LogOut className="h-3 w-3" strokeWidth={1.75} />
-              Sign out of this device
-            </Button>
-          </form>
-        </Panel>
+          <Row
+            label="Rep signup code"
+            value={signupCodeSet ? "Set" : "Not set — rep signup closed"}
+            status={signupCodeSet ? "ok" : "missing"}
+          />
+        </Section>
 
-        <Panel code="C" title="Brand palette" hint="Tuned to operational, considered green.">
-          <div className="grid grid-cols-2 gap-2">
-            <Swatch hex="#FAF8F3" name="Paper" />
-            <Swatch hex="#FFFFFF" name="Surface" />
-            <Swatch hex="#1A6B3A" name="Accent" />
-            <Swatch hex="#1A1F23" name="Ink" />
-          </div>
-        </Panel>
-
-        <Panel code="D" title="About" hint="LeadIntelligence — sales lead terminal for BITO UAE.">
-          <Row label="Version" value="0.1.0" />
-          <Row label="Region" value="GCC" />
-          <Row label="Owner" value="BITO UAE" />
+        <Section title="About" hint="LeadIntelligence — lead terminal for BITO UAE.">
+          <Row label="Version" value="1.0.1" />
           <Row label="Stack" value="Next.js 14 · Supabase" />
-        </Panel>
+          <Row label="Owner" value="BITO UAE" />
+          <Row label="Region" value="GCC" />
+        </Section>
       </div>
     </div>
   );
 }
 
-function Panel({
-  code,
+/**
+ * A headed group. The title column holds still on the left while the values
+ * run down the right, so the eye scans one column of facts rather than
+ * re-finding the value position in every card.
+ */
+function Section({
   title,
   hint,
   children,
 }: {
-  code: string;
   title: string;
   hint: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="bg-surface p-6">
-      <header className="mb-5 pb-3 border-b border-line">
-        <div className="flex items-baseline gap-3 mb-2">
-          <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-            {code}
-          </span>
-          <h2 className="display-serif text-xl text-ink leading-none">{title}</h2>
-        </div>
-        <p className="text-[12px] text-ink-dim leading-relaxed">{hint}</p>
-      </header>
-      <div className="space-y-2.5">{children}</div>
+    <section className="flex flex-col gap-4 p-[18px] lg:flex-row lg:gap-8 lg:p-6">
+      <div className="lg:w-[220px] lg:shrink-0">
+        <h2 className="text-[13.5px] font-bold text-ink">{title}</h2>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-ink-dim">{hint}</p>
+      </div>
+      <div className="min-w-0 flex-1 space-y-3">{children}</div>
     </section>
   );
 }
 
+const STATUS_DOT = {
+  ok: "bg-signal-good",
+  warn: "bg-stage-assigned",
+  missing: "bg-stage-dead",
+} as const;
+
+/**
+ * The dot is redundant emphasis — the value already says "Configured" or
+ * "Missing" in words, so the state never rests on colour.
+ */
 function Row({
   label,
   value,
   status,
+  control,
 }: {
   label: string;
-  value: string;
-  status?: "ok" | "missing";
+  value?: string;
+  status?: keyof typeof STATUS_DOT;
+  control?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 mono text-[11px]">
-      <span className="text-ink-faint uppercase tracking-wider">{label}</span>
-      <span className="flex items-center gap-2 text-ink-2">
-        {status && (
-          <span
-            className={`dot ${
-              status === "ok" ? "bg-signal-good" : "bg-signal-hot"
-            }`}
-          />
-        )}
-        <span className="truncate max-w-[220px] text-right">{value}</span>
-      </span>
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+      <span className="text-[12.5px] text-ink-faint">{label}</span>
+      {control ?? (
+        <span className="flex min-w-0 items-center gap-2">
+          {status && <span className={cn("dot shrink-0", STATUS_DOT[status])} />}
+          <span className="mono truncate text-[12px] text-ink-2">{value}</span>
+        </span>
+      )}
     </div>
   );
 }
 
-function Swatch({ hex, name }: { hex: string; name: string }) {
+function Action({ children }: { children: React.ReactNode }) {
+  return <div className="pt-1">{children}</div>;
+}
+
+function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border border-line p-2.5 flex items-center gap-2.5">
-      <div
-        className="h-9 w-9 border border-line shrink-0"
-        style={{ background: hex }}
-      />
-      <div className="min-w-0">
-        <div className="text-[12px] font-medium text-ink truncate">{name}</div>
-        <div className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-          {hex}
-        </div>
-      </div>
-    </div>
+    <p className="rounded-lg bg-surface-2 px-3.5 py-3 text-[12px] leading-relaxed text-ink-dim">
+      {children}
+    </p>
   );
 }
+

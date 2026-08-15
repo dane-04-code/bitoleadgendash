@@ -1,21 +1,15 @@
 import { cn, scoreTier } from "@/lib/utils";
 
+/**
+ * One heat ramp across the whole console — red hot, amber warm, grey cold —
+ * matching the pipeline board. The dot takes the vivid tone; the word takes
+ * the darker -ink variant, since the vivid amber and grey read under 3:1 as
+ * text. The word ships at every size, so the tier is never colour alone.
+ */
 const TIER = {
-  hot: {
-    dot: "bg-signal-hot",
-    text: "text-signal-hot",
-    label: "Hot",
-  },
-  warm: {
-    dot: "bg-signal-warm",
-    text: "text-signal-warm",
-    label: "Warm",
-  },
-  cold: {
-    dot: "bg-signal-cold",
-    text: "text-signal-cold",
-    label: "Cold",
-  },
+  hot: { dot: "bg-heat-high", text: "text-heat-high-ink", label: "Hot" },
+  warm: { dot: "bg-heat-mid", text: "text-heat-mid-ink", label: "Warm" },
+  cold: { dot: "bg-heat-low", text: "text-heat-low-ink", label: "Cold" },
 } as const;
 
 export function ScoreBadge({
@@ -34,30 +28,48 @@ export function ScoreBadge({
 
   if (size === "lg") {
     return (
-      <div className={cn("inline-flex items-baseline gap-2", className)}>
-        <span className={cn("display-number text-5xl tabular", t.text)}>
+      <div className={cn("inline-flex items-baseline gap-2.5", className)}>
+        <span className={cn("display-number text-[52px] tabular", t.text)}>
           {score}
         </span>
         {showLabel && (
-          <span className={cn("eyebrow", t.text)}>{t.label}</span>
+          <span
+            className={cn(
+              "mono text-[10px] font-semibold uppercase tracking-[0.14em]",
+              t.text
+            )}
+          >
+            {t.label}
+          </span>
         )}
       </div>
     );
   }
 
-  const sizeMap = {
-    sm: "text-[11px] gap-1.5",
-    default: "text-[12px] gap-2",
-  };
-
   return (
-    <span className={cn("inline-flex items-center mono", sizeMap[size], className)}>
-      <span className={cn("dot", t.dot)} />
-      <span className={cn("font-semibold tabular", t.text)}>
-        {score.toString().padStart(2, "0")}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5",
+        size === "sm" ? "gap-1.5" : "gap-2",
+        className
+      )}
+    >
+      <span className={cn("dot shrink-0", t.dot)} />
+      <span
+        className={cn(
+          "display-number tabular text-ink",
+          size === "sm" ? "text-[13.5px]" : "text-[16px]"
+        )}
+      >
+        {score}
       </span>
       {showLabel && (
-        <span className="text-ink-faint uppercase tracking-wider text-[10px]">
+        <span
+          className={cn(
+            "mono text-[9px] font-semibold uppercase tracking-[0.06em]",
+            t.text
+          )}
+        >
           {t.label}
         </span>
       )}

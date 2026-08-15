@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Mode = "rep" | "admin";
 
@@ -48,36 +49,42 @@ export function LoginForm({ next, error }: { next?: string; error?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Mode tabs */}
-      <div
-        role="tablist"
-        aria-label="Sign in as"
-        className="inline-flex border border-line bg-surface-2 p-0.5 rounded-sm"
-      >
-        <ModeTab
-          active={mode === "rep"}
-          onClick={() => {
-            setMode("rep");
-            setErrMsg(null);
-          }}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <span className="eyebrow" id="role-label">
+          Role
+        </span>
+        <div
+          role="radiogroup"
+          aria-labelledby="role-label"
+          className="grid grid-cols-2 gap-2"
         >
-          Sales rep
-        </ModeTab>
-        <ModeTab
-          active={mode === "admin"}
-          onClick={() => {
-            setMode("admin");
-            setErrMsg(null);
-          }}
-        >
-          Admin
-        </ModeTab>
+          <RoleOption
+            active={mode === "rep"}
+            onClick={() => {
+              setMode("rep");
+              setErrMsg(null);
+            }}
+          >
+            Sales rep
+          </RoleOption>
+          <RoleOption
+            active={mode === "admin"}
+            onClick={() => {
+              setMode("admin");
+              setErrMsg(null);
+            }}
+          >
+            Admin
+          </RoleOption>
+        </div>
       </div>
 
+      {/* Admins authenticate on a single shared password, so the email field is
+          not merely hidden — it is absent, and unset in the request body. */}
       {mode === "rep" && (
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Work email</Label>
           <Input
             id="email"
             name="email"
@@ -87,12 +94,12 @@ export function LoginForm({ next, error }: { next?: string; error?: string }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@bito.ae"
-            className="h-11 text-[14px]"
+            className="h-11 rounded-md px-3.5 text-[13.5px]"
           />
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label htmlFor="password">
           {mode === "admin" ? "Admin password" : "Password"}
         </Label>
@@ -101,22 +108,24 @@ export function LoginForm({ next, error }: { next?: string; error?: string }) {
           name="password"
           type="password"
           autoComplete="current-password"
-          autoFocus={mode === "admin"}
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          className="h-11 text-[14px]"
+          className="h-11 rounded-md px-3.5 text-[13.5px]"
         />
       </div>
 
       {errMsg && (
-        <div className="border-l-2 border-signal-hot bg-signal-hot/[0.06] px-3 py-2 text-[12px] text-signal-hot mono">
+        <p
+          role="alert"
+          className="rounded-md bg-signal-hot/[0.08] px-3 py-2 text-[12px] text-signal-hot"
+        >
           {errMsg}
-        </div>
+        </p>
       )}
 
-      <Button type="submit" className="w-full h-11" disabled={submitting}>
+      <Button type="submit" size="lg" className="h-12 w-full" disabled={submitting}>
         {submitting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -129,17 +138,11 @@ export function LoginForm({ next, error }: { next?: string; error?: string }) {
           </>
         )}
       </Button>
-
-      <p className="mono text-[10px] uppercase tracking-wider text-ink-faint text-center">
-        {mode === "rep"
-          ? "Reps · sign in with your work email"
-          : "Admin · single shared password"}
-      </p>
     </form>
   );
 }
 
-function ModeTab({
+function RoleOption({
   active,
   onClick,
   children,
@@ -151,14 +154,15 @@ function ModeTab({
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={active}
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
-      className={`mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-sm transition-colors ${
+      className={cn(
+        "mono h-10 rounded-md text-[10.5px] uppercase tracking-[0.14em] transition-colors",
         active
-          ? "bg-ink text-bg"
-          : "text-ink-dim hover:text-ink"
-      }`}
+          ? "bg-brand-ink text-white"
+          : "bg-surface-2 text-ink-dim hover:bg-surface-3 hover:text-ink"
+      )}
     >
       {children}
     </button>

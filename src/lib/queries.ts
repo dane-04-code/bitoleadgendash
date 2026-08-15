@@ -2,7 +2,7 @@ import { getSupabaseServerClient } from "./supabase/server";
 import {
   isMockMode,
   mockLeads,
-  MOCK_REPS,
+  mockReps,
   mockDashboardStats,
   mockLeadById,
   mockLeadNotes,
@@ -630,7 +630,7 @@ export async function getAllFeedback(): Promise<Feedback[]> {
 }
 
 export async function getRepById(id: string): Promise<Rep | null> {
-  if (isMockMode()) return MOCK_REPS.find((r) => r.id === id) ?? null;
+  if (isMockMode()) return mockReps().find((r) => r.id === id) ?? null;
 
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
@@ -766,7 +766,7 @@ export async function isLeadOwnedByRep(leadId: string, repId: string): Promise<b
 }
 
 export async function getActiveReps(): Promise<Rep[]> {
-  if (isMockMode()) return MOCK_REPS.filter((r) => r.is_active);
+  if (isMockMode()) return mockReps().filter((r) => r.is_active);
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("reps")
@@ -784,7 +784,7 @@ export type RepWithStatus = Omit<Rep, "password"> & { has_password: boolean };
 
 export async function getAllReps(): Promise<RepWithStatus[]> {
   if (isMockMode()) {
-    return MOCK_REPS.map((r) => {
+    return mockReps().map((r) => {
       const { password: _pw, ...rest } = r as Rep & { password?: string | null };
       return { ...(rest as Omit<Rep, "password">), has_password: true };
     });
@@ -882,6 +882,11 @@ export async function getPipelineLeads(): Promise<Record<LeadStatus, PipelineLea
       )
     `
     )
+    // Archived leads are noise the manager already dismissed — the mock branch
+    // above skips them and every other lead query filters them out. Without
+    // this the board showed 29 in New against production where only 1 was
+    // live, and the header stats counted all of them.
+    .eq("archived", false)
     .order("updated_at", { ascending: false });
 
   if (error) {

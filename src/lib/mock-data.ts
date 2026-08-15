@@ -724,6 +724,43 @@ export function mockUpdateFeedbackStatus(
   if (fb) fb.status = status;
 }
 
+// ─── Rep signup (mock mode) ───────────────────────────────────────────────
+
+export function mockFindRepByEmail(email: string): Rep | undefined {
+  const needle = email.trim().toLowerCase();
+  return MOCK_REPS.find((r) => r.email?.toLowerCase() === needle);
+}
+
+/**
+ * Register a rep in the in-memory set so the sign-up screen completes without
+ * a database. The fixtures live in module scope, so the account survives until
+ * the dev server restarts — long enough to walk the rep flow, and it cannot
+ * leak into a real project because callers gate on isMockMode().
+ *
+ * No password is stored: mock rep login accepts the shared demo password for
+ * any active fixture, so persisting a hash here would be dead weight that
+ * reads like a real credential.
+ */
+export function mockAddRep(entry: {
+  full_name: string;
+  email: string;
+}): Rep {
+  const rep: Rep = {
+    id: `rep-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    full_name: entry.full_name,
+    email: entry.email,
+    telegram_username: null,
+    telegram_chat_id: null,
+    speciality: null,
+    territory: null,
+    is_active: true,
+    availability: "looking",
+    created_at: new Date().toISOString(),
+  };
+  MOCK_REPS.push(rep);
+  return rep;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 export function mockDashboardStats(): DashboardStats {
@@ -767,7 +804,7 @@ export function mockLeadById(id: string): {
   return {
     lead: leadFields as Lead,
     contacts: MOCK_CONTACTS.filter((c) => c.lead_id === id),
-    outreach: MOCK_OUTREACH.filter((o) => o.lead_id === id),
+    outreach: mockOutreachForLead(id),
     call_briefs: MOCK_BRIEFS.filter((b) => b.lead_id === id),
     assignments: MOCK_ASSIGNMENTS.filter((a) => a.lead_id === id),
     pipeline_updates: mockPipelineUpdates().filter((p) => p.lead_id === id).sort(
@@ -789,14 +826,58 @@ export function mockLeadById(id: string): {
 type MockStore = {
   status: Map<string, { status: LeadStatus; updated_at: string }>;
   updates: PipelineUpdate[];
+  /** repId → is_active, for reps toggled during the session. */
+  repActive: Map<string, boolean>;
+  /** outreachId → used, for drafts marked sent during the session. */
+  outreachUsed: Map<string, boolean>;
 };
 
 function store(): MockStore {
   const g = globalThis as unknown as { __bitoMockStore?: MockStore };
   if (!g.__bitoMockStore) {
-    g.__bitoMockStore = { status: new Map(), updates: [] };
+    g.__bitoMockStore = {
+      status: new Map(),
+      updates: [],
+      repActive: new Map(),
+      outreachUsed: new Map(),
+    };
   }
   return g.__bitoMockStore;
+}
+
+/**
+ * MOCK_REPS with any demo-mode activation changes applied. Read reps through
+ * this rather than touching MOCK_REPS directly, or a rep deactivated by an
+ * action stays active on the next render.
+ */
+export function mockReps(): Rep[] {
+  const { repActive } = store();
+  if (repActive.size === 0) return MOCK_REPS;
+  return MOCK_REPS.map((rep) => {
+    const override = repActive.get(rep.id);
+    return override === undefined ? rep : { ...rep, is_active: override };
+  });
+}
+
+export function mockSetRepActive(repId: string, isActive: boolean): boolean {
+  if (!MOCK_REPS.some((r) => r.id === repId)) return false;
+  store().repActive.set(repId, isActive);
+  return true;
+}
+
+/** MOCK_OUTREACH for one lead, with any demo-mode sent marks applied. */
+export function mockOutreachForLead(leadId: string): Outreach[] {
+  const { outreachUsed } = store();
+  return MOCK_OUTREACH.filter((o) => o.lead_id === leadId).map((o) => {
+    const override = outreachUsed.get(o.id);
+    return override === undefined ? o : { ...o, used: override };
+  });
+}
+
+export function mockSetOutreachUsed(outreachId: string, used: boolean): boolean {
+  if (!MOCK_OUTREACH.some((o) => o.id === outreachId)) return false;
+  store().outreachUsed.set(outreachId, used);
+  return true;
 }
 
 /** MOCK_LEADS with any demo-mode stage changes applied. */

@@ -2,105 +2,201 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   BITO LeadIntelligence — teal console.
+   Palette and shape from the approved `Lead Inbox` and `Pipeline` comps: a mint
+   ground, flat white cards, a teal brand ramp, and soft corners. Score and
+   stage carry their own tones, each paired with a word so meaning never rests
+   on colour. Every value below is a token; components never hard-code a colour.
+   ────────────────────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    /* Surfaces — warm paper, layered subtly */
-    --bg:           42  18% 97%;     /* #faf8f3 — warm paper */
-    --surface:      0    0% 100%;    /* #ffffff */
-    --surface-2:    42  16% 95%;     /* #f4f1ea */
-    --surface-3:    42  14% 91%;     /* #ebe7dc */
+    /* Surfaces — mint ground, white cards floating on it */
+    --bg:           180 14% 94%;     /* #eef2f2 — mint ground */
+    --surface:        0  0% 100%;    /* #ffffff — card */
+    --surface-2:    165 18% 96%;     /* #f2f6f5 — row hover / wash */
+    --surface-3:    170 14% 92%;     /* #e7edec — active nav, chips */
 
-    /* Borders — gentle warm lines */
-    --line:         42  10% 84%;     /* #d8d4c7 */
-    --line-strong:  42   8% 72%;     /* #b9b4a3 */
+    /* Borders — the comp separates by tone, not by weight */
+    --line:         173 15% 88%;     /* #dde6e5 — section rules */
+    --line-soft:    165 15% 95%;     /* #f0f4f3 — row dividers inside a card */
+    --line-strong:  175 13% 83%;     /* #cfdad9 — inputs, focus outlines */
 
-    /* Text — true warm ink */
-    --ink:          200 12%  10%;    /* near-black, slight cool */
-    --ink-2:        200  8%  22%;
-    --ink-dim:      200  6%  42%;
-    --ink-faint:    200  6%  58%;
+    /* Ink — one cool-grey ladder. Every role below is ≥4.5:1 on white and on
+       the mint ground; --ink-ghost is the single decorative-only step and must
+       never carry meaning on its own. */
+    --ink:          180  5% 12%;     /* #1c1f1f */
+    --ink-2:        180  9% 33%;     /* #4d5d5d */
+    --ink-dim:      180  7% 39%;     /* #5c6a6a */
+    --ink-faint:    180  6% 46%;     /* #6f7c7c */
+    --ink-ghost:    180  8% 68%;     /* #a8b5b5 — rules, row numerals, dots */
 
-    /* Accent — deep operational green (forestry / equipment) */
-    --accent:       146 62%  26%;    /* #1a6b3a */
-    --accent-ink:   148 70%  22%;    /* slightly deeper for text */
-    --accent-bg:    146 50%  92%;    /* very pale green wash */
+    /* Brand — BITO teal, single hue, four steps */
+    --accent:       183 100% 25%;    /* #00797f */
+    --accent-ink:   183 100% 18%;    /* #00565b */
+    --accent-deep:  183 100% 15%;    /* #00464a */
+    --accent-soft:  183  36% 48%;    /* #4fa3a8 */
+    --accent-bg:    170  14% 92%;    /* #e7edec */
 
-    /* Signal status (light-theme tuned, never neon) */
-    --hot:          358 68% 46%;     /* deep red */
-    --warm:          28 88% 42%;     /* burnt amber */
-    --cold:         210 70% 38%;     /* deep blue */
-    --good:         146 62% 26%;     /* same as accent — coherent */
+    /* Flare — permitted for tiny components only, never a surface */
+    --flare:         29 100% 44%;    /* #e06c00 */
 
-    /* Mapped tokens for legacy components */
-    --background:        42 18% 97%;
-    --foreground:        200 12% 10%;
+    /* The rail — the one region the brand hue owns outright. Every pair below
+       is measured, not eyeballed: text sits ≥4.5:1 on rail and hover. On the
+       active item only --rail-ink is legible, so active items use it for
+       their numeral and badge too rather than the dimmer steps. */
+    --rail:         183 100% 15%;    /* #00464a */
+    --rail-hover:   183 100% 18%;    /* #00595e */
+    --rail-active:  183 100% 25%;    /* #00797f */
+    --rail-edge:    183 100% 12%;
+    --rail-ink:     180  44% 96%;    /* #f2fafa — 10.0:1 on rail */
+    --rail-ink-2:   183  30% 77%;    /* #b3d4d6 —  6.7:1 */
+    --rail-ink-3:   184  29% 70%;    /* #9cc6c9 —  5.7:1 */
+    --rail-mark:    185  61% 79%;    /* #a8e4ea —  7.6:1 */
+
+    /* Stage tones, from the Pipeline comp. Each column carries one, as a dot
+       beside a written stage name — the dot narrows it, the label states it. */
+    --stage-new:        183 100% 25%;  /* #00797f */
+    --stage-listed:     180   8% 59%;  /* #8fa0a0 */
+    --stage-assigned:    38  73% 45%;  /* #c98a1f */
+    --stage-contacted:  183 100% 25%;
+    --stage-meeting:    183 100% 18%;  /* #00565b */
+    --stage-quote:      183  36% 48%;  /* #4fa3a8 */
+    --stage-won:        149  78% 27%;  /* #0f7a42 */
+    --stage-dead:         8  50% 46%;  /* #b04a3a */
+    --stage-returned:   180   7% 63%;  /* #9aa8a8 */
+
+    /* Score heat: red hot, amber warm, grey cold — one ramp for the whole
+       console. The vivid values are for dots and fills; the -ink variants are
+       for the tier *word*, because the comp's amber and grey read at 2.9:1 and
+       2.7:1 as text. The word always ships with the dot, so nothing is
+       carried by colour alone. */
+    --heat-high:          8  50% 46%;
+    --heat-mid:          38  73% 45%;
+    --heat-low:         180   8% 59%;
+    --heat-high-ink:      8  50% 46%;  /* 5.4:1 on white */
+    --heat-mid-ink:      38  80% 30%;  /* 5.8:1 */
+    --heat-low-ink:     180   7% 39%;  /* 5.6:1 */
+
+    /* Semantic status — UX convention, not brand */
+    --good:         135 29% 44%;     /* #4f8f5f */
+    --warn:          39 61% 52%;     /* #cf9a3a */
+    --bad:            8 49% 48%;     /* #b8503f */
+    --hot:            8 49% 48%;
+    --warm:          39 61% 52%;
+    --cold:         212 23% 43%;     /* #546b85 */
+
+    /* Depth — tinted from ink so shadows sit in the palette, never neutral black */
+    --shadow-ink:   180 12% 20%;
+
+    /* Shape — the comp's four corners */
+    --radius-sm:     5px;            /* chips */
+    --radius-md:     9px;            /* nav items, buttons */
+    --radius:       11px;            /* controls, filter pills */
+    --radius-xl:    14px;            /* the table card */
+
+    /* Mapped tokens for the shadcn-derived primitives */
+    --background:        180 14% 94%;
+    --foreground:        180 5% 12%;
     --card:              0 0% 100%;
-    --card-foreground:   200 12% 10%;
+    --card-foreground:   180 5% 12%;
     --popover:           0 0% 100%;
-    --popover-foreground:200 12% 10%;
-    --primary:           146 62% 26%;
+    --popover-foreground:180 5% 12%;
+    --primary:           183 100% 25%;
     --primary-foreground: 0 0% 100%;
-    --secondary:         42 16% 95%;
-    --secondary-foreground: 200 12% 10%;
-    --muted:             42 14% 91%;
-    --muted-foreground:  200 6% 42%;
+    --secondary:         165 18% 96%;
+    --secondary-foreground: 180 5% 12%;
+    --muted:             170 14% 92%;
+    --muted-foreground:  180 6% 46%;
     --accent-foreground: 0 0% 100%;
-    --destructive:       358 68% 46%;
+    --destructive:       8 49% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border:            42 10% 84%;
-    --input:             42 10% 84%;
-    --ring:              146 62% 26%;
-    --radius:            0.25rem;
+    --border:            173 15% 88%;
+    --input:             175 13% 83%;
+    --ring:              183 100% 25%;
   }
 
-  /* ── Dark theme — deep warm charcoal, same operational green ───────────── */
+  /* ── Dark theme — the same teal, on deep petrol ink ────────────────────── */
   .dark {
-    /* Surfaces — layered warm charcoal */
-    --bg:           40  8%  8%;      /* near-black, faint warmth */
-    --surface:      40  7%  11%;
-    --surface-2:    40  6%  15%;
-    --surface-3:    40  6%  19%;
+    --bg:           192 26%  7%;     /* #0e1618 */
+    --surface:      190 22% 11%;     /* #151f21 */
+    --surface-2:    190 20% 14%;
+    --surface-3:    190 18% 18%;
 
-    /* Borders — warm low-contrast lines */
-    --line:         40  5%  24%;
-    --line-strong:  40  5%  34%;
+    --line:         190 14% 20%;
+    --line-soft:    190 16% 15%;
+    --line-strong:  190 12% 31%;
 
-    /* Text — warm off-white ink */
-    --ink:          42  20% 92%;
-    --ink-2:        42  12% 78%;
-    --ink-dim:      42   8% 60%;
-    --ink-faint:    42   7% 46%;
+    --ink:          180 20% 91%;
+    --ink-2:        180 10% 76%;
+    --ink-dim:      180  9% 64%;
+    --ink-faint:    180  8% 57%;
+    --ink-ghost:    180  8% 40%;
 
-    /* Accent — brighter green so it reads on dark */
-    --accent:       146 48% 50%;
-    --accent-ink:   146 52% 62%;
-    --accent-bg:    146 40% 16%;
+    --accent:       185 45% 53%;     /* #4fb4bd — lifts to carry on dark */
+    --accent-ink:   185 50% 66%;
+    --accent-deep:  185 55% 76%;
+    --accent-soft:  185 35% 44%;
+    --accent-bg:    188 32% 17%;
 
-    /* Signal status — luminous, never neon */
-    --hot:          358 72% 64%;
-    --warm:          30 85% 60%;
-    --cold:         206 78% 62%;
-    --good:         146 48% 54%;
+    --flare:         29 88% 58%;
 
-    /* Mapped tokens for legacy components */
-    --background:        40 8% 8%;
-    --foreground:        42 20% 92%;
-    --card:              40 7% 11%;
-    --card-foreground:   42 20% 92%;
-    --popover:           40 7% 11%;
-    --popover-foreground:42 20% 92%;
-    --primary:           146 48% 50%;
-    --primary-foreground: 40 10% 8%;
-    --secondary:         40 6% 15%;
-    --secondary-foreground: 42 20% 92%;
-    --muted:             40 6% 15%;
-    --muted-foreground:  42 8% 60%;
-    --accent-foreground: 40 10% 8%;
-    --destructive:       358 72% 64%;
-    --destructive-foreground: 40 10% 8%;
-    --border:            40 5% 24%;
-    --input:             40 5% 24%;
-    --ring:              146 48% 50%;
+    /* On dark the rail sits only 1.4:1 off the page ground, so it earns its
+       edge from a hairline rather than from luminance alone. */
+    --rail:         185 63% 14%;     /* #0d3539 */
+    --rail-hover:   184 55% 18%;     /* #154649 */
+    --rail-active:  185 55% 25%;     /* #1d5f65 */
+    --rail-edge:    185 40% 22%;
+    --rail-ink:     180 39% 93%;     /* #e6f4f4 — 11.7:1 on rail */
+    --rail-ink-2:   185 28% 73%;     /* #a8cbce —  7.6:1 */
+    --rail-ink-3:   185 24% 64%;     /* #8db5b9 —  6.0:1 */
+    --rail-mark:    186 59% 65%;     /* #6fd0da —  7.4:1 */
+
+    --stage-new:        185 45% 53%;
+    --stage-listed:     180  9% 58%;
+    --stage-assigned:    38  72% 60%;
+    --stage-contacted:  185 45% 53%;
+    --stage-meeting:    185 50% 66%;
+    --stage-quote:      185 35% 62%;
+    --stage-won:        149 52% 50%;
+    --stage-dead:         8  62% 63%;
+    --stage-returned:   180  8% 62%;
+
+    --heat-high:          8  62% 63%;
+    --heat-mid:          38  72% 60%;
+    --heat-low:         180  9% 58%;
+    --heat-high-ink:      8  62% 63%;
+    --heat-mid-ink:      38  72% 60%;
+    --heat-low-ink:     180  9% 58%;
+
+    --good:         135 38% 58%;
+    --warn:          39 72% 62%;
+    --bad:            8 62% 63%;
+    --hot:            8 62% 63%;
+    --warm:          39 72% 62%;
+    --cold:         212 45% 66%;
+
+    --shadow-ink:   192 40%  3%;
+
+    --background:        192 26% 7%;
+    --foreground:        180 20% 91%;
+    --card:              190 22% 11%;
+    --card-foreground:   180 20% 91%;
+    --popover:           190 22% 11%;
+    --popover-foreground:180 20% 91%;
+    --primary:           185 45% 53%;
+    --primary-foreground: 192 26% 7%;
+    --secondary:         190 20% 14%;
+    --secondary-foreground: 180 20% 91%;
+    --muted:             190 18% 18%;
+    --muted-foreground:  180 8% 57%;
+    --accent-foreground: 192 26% 7%;
+    --destructive:       8 62% 63%;
+    --destructive-foreground: 192 26% 7%;
+    --border:            190 14% 20%;
+    --input:             190 12% 31%;
+    --ring:              185 45% 53%;
   }
 }
 
@@ -115,7 +211,6 @@
     color: hsl(var(--ink));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "ss01", "ss02", "cv11";
     color-scheme: light;
   }
 
@@ -123,35 +218,35 @@
     color-scheme: dark;
   }
 
+  /* The comp's ground is flat. No paper texture, no blueprint grid — the white
+     cards do the separating. */
   body {
-    background:
-      /* warm paper base */
-      linear-gradient(to bottom, hsl(var(--bg)), hsl(var(--bg))),
-      /* very faint blueprint grid in dark ink */
-      repeating-linear-gradient(0deg, transparent 0 23px, hsla(200, 12%, 10%, 0.018) 23px 24px),
-      repeating-linear-gradient(90deg, transparent 0 23px, hsla(200, 12%, 10%, 0.018) 23px 24px);
-    background-attachment: fixed;
+    background: hsl(var(--bg));
     min-height: 100vh;
   }
 
-  /* Dark: flip the blueprint grid to faint light ink so it stays visible */
-  .dark body {
-    background:
-      linear-gradient(to bottom, hsl(var(--bg)), hsl(var(--bg))),
-      repeating-linear-gradient(0deg, transparent 0 23px, hsla(42, 20%, 92%, 0.022) 23px 24px),
-      repeating-linear-gradient(90deg, transparent 0 23px, hsla(42, 20%, 92%, 0.022) 23px 24px);
-    background-attachment: fixed;
-  }
-
   ::selection {
-    background: hsl(var(--accent) / 0.22);
+    background: hsl(var(--accent) / 0.18);
     color: hsl(var(--ink));
   }
 
   :focus-visible {
-    outline: 1px solid hsl(var(--accent));
+    outline: 2px solid hsl(var(--accent));
     outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
+
+  /* Scrollbars are part of the design, not a browser default. */
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--line-strong));
+    border-radius: var(--radius-md);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink-ghost)); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Firefox */
+  html { scrollbar-color: hsl(var(--line-strong)) transparent; scrollbar-width: thin; }
 
   .tabular,
   th, td,
@@ -162,32 +257,34 @@
 }
 
 @layer components {
+  /* The condensed display voice — the page numeral and the metric figures. */
   .display-number {
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-display), var(--font-sans), ui-sans-serif, sans-serif;
     font-weight: 700;
-    font-feature-settings: "ss01", "lnum", "tnum";
-    letter-spacing: -0.04em;
+    font-feature-settings: "lnum", "tnum";
+    letter-spacing: 0;
     line-height: 0.9;
   }
 
   .display-serif {
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-display), var(--font-sans), ui-sans-serif, sans-serif;
     font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
   }
 
   .mono {
     font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-    font-feature-settings: "ss01", "ss02", "zero", "tnum";
+    font-feature-settings: "zero", "tnum";
   }
 
+  /* The comp's small-caps metadata voice: mono, wide-tracked, uppercase. */
   .label-xs,
   .eyebrow {
     font-family: var(--font-mono), ui-monospace, monospace;
     font-size: 10px;
     line-height: 1;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     color: hsl(var(--ink-faint));
     font-weight: 500;
   }
@@ -200,20 +297,28 @@
     display: inline-block;
     width: 6px;
     height: 6px;
-    border-radius: 999px;
+    border-radius: 50%;
+  }
+
+  /* The card the whole inbox sits in: white, soft-cornered, borderless. */
+  .panel {
+    background: hsl(var(--surface));
+    border-radius: var(--radius-xl);
+    overflow: hidden;
   }
 }
 
 @layer utilities {
-  /* Elevation + drag feedback. These support the kanban board and the command
-     palette overlay; they carry no brand colour of their own, taking their tint
-     from --ink so they sit correctly on whatever palette is loaded. */
-  .lift-1 { box-shadow: 0 1px 2px hsl(var(--ink) / 0.06), 0 1px 1px hsl(var(--ink) / 0.04); }
-  .lift-2 { box-shadow: 0 2px 4px hsl(var(--ink) / 0.07), 0 4px 12px hsl(var(--ink) / 0.07); }
-  .lift-3 { box-shadow: 0 4px 8px hsl(var(--ink) / 0.10), 0 12px 28px hsl(var(--ink) / 0.12); }
-  .dark .lift-1 { box-shadow: 0 1px 2px hsl(0 0% 0% / 0.5); }
-  .dark .lift-2 { box-shadow: 0 2px 5px hsl(0 0% 0% / 0.5), 0 6px 16px hsl(0 0% 0% / 0.45); }
-  .dark .lift-3 { box-shadow: 0 6px 12px hsl(0 0% 0% / 0.6), 0 16px 36px hsl(0 0% 0% / 0.5); }
+  /* Elevation. The comp is flat, so the resting shadow is a whisper that only
+     separates white card from mint ground; lift-2 and lift-3 stay for the
+     surfaces that genuinely float — dialogs, the command palette, dragged
+     kanban cards. All tinted from ink, never neutral black. */
+  .lift-1 { box-shadow: 0 1px 2px hsl(var(--shadow-ink) / 0.04); }
+  .lift-2 { box-shadow: 0 2px 4px hsl(var(--shadow-ink) / 0.06), 0 6px 16px hsl(var(--shadow-ink) / 0.08); }
+  .lift-3 { box-shadow: 0 4px 8px hsl(var(--shadow-ink) / 0.10), 0 14px 32px hsl(var(--shadow-ink) / 0.13); }
+  .dark .lift-1 { box-shadow: 0 1px 2px hsl(var(--shadow-ink) / 0.5); }
+  .dark .lift-2 { box-shadow: 0 2px 5px hsl(var(--shadow-ink) / 0.5), 0 6px 16px hsl(var(--shadow-ink) / 0.45); }
+  .dark .lift-3 { box-shadow: 0 6px 12px hsl(var(--shadow-ink) / 0.6), 0 16px 36px hsl(var(--shadow-ink) / 0.5); }
 
   .row-hit { transition: background-color 90ms linear; }
   .row-hit:hover { background: hsl(var(--surface-2) / 0.7); }
@@ -222,14 +327,14 @@
      it lands the new position settles back from an already-visible state —
      never a fade-in that hides content. */
   .card-lift {
-    box-shadow: 0 8px 16px hsl(var(--ink) / 0.12), 0 18px 40px hsl(var(--ink) / 0.14);
+    box-shadow: 0 8px 16px hsl(var(--shadow-ink) / 0.12), 0 18px 40px hsl(var(--shadow-ink) / 0.14);
     transform: scale(1.02) rotate(0.4deg);
     transition:
       transform 140ms cubic-bezier(0.2, 0, 0, 1),
       box-shadow 140ms cubic-bezier(0.2, 0, 0, 1);
   }
   .dark .card-lift {
-    box-shadow: 0 8px 16px hsl(0 0% 0% / 0.6), 0 18px 40px hsl(0 0% 0% / 0.5);
+    box-shadow: 0 8px 16px hsl(var(--shadow-ink) / 0.6), 0 18px 40px hsl(var(--shadow-ink) / 0.5);
   }
 
   .card-settle { animation: card-settle 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -245,11 +350,15 @@
     }
   }
 
-  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  /* The board hides its own horizontal bar and is driven by the rail above it,
+     so the control sits under the filters instead of below the fold. */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { height: 0; width: 0; display: none; }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 9px; height: 9px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--line-strong));
-    border: 2px solid hsl(var(--bg));
-    border-radius: 999px;
+    border-radius: var(--radius-md);
   }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 
@@ -257,34 +366,26 @@
   .text-ink-2   { color: hsl(var(--ink-2)); }
   .text-ink-dim { color: hsl(var(--ink-dim)); }
   .text-ink-faint{ color: hsl(var(--ink-faint)); }
+  .text-ink-ghost{ color: hsl(var(--ink-ghost)); }
 
   .bg-surface   { background: hsl(var(--surface)); }
   .bg-surface-2 { background: hsl(var(--surface-2)); }
   .bg-surface-3 { background: hsl(var(--surface-3)); }
 
   .border-line  { border-color: hsl(var(--line)); }
+  .border-line-soft { border-color: hsl(var(--line-soft)); }
   .border-line-strong { border-color: hsl(var(--line-strong)); }
 
-  .corner-marks {
-    position: relative;
-  }
-  .corner-marks::before,
-  .corner-marks::after {
+  /* A row that is clickable in full while keeping one real link for the
+     keyboard: the link stretches over the row, action buttons sit above it. */
+  .stretch-link::after {
     content: "";
     position: absolute;
-    width: 8px;
-    height: 8px;
-    border: 1px solid hsl(var(--accent));
-    pointer-events: none;
+    inset: 0;
   }
-  .corner-marks::before {
-    top: -1px; left: -1px;
-    border-right: none;
-    border-bottom: none;
-  }
-  .corner-marks::after {
-    bottom: -1px; right: -1px;
-    border-left: none;
-    border-top: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-settle { animation: none; }
+    .card-lift { transition: none; }
   }
 }

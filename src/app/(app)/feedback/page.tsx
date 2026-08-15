@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getAllFeedback, getRepById } from "@/lib/queries";
-import { PageHeader, MetaItem } from "@/components/page-header";
+import { StatStrip, Stat } from "@/components/stat-strip";
 import { FeedbackForm } from "@/components/feedback-form";
 import { FeedbackStatusSelector } from "@/components/feedback-status-selector";
 import {
@@ -32,70 +32,53 @@ export default async function FeedbackPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader
-        number={isAdmin ? "05" : "03"}
-        eyebrow="Lead Intelligence Terminal / Feedback"
-        title={
-          <>
-            Ideas &amp; <em className="text-brand-ink">suggestions</em>.
-          </>
-        }
-        subtitle="Spotted a bug or have an idea to make this better? Send it through — the admin reviews every submission."
-        meta={
-          isAdmin ? (
-            <>
-              <MetaItem label="Total" value={items.length} />
-              <MetaItem label="New" value={openCount} accent />
-            </>
-          ) : undefined
-        }
-      />
+      <h1 className="sr-only">Feedback — ideas and suggestions</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,1.4fr)] gap-10">
+      <StatStrip number={isAdmin ? "05" : "03"} className="mb-5">
+        {isAdmin ? (
+          <>
+            <Stat label="Total" value={items.length} />
+            <Stat label="New" value={openCount} tone="brand" />
+          </>
+        ) : (
+          <Stat label="Feedback" value="Open" tone="brand" />
+        )}
+      </StatStrip>
+
+      <p className="mb-5 max-w-2xl text-[12.5px] leading-relaxed text-ink-dim">
+        Spotted a bug or have an idea to make this better? Send it through — the
+        admin reviews every submission.
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_minmax(0,1.4fr)]">
         {/* SUBMIT */}
-        <section>
-          <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-line">
-            <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-              A
-            </span>
-            <h2 className="display-serif text-xl text-ink leading-none">
-              Send feedback
-            </h2>
-          </div>
-          <div className="border border-line bg-surface p-5">
-            <FeedbackForm />
-          </div>
+        <section className="panel p-[18px] lg:p-5">
+          <h2 className="mb-3.5 text-[13.5px] font-bold text-ink">Send feedback</h2>
+          <FeedbackForm />
         </section>
 
         {/* ADMIN REVIEW LIST */}
         {isAdmin && (
-          <section>
-            <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-line">
-              <span className="mono text-[10px] uppercase tracking-wider text-ink-faint">
-                B
-              </span>
-              <h2 className="display-serif text-xl text-ink leading-none">
-                Submissions
-              </h2>
-              <span className="mono text-[10px] uppercase tracking-wider text-ink-faint ml-auto">
-                {items.length} entries
+          <section className="panel p-[18px] lg:p-5">
+            <div className="mb-3.5 flex items-baseline justify-between gap-3">
+              <h2 className="text-[13.5px] font-bold text-ink">Submissions</h2>
+              <span className="mono tabular text-[11px] text-ink-faint">
+                {items.length}
               </span>
             </div>
 
             {items.length === 0 ? (
-              <div className="border border-dashed border-line px-6 py-16 text-center">
-                <div className="display-serif text-5xl text-ink-faint/30 mb-3">
-                  ∅
-                </div>
-                <h3 className="display-serif text-xl text-ink mb-2">
+              <div className="rounded-lg bg-surface-2 px-6 py-14 text-center">
+                <div className="display-serif mb-3 text-5xl text-ink-ghost">∅</div>
+                <h3 className="display-serif mb-2 text-xl text-ink">
                   No feedback yet.
                 </h3>
-                <p className="text-[13px] text-ink-dim max-w-xs mx-auto">
+                <p className="mx-auto max-w-xs text-[12.5px] text-ink-dim">
                   Suggestions from you and your reps will appear here.
                 </p>
               </div>
             ) : (
-              <ul className="space-y-px bg-line border border-line">
+              <ul className="space-y-2">
                 {items.map((f) => (
                   <FeedbackRow key={f.id} item={f} />
                 ))}
@@ -112,18 +95,18 @@ function FeedbackRow({ item }: { item: Feedback }) {
   const categoryLabel =
     FEEDBACK_CATEGORY_LABELS[item.category as FeedbackCategory] ?? item.category;
   return (
-    <li className="bg-surface p-4">
+    <li className="rounded-lg bg-surface-2 p-3.5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mono text-[10px] uppercase tracking-wider text-ink-faint mb-1.5">
-            <span className="inline-flex items-center rounded-sm border border-line bg-surface-2 px-1.5 py-0.5 text-ink-2">
+          <div className="eyebrow mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="rounded-sm bg-surface px-1.5 py-0.5 text-ink-2">
               {categoryLabel}
             </span>
             <span className="text-ink-2">{item.author || "Unknown"}</span>
             {item.author_role && <span>· {item.author_role}</span>}
             <span>· {formatRelative(item.created_at)}</span>
           </div>
-          <p className="text-[13px] text-ink-2 leading-relaxed whitespace-pre-wrap">
+          <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink-2">
             {item.body}
           </p>
         </div>

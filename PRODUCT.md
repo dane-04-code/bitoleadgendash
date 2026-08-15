@@ -27,7 +27,7 @@ Not a general CRM. It is the last mile of an automated signal pipeline — leads
 
 ## Operating Context
 
-- **Lead lifecycle:** `new → listed → assigned → contacted → meeting → proposal → won | dead | returned`. `returned` = a rep handed a lead back. `listed` = published to the internal marketplace for reps to claim.
+- **Lead lifecycle:** `new → listed → assigned → contacted → meeting → quote → won | dead | returned`. `returned` = a rep handed a lead back. `listed` = published to the internal marketplace for reps to claim.
 - **Routing:** admin assigns directly, or lists to a marketplace where reps self-claim and can unclaim. Reps set an availability flag (`looking` / `not_looking`).
 - **Working a lead:** score breakdown rubric, manual review scorecard with comment, notes, contact copy + Outlook/mailto handoff, AI-drafted outreach copy a human sends manually, kill/archive, return.
 - **Closing:** a deal profile (commercial detail: quote reference, competitors, tender reference) and a sale record (value, gross profit, margin, project reference) feeding a sales register.
@@ -48,21 +48,34 @@ Confirmed functionality that must survive any redesign — routes: `/dashboard`,
 - Next.js 14 App Router + Supabase (anon key, RLS disabled on some tables), Tailwind. Server actions in `src/app/actions.ts`, queries in `src/lib/queries.ts`.
 - Auth is *not* Supabase Auth: a single shared `DASHBOARD_PASSWORD` env var for admin, PBKDF2 hashes in a `reps` table for reps, HMAC-signed `li_session` cookie.
 - `src/lib/mock-data.ts` + `isMockMode()` serve the entire app without Supabase when env vars are absent or placeholder. This is the local demo path.
-- The base `leads`/`contacts`/`reps` schema predates the repo's migrations and lives only in the live Supabase project — changing the `status` check constraint is a production DB change requiring explicit approval.
+- The base `leads`/`contacts`/`reps` schema predates the repo's migrations and lives only in the live Supabase project. **The upstream agents alter that schema without a commit here** — `supabase/migrations/` is not a reliable record of production, and only one migration is registered remotely. Any production DDL requires explicit approval.
 - Apollo enrichment and phone-number sourcing happen upstream in Hermes, not in this codebase.
-- **No email sending exists.** Only `mailto:` links and drafted copy a human sends. Building automated email needs a provider, trigger, and template decision that has not been made.
+- **No email sending exists in this app.** Only `mailto:` links and drafted copy a human sends. An `assignment_pings` table (assignment-notification send log: recipient, subject, lead count, status, error) exists in the live database — created upstream, currently 0 rows, and unreferenced anywhere in this codebase. Whether the dashboard adopts it is a v2 decision.
 
-**Terminology change in flight (approved 2026-08-12):** the stage and all UI copy currently reading "Proposal" become **"Quote"**. The DB value change is held pending approval of the production constraint alteration.
+**Terminology change — shipped 2026-08-13.** The "Proposal" stage is now **"Quote"** in both UI copy and stored data (migration `0014`, the one migration registered remotely). `leads.status` turned out to have no check constraint and no enum — it is plain `text` defaulting to `'new'`, so no constraint alteration was needed. `deal_profiles.proposal_reference` / `proposal_sent_date` are retained but no longer written.
+
+## v2 (in flight, from 2026-08-13)
+
+The upstream agents have moved to v2 and lead discovery is **validated** — every one of the 110 live leads carries contacts. The frontend has not caught up. v2 for this repo means closing that gap and improving the working experience on top of it; the plan of record is `V2_PLAN.md`, which also tracks live-vs-repo schema drift.
+
+Newly confirmed upstream output the UI does not yet surface:
+
+- `leads.why_is_this_a_lead` — a sourced narrative justifying the lead (named company, dated event, contract value, facility detail). The strongest signal the pipeline now produces. Present on the newest leads only.
+- `contacts.email_verified`, `contacts.role_fit`, `contacts.enrichment_method`, `contacts.note` — contact-quality evidence, populated across the contact set.
+
+Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but did not exist in the production table — migration `0010` had been written and never applied. The column is now live, but it is `NULL` on all 110 production leads *and* all 8 mock fixtures, so the score-breakdown rubric has never actually rendered for anyone. Nothing in this codebase writes it — it is upstream output. The feature stays dark until the agents populate it; spec in `V2_PLAN.md` §4 A1.
+
+**Security posture is changing (decided 2026-08-13).** The app currently reaches Supabase with the anon key against tables with row-level security disabled. Dane has directed a move to a properly secured, RLS-enforced database. See `V2_PLAN.md` §6.
 
 ## Brand Commitments
 
 Binding, from `Danes Brain/Projects/Bito Consulting/Plans/BRANDING.md` (colours sampled from the real logo asset, verified 5 Aug 2026) plus operator decisions on 2026-08-12:
 
 - **BITO teal `#00797f`** and **white** are the brand. Tonal ramp: `#00565b`, `#00464a`, `#4fa3a8`, `#e7edec`, `#f2f6f5`.
-- **Quicksand** is the typeface (headings 600/700, body 400/500). It replaces an earlier unverified Barlow assumption — do not reintroduce Barlow.
+- **Barlow / Barlow Condensed** are the typefaces, with IBM Plex Mono for figures — wired in `src/app/layout.tsx`. This supersedes the earlier Quicksand-only rule (2026-08-13): the Claude Design comps Dane approved for the console are set in Barlow, and the comp is the commitment. Do not "restore" Quicksand without asking.
 - **Orange `#e06c00` is permitted for tiny components only** (a CTA, a hot flag) — never a base surface or a second identity colour. This is a deliberate, operator-approved exception to BRANDING.md's "no orange, anywhere" rule, scoped to this app.
 - **Do not place the BITO logo anywhere.** Reserve a defined space for it in the layout, left empty. Colours and fonts only.
-- **Components must not be rounded.** Square corners.
+- **Corners are rounded**, on the comp's scale: `--radius-sm` 5px through `--radius-xl` 14px, status dots fully round. This supersedes the earlier "square corners, without exception" rule (2026-08-13), for the same reason as the typeface above.
 - Semantic status colours are UX convention, not brand: good `#4f8f5f`, warning `#cf9a3a`, bad `#b8503f`. Ink `#1c1f1f`, muted `#6f7c7c`.
 
 **Convention is the commitment (standing preference, 2026-08-12).** The operator asked for the familiar CRM path — "take inspiration from popular CRM tools", "don't sway too hard away from what we already have". This surface executes the category standard at full fidelity, without irony or smuggled quirk. The craft bar is **Attio/Linear density for tables and lists, with roomier kanban cards sized for comfortable drag targets**. Future work on this product inherits that bar rather than reopening the aesthetic.

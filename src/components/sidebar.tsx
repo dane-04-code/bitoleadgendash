@@ -8,7 +8,6 @@ import {
   Users,
   Cog,
   LogOut,
-  User,
   UserCog,
   MessageSquare,
   Store,
@@ -38,125 +37,143 @@ export type SidebarUser =
   | { role: "admin"; label: string }
   | { role: "rep"; label: string; email?: string | null; territory?: string | null };
 
-export function Sidebar({ user }: { user: SidebarUser }) {
+/** Live counts for the nav badges, keyed by href. Absent = no badge. */
+export type NavCounts = Record<string, number>;
+
+export function Sidebar({
+  user,
+  counts,
+}: {
+  user: SidebarUser;
+  counts?: NavCounts;
+}) {
   const pathname = usePathname();
   const nav = user.role === "admin" ? ADMIN_NAV : REP_NAV;
   const { open } = useCommandPalette();
 
   return (
-    <aside className="hidden lg:flex h-screen w-[232px] shrink-0 flex-col border-r border-line bg-surface sticky top-0">
-      <div className="px-5 pt-6 pb-5 border-b border-line">
-        <Link href={user.role === "admin" ? "/dashboard" : "/my"} className="flex items-start gap-3 group">
-          <div className="relative h-9 w-9 shrink-0 border border-line-strong flex items-center justify-center bg-bg">
-            <span className="display-serif text-ink text-lg leading-none">Li</span>
-            <span className="absolute -top-px -right-px w-1.5 h-1.5 bg-brand" />
-          </div>
-          <div className="leading-tight pt-0.5">
-            <div className="text-[13px] font-semibold tracking-tight text-ink">
-              LeadIntelligence
-            </div>
-            <div className="mono text-[10px] uppercase tracking-wider text-ink-faint mt-0.5">
-              BITO UAE · GCC
-            </div>
-          </div>
-        </Link>
-      </div>
+    /* The teal plane is painted by the outer wrapper, which stretches to the
+       full document height; the inner column is what sticks. With the paint on
+       the sticky element itself, a page taller than the viewport showed mint
+       ground below the rail. */
+    <aside className="hidden w-[236px] shrink-0 border-r border-rail-edge bg-rail lg:block">
+      <div className="sticky top-0 flex h-screen flex-col gap-6 px-4 pt-[22px] pb-[18px]">
+      <Link
+        href={user.role === "admin" ? "/dashboard" : "/my"}
+        className="flex items-center gap-[11px] rounded-md px-1.5"
+      >
+        {/* Reserved logo slot. BITO's mark is deliberately never placed — the
+            space is held so it can be, without a relayout. */}
+        <span aria-hidden className="block w-7 shrink-0" />
+        <span className="block">
+          <span className="block text-[14.5px] font-bold leading-tight text-rail-ink">
+            LeadIntelligence
+          </span>
+          <span className="mono mt-0.5 block text-[9.5px] font-medium uppercase tracking-[0.13em] text-rail-3">
+            BITO UAE · GCC
+          </span>
+        </span>
+      </Link>
 
-      <div className="px-2.5 pt-4">
-        <button
-          type="button"
-          onClick={open}
-          className="w-full flex items-center gap-2 rounded-sm border border-line bg-bg px-2.5 py-2 text-[12px] text-ink-dim hover:border-line-strong hover:text-ink transition-colors"
-        >
-          <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-          <span className="flex-1 text-left">Search…</span>
-          <kbd className="mono text-[10px] text-ink-faint border border-line px-1 py-px">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={open}
+        className="flex items-center gap-2.5 rounded-md bg-rail-hover px-3 py-2.5 text-[12.5px] text-rail-2 transition-colors hover:bg-rail-active hover:text-rail-ink"
+      >
+        <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+        <span className="flex-1 text-left">Search…</span>
+        <kbd className="mono text-[10px] text-rail-3">⌘K</kbd>
+      </button>
 
-      <nav className="flex-1 px-2.5 py-4">
-        <div className="px-2 pb-2 mono text-[10px] uppercase tracking-wider text-ink-faint">
+      <nav className="flex flex-col gap-0.5">
+        <div className="mono px-2.5 pb-2 text-[9.5px] font-medium uppercase tracking-[0.16em] text-rail-3">
           {user.role === "admin" ? "Navigation" : "Workspace"}
         </div>
-        <ul className="space-y-px">
-          {nav.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/dashboard" &&
-                item.href !== "/my" &&
-                pathname.startsWith(item.href));
-            const Icon = item.icon;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
+        {nav.map((item) => {
+          const active =
+            pathname === item.href ||
+            (item.href !== "/dashboard" &&
+              item.href !== "/my" &&
+              pathname.startsWith(item.href));
+          const Icon = item.icon;
+          const badge = counts?.[item.href];
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "group flex items-center gap-[11px] rounded-md px-2.5 py-2.5 transition-colors",
+                active
+                  ? "bg-rail-active text-rail-ink"
+                  : "text-rail-2 hover:bg-rail-hover hover:text-rail-ink"
+              )}
+            >
+              {/* On the active block only --rail-ink clears 4.5:1, so the
+                  numeral and badge ride full ink there instead of dimming. */}
+              <span
+                className={cn(
+                  "mono w-3.5 shrink-0 text-[9.5px] font-medium",
+                  active ? "text-rail-ink" : "text-rail-3"
+                )}
+              >
+                {item.code}
+              </span>
+              <Icon
+                className="h-3.5 w-3.5 shrink-0 opacity-80"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  "flex-1 text-[13.5px]",
+                  active ? "font-semibold" : "font-medium"
+                )}
+              >
+                {item.label}
+              </span>
+              {badge !== undefined && badge > 0 && (
+                <span
                   className={cn(
-                    "group flex items-center gap-3 rounded-sm px-2.5 py-2 text-[13px] transition-colors relative",
-                    active
-                      ? "bg-surface-3 text-ink"
-                      : "text-ink-dim hover:text-ink hover:bg-surface-2"
+                    "mono text-[10px] font-semibold tabular",
+                    active ? "text-rail-ink" : "text-rail-3"
                   )}
                 >
-                  {active && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-px bg-brand" />
-                  )}
-                  <span className="mono text-[10px] text-ink-faint w-5 shrink-0">
-                    {item.code}
-                  </span>
-                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                  <span className="flex-1">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  {badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="border-t border-line p-3 space-y-3">
-        {user.role === "rep" ? (
-          <div className="px-1.5 flex items-center gap-2.5">
-            <div className="display-serif text-sm text-ink-2 w-8 h-8 border border-line-strong flex items-center justify-center shrink-0 bg-surface-2">
-              {initials(user.label)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-medium text-ink truncate">
-                {user.label}
-              </div>
-              <div className="mono text-[10px] uppercase tracking-wider text-ink-faint truncate">
-                {user.territory ? user.territory : "Sales rep"}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="px-1.5 flex items-center gap-2.5">
-            <div className="w-8 h-8 border border-line-strong flex items-center justify-center shrink-0 bg-surface-2">
-              <User className="h-3.5 w-3.5 text-ink-2" strokeWidth={1.75} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-medium text-ink truncate">
-                Admin
-              </div>
-              <div className="mono text-[10px] uppercase tracking-wider text-signal-good flex items-center gap-1.5">
-                <span className="dot bg-signal-good" />
-                Active
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="mt-auto flex flex-col gap-3">
+        <div className="flex items-center gap-2.5 px-1.5 py-1">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rail-active text-[11px] font-semibold text-rail-ink">
+            {user.role === "admin" ? "AD" : initials(user.label)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[12.5px] font-semibold leading-tight text-rail-ink">
+              {user.role === "admin" ? "Admin" : user.label}
+            </span>
+            <span className="mono mt-0.5 flex items-center gap-1.5 text-[9.5px] font-medium uppercase tracking-[0.1em] text-rail-mark">
+              {user.role === "admin" ? "Active" : user.territory || "Sales rep"}
+            </span>
+          </span>
+        </div>
 
-        <ThemeToggle />
+        <ThemeToggle onRail />
 
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
-            className="w-full flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-[12px] text-ink-dim hover:text-ink hover:bg-surface-2 transition-colors"
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12.5px] text-rail-2 transition-colors hover:bg-rail-hover hover:text-rail-ink"
           >
             <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />
             Sign out
           </button>
         </form>
+        </div>
       </div>
     </aside>
   );
@@ -167,15 +184,15 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
   const nav = user.role === "admin" ? ADMIN_NAV : REP_NAV;
   const home = user.role === "admin" ? "/dashboard" : "/my";
   return (
-    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-      <Link href={home} className="flex items-center gap-2.5">
-        <div className="relative h-7 w-7 border border-line-strong flex items-center justify-center bg-bg">
-          <span className="display-serif text-ink text-sm leading-none">Li</span>
-          <span className="absolute -top-px -right-px w-1 h-1 bg-brand" />
-        </div>
-        <span className="font-semibold text-[13px] tracking-tight">LeadIntelligence</span>
+    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-rail px-4 py-3">
+      <Link href={home} className="min-w-0 shrink rounded-md">
+        <span className="block truncate text-[13.5px] font-bold tracking-tight text-rail-ink">
+          LeadIntelligence
+        </span>
       </Link>
-      <nav className="flex items-center gap-1">
+      {/* Eight targets do not fit a 390px bar. The rail scrolls rather than
+          clipping sign-out off the right edge. */}
+      <nav className="flex shrink-0 items-center gap-0.5 overflow-x-auto scrollbar-thin">
         {nav.map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -184,25 +201,26 @@ export function MobileTopbar({ user }: { user: SidebarUser }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-sm transition-colors",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
                 active
-                  ? "bg-surface-3 text-ink border border-line"
-                  : "text-ink-dim hover:text-ink"
+                  ? "bg-rail-active text-rail-ink"
+                  : "text-rail-2 hover:text-rail-ink"
               )}
               aria-label={item.label}
+              aria-current={active ? "page" : undefined}
             >
-              <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+              <Icon className="h-4 w-4" strokeWidth={1.75} />
             </Link>
           );
         })}
-        <ThemeToggle compact />
+        <ThemeToggle compact onRail />
         <form action="/api/auth/logout" method="post" className="ml-1">
           <button
             type="submit"
-            className="flex h-8 w-8 items-center justify-center rounded-sm text-ink-dim hover:text-ink transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-rail-2 transition-colors hover:text-rail-ink"
             aria-label="Sign out"
           >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />
+            <LogOut className="h-4 w-4" strokeWidth={1.75} />
           </button>
         </form>
       </nav>

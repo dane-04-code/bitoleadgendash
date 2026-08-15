@@ -4,15 +4,18 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentRepId, getSession } from "@/lib/auth";
 import { hashPassword, verifyPasswordHash } from "@/lib/auth";
+import { isLeadOwnedByRep } from "@/lib/queries";
 import {
   isMockMode,
-  MOCK_REPS,
+  mockReps,
   mockAddLeadNote,
   mockDeleteLeadNote,
   mockSaveLeadReview,
   mockAddFeedback,
   mockUpdateFeedbackStatus,
   mockUpdateLeadStatus,
+  mockSetRepActive,
+  mockSetOutreachUsed,
 } from "@/lib/mock-data";
 import type {
   LeadStatus,
@@ -30,7 +33,7 @@ async function currentActorName(): Promise<string | null> {
   if (!session) return null;
   if (session.role === "admin") return "Admin";
   if (isMockMode()) {
-    return MOCK_REPS.find((r) => r.id === session.subject)?.full_name ?? "Rep";
+    return mockReps().find((r) => r.id === session.subject)?.full_name ?? "Rep";
   }
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
@@ -456,7 +459,30 @@ export async function killLead(formData: FormData): Promise<{ ok: boolean; error
   return { ok: true };
 }
 
+/**
+ * Mark an outreach draft as sent, or undo that. The admin may mark any draft;
+ * a rep may only mark drafts on a lead they currently hold — the same rule the
+ * lead page uses to decide who can open it at all.
+ */
 export async function markOutreachUsed(outreachId: string, leadId: string, used: boolean) {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+  if (!outreachId || !leadId) {
+    return { ok: false, error: "Missing draft or lead." };
+  }
+  if (session.role !== "admin") {
+    const owns = await isLeadOwnedByRep(leadId, session.subject);
+    if (!owns) return { ok: false, error: "That lead isn't yours." };
+  }
+
+  if (isMockMode()) {
+    if (!mockSetOutreachUsed(outreachId, used)) {
+      return { ok: false, error: "Draft not found." };
+    }
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  }
+
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("outreach")
@@ -778,16 +804,36 @@ export async function clearRepPassword(formData: FormData) {
   return { ok: true };
 }
 
+/**
+ * Deactivate a rep (or bring one back). Deactivating takes them out of the
+ * assignment picker without touching their history — the reversible
+ * alternative to deleteRep, which is why both exist.
+ */
 export async function toggleRepActive(repId: string, isActive: boolean) {
+  const session = await getSession();
+  if (session?.role !== "admin") return { ok: false, error: "Admins only." };
+  if (!repId) return { ok: false, error: "Missing rep id." };
+
+  if (isMockMode()) {
+    if (!mockSetRepActive(repId, isActive)) {
+      return { ok: false, error: "Rep not found." };
+    }
+    revalidatePath("/reps");
+    revalidatePath(`/reps/${repId}`);
+    return { ok: true };
+  }
+
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("reps")
     .update({ is_active: isActive })
     .eq("id", repId);
   if (error) {
+    console.error("toggleRepActive", error);
     return { ok: false, error: error.message };
   }
   revalidatePath("/reps");
+  revalidatePath(`/reps/${repId}`);
   return { ok: true };
 }
 

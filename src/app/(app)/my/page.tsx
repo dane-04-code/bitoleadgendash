@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentRepId } from "@/lib/auth";
 import { getLeadsForRep, getRepById, getRepStats } from "@/lib/queries";
 import { RepLeadsView } from "@/components/rep-leads-view";
-import { PageHeader, MetaItem } from "@/components/page-header";
+import { StatStrip, Stat } from "@/components/stat-strip";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,35 +25,28 @@ export default async function MyPage() {
   // Admin reset their password — force them to choose their own before working.
   if (rep.must_change_password) redirect("/my/account");
 
-  const firstName = rep.full_name.split(/\s+/)[0] || rep.full_name;
   const liveQuotes = leads.filter((l) => l.status === "quote").length;
 
   return (
     <div className="animate-fade-in">
-      <PageHeader
-        number="A"
-        eyebrow={`Sales rep · ${rep.full_name}`}
-        title={
-          <>
-            Welcome back, <em className="text-brand-ink">{firstName}</em>.
-          </>
-        }
-        subtitle="The leads routed to you. Drag a card to move it through the stages."
-        meta={
-          <>
-            <MetaItem label="In play" value={stats.open} accent />
-            <MetaItem label="Hot · 80+" value={stats.hot} tone="warn" />
-            <MetaItem
-              label="Live quotes"
-              value={liveQuotes}
-              hint="Quotes you've issued that are still open"
-            />
-            <MetaItem label="Won" value={stats.won} tone="good" />
-            <MetaItem label="Dead" value={stats.dead} tone="bad" />
-            <MetaItem label="Total" value={stats.total} />
-          </>
-        }
-      />
+      <h1 className="sr-only">My leads — {rep.full_name}</h1>
+
+      <StatStrip number="01" className="mb-5">
+        <Stat label="In play" value={stats.open} tone="brand" />
+        <Stat label="Hot · 80+" value={stats.hot} tone="warn" />
+        <Stat
+          label="Live quotes"
+          value={liveQuotes}
+          hint="Quotes you've issued that are still open"
+        />
+        <Stat label="Won" value={stats.won} tone="good" />
+        <Stat label="Dead" value={stats.dead} tone="bad" />
+        <Stat label="Total" value={stats.total} />
+      </StatStrip>
+
+      <p className="mb-5 text-[12.5px] leading-relaxed text-ink-dim">
+        The leads routed to you. Drag a card to move it through the stages.
+      </p>
 
       <RepLeadsView leads={leads} />
     </div>
