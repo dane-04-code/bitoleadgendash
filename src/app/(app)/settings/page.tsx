@@ -36,7 +36,7 @@ export default async function SettingsPage() {
           value={mock ? "Mock" : "Live"}
           tone={mock ? "warn" : "brand"}
         />
-        <Stat label="Build" value="0.1.0" />
+        <Stat label="Build" value="1.0.1" />
         <Stat label="Region" value="GCC" />
       </StatStrip>
 
@@ -120,7 +120,7 @@ export default async function SettingsPage() {
         </Section>
 
         <Section title="About" hint="LeadIntelligence — lead terminal for BITO UAE.">
-          <Row label="Version" value="0.1.0" />
+          <Row label="Version" value="1.0.1" />
           <Row label="Stack" value="Next.js 14 · Supabase" />
           <Row label="Owner" value="BITO UAE" />
           <Row label="Region" value="GCC" />

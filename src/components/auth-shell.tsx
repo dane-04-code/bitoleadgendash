@@ -109,7 +109,7 @@ export function AuthShell({
         </div>
 
         <div className="mono flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-          <span className="tabular">v0.1.0</span>
+          <span className="tabular">v1.0.1</span>
           <span>BITO UAE · Internal use only</span>
         </div>
       </main>

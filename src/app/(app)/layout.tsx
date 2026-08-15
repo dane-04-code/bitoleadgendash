@@ -53,7 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {children}
           </main>
           <footer className="px-4 sm:px-6 lg:px-[30px] py-4 mono text-[9.5px] uppercase tracking-[0.14em] text-ink-ghost flex items-center justify-between gap-4">
-            <span>BITO UAE / LeadIntelligence v0.1.0</span>
+            <span>BITO UAE / LeadIntelligence v1.0.1</span>
             <span>{new Date().getFullYear()} · GCC Region</span>
           </footer>
         </div>
