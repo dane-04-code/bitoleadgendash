@@ -198,6 +198,38 @@ takes the app down:
 6. **TODO after 4** — rotate the anon key, since the old one has been in
    browsers.
 
+### ⛔ BLOCKER found 2026-08-15: Hermes reads with the anon key
+
+Applying `0015` right now **would break upstream lead ingestion**, not just the
+dashboard. Evidence from the project's edge logs for 2026-08-15:
+
+| Source | Detail |
+|---|---|
+| API key role | `anon` — on **every** one of 400 requests |
+| Client | `Python-urllib/3.11` (not this app; Next.js would be node/undici) |
+| Network | Hetzner Online GmbH — where Hermes runs, not a browser |
+| Paths | `/rest/v1/leads` ×396, plus `contacts` and `outreach` |
+| Window | 04:03 to 14:00 the same day — actively running |
+
+So the anon key is not merely "exposed in browsers"; it is the **live production
+credential for the upstream pipeline**. Deny-anon-by-default would return empty
+result sets to Hermes rather than an error, which is the dangerous failure mode:
+silent, not loud.
+
+**Revised order — steps 1-3 stay, then:**
+
+  3a. Move Hermes onto `SUPABASE_SERVICE_ROLE_KEY` (or its own dedicated key) and
+      confirm from these same logs that no `anon` traffic remains. This is a
+      change in the Hermes codebase, which does not live in this repo.
+  3b. Only once anon traffic is zero, apply `0015`.
+  3c. Then rotate the anon key — which now also breaks anything still on it, so
+      3a must genuinely be complete.
+
+Note the requests are all `GET`. Hermes's *writes* do not appear in the edge
+logs, so it likely writes over a direct Postgres connection — that path is
+unaffected by RLS if it connects as a superuser role, but it must be confirmed
+before 3b, not assumed.
+
 `reps` is the priority table regardless of sequencing — it holds PBKDF2 password
 hashes and is currently readable by anyone with the public key.
 
