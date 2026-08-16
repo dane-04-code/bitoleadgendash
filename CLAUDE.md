@@ -2,7 +2,11 @@
 
 Working notes for Claude Code on **BITO LeadIntelligence** (`bitoleadgendash`).
 Read this before touching anything. Last verified against the live database
-2026-08-13.
+2026-08-16.
+
+**Current position: `HANDOVER.md`** — what shipped in v1.0.1, the live data as
+measured 2026-08-16, open asks for the upstream Hermes agent, and what comes
+next. Read it before `V2_PLAN.md`.
 
 ## What this repo is
 
@@ -37,10 +41,15 @@ There is no test suite. `npm run build` is the only gate.
 Reach it with the Supabase MCP tools (`list_tables`, `execute_sql`,
 `apply_migration`, `get_advisors`) using that project ref.
 
-**`.env.local` in this checkout holds placeholder Supabase values on purpose.**
-That keeps `isMockMode()` true, so the whole app renders from
-`src/lib/mock-data.ts` with no database. That is the intended local demo path —
-do not "fix" it by pasting production credentials in.
+**⚠️ `.env.local` in this checkout now points at the live project** (changed
+2026-08-16), so `isMockMode()` is **false** and `npm run dev` reads and writes
+**production**. A local click can kill a real lead. It also holds
+`SUPABASE_SERVICE_ROLE_KEY`, which bypasses RLS entirely.
+
+To go back to the mock demo path, restore the placeholder
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` values recorded in
+the comment at the top of `.env.local`. That flips `isMockMode()` true and the
+whole app renders from `src/lib/mock-data.ts` with no database.
 
 ### Migrations are not in sync with `supabase/migrations/`
 
@@ -71,17 +80,33 @@ section current.
 - Reps: PBKDF2 hashes in the `reps` table, self-signup gated by `REP_SIGNUP_CODE`.
 - Session: HMAC-signed `li_session` cookie, verified in middleware.
 
-Because the app talks to Supabase with the **anon key** and most tables have RLS
-disabled, all authorization is enforced in application code. Do not add a
-client-side query path that trusts the browser.
+### Database access — service-role key, RLS deny-by-default
+
+Since migration `0015` (applied 2026-08-16), **RLS is on with no policies on all
+13 tables**. The anon key reads nothing — it returns empty result sets, not
+errors. The app reaches Supabase through `SUPABASE_SERVICE_ROLE_KEY`, which holds
+`rolbypassrls`.
+
+That key must never be exposed. It is deliberately not `NEXT_PUBLIC_`, and
+`src/lib/supabase/server.ts` must only ever be imported from server code. All
+authorization is enforced in application code, so:
+
+- **Do not add a client-side query path.** `getSupabaseBrowserClient` has zero
+  callers by design; keep it that way.
+- **Guard every server action.** Middleware protects the *page*, not the action —
+  a server action is a live endpoint. Two actions shipped unguarded and were only
+  safe because nothing called them (`bb89ff5`).
+
+The upstream Hermes pipeline is on the service-role key too. Anon key rotation is
+still outstanding — see `HANDOVER.md` §4.
 
 ## Design constraints — binding
 
-**`DESIGN.md` is a snapshot of the pre-comp build (2026-08-12) and is now stale
-in several load-bearing ways — see the banner at the top of that file. Until it
-is regenerated, the source of truth for shape, type and colour is
-`src/app/globals.css` + `tailwind.config.ts`, i.e. the shipped tokens.**
-`PRODUCT.md` still holds the product contract and remains authoritative.
+**`DESIGN.md` was regenerated 2026-08-15 (`447f464`) from the build that actually
+shipped** — globals.css, tailwind.config.ts, layout.tsx and the components — so
+it is current and the old staleness banner is gone. `PRODUCT.md` holds the
+product contract and remains authoritative. Where the two could ever disagree,
+the shipped tokens in `globals.css` + `tailwind.config.ts` win.
 
 The `ui-overhaul/inbox` branch rebuilt the console on the Claude Design comps
 (Lead Inbox, Pipeline), which replaced the visual language. Current
@@ -109,10 +134,25 @@ in quirk.
 ## House rules
 
 1. **A redesign replaces the look, never the function.** The feature set is in
-   daily use and hard-won. Removing a capability needs explicit approval.
+   daily use and hard-won. Removing a capability needs explicit approval — and
+   this binds *feature* commits too, not just redesigns. `aa82dc9` shipped the
+   marketplace and, in passing, deleted the reps' list view and narrowed the
+   manager's default tab, each mentioned in one line of the commit body. Both
+   came back as bug reports weeks later; the list was restored 2026-08-16. If a
+   commit removes a surface someone works from, that goes in the subject line
+   and gets asked about first. See `HANDOVER.md` §4.
 2. **Verify against the live DB before wiring a field.** See drift note above.
 3. **Do not fabricate** customer names beyond the mock set, win rates, revenue
    figures, or any claim about what the upstream agents can do.
 4. **Production DDL needs explicit approval**, even additive columns.
 5. Mock mode and live mode must both keep working. If you add a field, add it to
    `mock-data.ts` too.
+6. **The mock branch and the live branch of a query must apply the same
+   filters.** Two of the last three bugs were the two halves disagreeing:
+   `getPipelineLeads` dropped the `archived` filter on the live branch only
+   (`a0ba67a`, put 32 dismissed leads back on the board in production), and the
+   sign-up route had no mock branch at all (`f580bd4`). Mock mode cannot catch
+   these — no fixture is archived — so read both branches side by side.
+7. **Never hard-delete a lead.** Archive it (`archived` + `archived_reason`); the
+   Archived tab exists for this and it keeps the audit trail. This applies to
+   upstream too — see `HANDOVER.md` §3.

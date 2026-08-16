@@ -1,13 +1,18 @@
 import { redirect } from "next/navigation";
 import { getCurrentRepId } from "@/lib/auth";
 import { getLeadsForRep, getRepById, getRepStats } from "@/lib/queries";
-import { RepLeadsView } from "@/components/rep-leads-view";
+import { RepLeadsView, type RepView } from "@/components/rep-leads-view";
 import { StatStrip, Stat } from "@/components/stat-strip";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function MyPage() {
+export default async function MyPage({
+  searchParams,
+}: {
+  searchParams?: { view?: string };
+}) {
+  const view: RepView = searchParams?.view === "inbox" ? "inbox" : "board";
   const repId = await getCurrentRepId();
   if (!repId) redirect("/login");
 
@@ -45,10 +50,12 @@ export default async function MyPage() {
       </StatStrip>
 
       <p className="mb-5 text-[12.5px] leading-relaxed text-ink-dim">
-        The leads routed to you. Drag a card to move it through the stages.
+        {view === "inbox"
+          ? "The leads routed to you, hottest first. Set a stage inline, or open a lead to work it."
+          : "The leads routed to you. Drag a card to move it through the stages."}
       </p>
 
-      <RepLeadsView leads={leads} />
+      <RepLeadsView leads={leads} view={view} />
     </div>
   );
 }

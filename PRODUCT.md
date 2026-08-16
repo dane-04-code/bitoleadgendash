@@ -25,6 +25,10 @@ Success = no qualified lead sits unactioned, every rep knows what to work next, 
 
 Not a general CRM. It is the last mile of an automated signal pipeline — leads arrive pre-scored with a reasoned score breakdown, suggested BITO products, and drafted outreach. The product's job is fast human judgement on machine-supplied leads, not contact management from scratch.
 
+**What that means for the screens (clarified 2026-08-16).** Because the machine supplies the leads, the admin's home screen is a *decision queue*, not a database index. The Inbox's default "Leads" tab shows only leads nobody owns yet (`new` / `listed` / `returned`, not archived); everything a rep is working lives under Assigned and on the Pipeline board. An empty queue is the intended success state — it means nothing is waiting on a human — but the product must **say so**, because an empty first screen otherwise reads as lost data. That has already caused one false alarm. Every count-based view owes the user an explanation of where the rest of the records went. See `HANDOVER.md` §4 for the open decision on this tab.
+
+The corollary: **this console is not the system of record for lead existence.** Hermes creates and can remove leads independently of anything a human does here. The product's honest claim is over *decisions* — who owns what, what stage it reached, what was said — not over the completeness of the lead set.
+
 ## Operating Context
 
 - **Lead lifecycle:** `new → listed → assigned → contacted → meeting → quote → won | dead | returned`. `returned` = a rep handed a lead back. `listed` = published to the internal marketplace for reps to claim.
@@ -38,14 +42,16 @@ Not a general CRM. It is the last mile of an automated signal pipeline — leads
 Confirmed functionality that must survive any redesign — routes: `/dashboard`, `/pipeline`, `/leads/[id]`, `/reps`, `/marketplace`, `/my`, `/my/account`, `/settings`, `/feedback`, `/login`, `/signup`.
 
 - Admin-only: `/dashboard`, `/pipeline`, `/reps`, `/settings` (enforced in `src/middleware.ts`). `/my` is rep-only.
-- Dashboard tabs: New / Leads / Assigned / Returned / Archived / Killed, with filters (search, status, industry, score) and stat tiles.
+- Dashboard tabs: New / Leads / Assigned / Returned / Archived / Killed, with filters (search, status, industry, score) and stat tiles. **"Leads" is the unowned triage queue, not all leads** — `archived = false AND status IN ('new','listed','returned')`, narrowed to this in `aa82dc9` (2026-06-22) when the marketplace shipped.
 - Kanban across all nine stages (admin), and a rep-scoped board on `/my`.
+- **Reps get both surfaces on `/my`** — the kanban board (default) and a dense inbox list at `/my?view=inbox`, with an inline stage dropdown per row. The list existed from 2026-06-16, was dropped as a side effect of `aa82dc9`, and was restored 2026-08-16 on the shipped design language. The choice is a URL param so it survives opening a lead and coming back. Neither surface may be removed without asking: a rep triaging their whole book scans a list, a rep advancing deals drags cards.
 - Rep admin: add rep, set/reset password, delete rep, per-rep lead counts.
 - Rep self-signup gated by a shared `REP_SIGNUP_CODE`; forced password reset flow.
 - Light and dark themes both supported, with a toggle — confirmed keep, 2026-08-12.
 
 **Constraints:**
-- Next.js 14 App Router + Supabase (anon key, RLS disabled on some tables), Tailwind. Server actions in `src/app/actions.ts`, queries in `src/lib/queries.ts`.
+- Next.js 14 App Router + Supabase, Tailwind. Server actions in `src/app/actions.ts`, queries in `src/lib/queries.ts`.
+- **Database access (since 2026-08-16):** RLS is enabled with deny-by-default on all 13 tables (migration `0015`). The app reads and writes with `SUPABASE_SERVICE_ROLE_KEY`, server-side only; the anon key returns empty result sets. All authorization stays in application code, so every server action must guard itself — middleware protects pages, not actions.
 - Auth is *not* Supabase Auth: a single shared `DASHBOARD_PASSWORD` env var for admin, PBKDF2 hashes in a `reps` table for reps, HMAC-signed `li_session` cookie.
 - `src/lib/mock-data.ts` + `isMockMode()` serve the entire app without Supabase when env vars are absent or placeholder. This is the local demo path.
 - The base `leads`/`contacts`/`reps` schema predates the repo's migrations and lives only in the live Supabase project. **The upstream agents alter that schema without a commit here** — `supabase/migrations/` is not a reliable record of production, and only one migration is registered remotely. Any production DDL requires explicit approval.
@@ -56,16 +62,18 @@ Confirmed functionality that must survive any redesign — routes: `/dashboard`,
 
 ## v2 (in flight, from 2026-08-13)
 
-The upstream agents have moved to v2 and lead discovery is **validated** — every one of the 110 live leads carries contacts. The frontend has not caught up. v2 for this repo means closing that gap and improving the working experience on top of it; the plan of record is `V2_PLAN.md`, which also tracks live-vs-repo schema drift.
+The upstream agents have moved to v2 and are writing richer records than the dashboard knows how to read. The frontend has not caught up. v2 for this repo means closing that gap and improving the working experience on top of it; the plan of record is `V2_PLAN.md`, which also tracks live-vs-repo schema drift. `HANDOVER.md` carries the current measured position and the open asks for the upstream pipeline.
+
+Lead discovery was **validated** on 2026-08-13 at 110/110 leads carrying contacts. Re-measured 2026-08-16 it is **95 / 101** — nine leads were also hard-deleted upstream with their contacts and assignments cascading. Neither the coverage regression nor the deletions originate in this repo; both are open questions for Hermes.
 
 Newly confirmed upstream output the UI does not yet surface:
 
 - `leads.why_is_this_a_lead` — a sourced narrative justifying the lead (named company, dated event, contract value, facility detail). The strongest signal the pipeline now produces. Present on the newest leads only.
 - `contacts.email_verified`, `contacts.role_fit`, `contacts.enrichment_method`, `contacts.note` — contact-quality evidence, populated across the contact set.
 
-Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but did not exist in the production table — migration `0010` had been written and never applied. The column is now live, but it is `NULL` on all 110 production leads *and* all 8 mock fixtures, so the score-breakdown rubric has never actually rendered for anyone. Nothing in this codebase writes it — it is upstream output. The feature stays dark until the agents populate it; spec in `V2_PLAN.md` §4 A1.
+Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but did not exist in the production table — migration `0010` had been written and never applied. The column is now live, but it is still `NULL` on all 101 production leads *and* all 8 mock fixtures, so the score-breakdown rubric has never actually rendered for anyone. Nothing in this codebase writes it — it is upstream output. The feature stays dark until the agents populate it; spec in `V2_PLAN.md` §4 A1 and `HANDOVER.md` §3.
 
-**Security posture is changing (decided 2026-08-13).** The app currently reaches Supabase with the anon key against tables with row-level security disabled. Dane has directed a move to a properly secured, RLS-enforced database. See `V2_PLAN.md` §6.
+**Security posture — RESOLVED 2026-08-16.** The app used to reach Supabase with the browser-shipped anon key against tables with RLS disabled, including `reps`, which holds password hashes. Migration `0015` is applied: RLS on with no policies across all 13 tables, the app moved to the service-role key, and Hermes migrated first so upstream ingestion never broke. Verified by role — anon reads 0 rows. Anon key rotation remains outstanding as hygiene. See `V2_PLAN.md` §6.
 
 ## Brand Commitments
 
