@@ -16,16 +16,20 @@ import {
   type LeadStatus,
 } from "@/lib/supabase/types";
 import { updateLeadStatus } from "@/app/actions";
+import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 export function StatusSelector({
   leadId,
   currentStatus,
   role = "admin",
+  className,
 }: {
   leadId: string;
   currentStatus: LeadStatus;
   role?: "admin" | "rep";
+  /** Overrides the trigger size — the inbox row needs a shorter control. */
+  className?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
@@ -57,7 +61,7 @@ export function StatusSelector({
   return (
     <div className="flex items-center gap-2">
       <Select value={value} onValueChange={onChange} disabled={pending}>
-        <SelectTrigger className="h-9 w-[160px]">
+        <SelectTrigger className={cn("h-9 w-[160px]", className)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
