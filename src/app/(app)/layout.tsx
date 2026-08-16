@@ -13,6 +13,7 @@ import {
   getAssignedLeadCount,
 } from "@/lib/queries";
 import { CommandPaletteProvider } from "@/components/command-palette";
+import { WhatsNew } from "@/components/whats-new";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -44,6 +45,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <CommandPaletteProvider role={session.role}>
+      {/* Sits at the shell so it fires on whichever surface the user lands on
+          after signing in, and survives navigation between them. */}
+      <WhatsNew role={session.role} subject={session.subject} />
       <div className="flex min-h-screen">
         <Sidebar user={user} counts={counts} />
         <div className="flex flex-1 flex-col min-w-0">
