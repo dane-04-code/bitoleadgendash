@@ -128,6 +128,7 @@ export function KanbanBoard({
   emptyHint = "Nothing here",
   reps,
   regions,
+  filters,
 }: {
   columns: LeadStatus[];
   buckets: Record<string, KanbanLead[]>;
@@ -136,12 +137,18 @@ export function KanbanBoard({
   showRep?: boolean;
   emptyHint?: string;
   /**
-   * Salesmen who may own a lead. Supplying this turns on the board filters;
-   * a rep-scoped board (every card already theirs) omits it.
+   * Salesmen who may own a lead. Supplying this shows the salesman picker; a
+   * rep-scoped board (every card already theirs) omits it and keeps the rest.
    */
   reps?: string[];
   /** Countries present on the board, for the region filter. */
   regions?: string[];
+  /**
+   * Whether to show the filter bar at all. Defaults to "yes if this board has
+   * a salesman picker", which is how the pipeline has always turned it on —
+   * a rep board opts in explicitly, since it has no `reps` to key off.
+   */
+  filters?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -324,7 +331,8 @@ export function KanbanBoard({
     });
   }
 
-  const showFilters = Boolean(reps && reps.length > 0);
+  const showRepPicker = Boolean(reps && reps.length > 0);
+  const showFilters = filters ?? showRepPicker;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -365,24 +373,29 @@ export function KanbanBoard({
               </span>
             </button>
 
-            <Select value={repFilter} onValueChange={setRepFilter}>
-              <SelectTrigger className={PILL_CONTROL} aria-label="Filter by salesman">
-                <SelectValue placeholder="All reps" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>All reps · {repCounts.total}</SelectItem>
-                {repCounts.unassigned > 0 && (
-                  <SelectItem value={UNASSIGNED}>
-                    Unassigned · {repCounts.unassigned}
-                  </SelectItem>
-                )}
-                {reps!.map((name) => (
-                  <SelectItem key={name} value={name}>
-                    {name} · {repCounts.counts.get(name) ?? 0}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Owner picker only where ownership varies. On a rep's own board
+                every card is already theirs, so the control would offer one
+                answer. */}
+            {showRepPicker && (
+              <Select value={repFilter} onValueChange={setRepFilter}>
+                <SelectTrigger className={PILL_CONTROL} aria-label="Filter by salesman">
+                  <SelectValue placeholder="All reps" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ANY}>All reps · {repCounts.total}</SelectItem>
+                  {repCounts.unassigned > 0 && (
+                    <SelectItem value={UNASSIGNED}>
+                      Unassigned · {repCounts.unassigned}
+                    </SelectItem>
+                  )}
+                  {reps!.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name} · {repCounts.counts.get(name) ?? 0}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {regions && regions.length > 0 && (
               <Select value={regionFilter} onValueChange={setRegionFilter}>

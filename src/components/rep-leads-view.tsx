@@ -8,7 +8,7 @@ import {
   type LeadStatus,
 } from "@/lib/supabase/types";
 import { KanbanBoard, type KanbanLead } from "@/components/kanban-board";
-import { daysBetween } from "@/lib/utils";
+import { daysBetween, regionOf } from "@/lib/utils";
 
 // A rep only ever holds owned leads, so drop the columns for unowned states
 // (new / listed / returned) — they'd always be empty on the rep board.
@@ -39,6 +39,18 @@ export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
     return map;
   }, [leads]);
 
+  // Only the countries the rep actually holds. A picker offering regions with
+  // nothing behind them would be a list of dead ends.
+  const regions = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          leads.map((l) => regionOf(l.location)).filter((r): r is string => Boolean(r))
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    [leads]
+  );
+
   if (leads.length === 0) {
     return (
       <section>
@@ -63,6 +75,8 @@ export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
         droppable={REP_SETTABLE_STATUSES}
         showRep={false}
         emptyHint="No leads"
+        filters
+        regions={regions}
       />
     </section>
   );
