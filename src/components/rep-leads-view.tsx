@@ -33,6 +33,7 @@ export function RepLeadsView({ leads }: { leads: RepInboxLead[] }) {
         location: lead.location,
         rep_name: null,
         days_in_stage: daysBetween(lead.updated_at || lead.assigned_at),
+        days_since_created: daysBetween(lead.created_at),
       });
     }
     return map;

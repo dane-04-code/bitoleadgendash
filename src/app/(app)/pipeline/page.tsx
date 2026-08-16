@@ -2,7 +2,7 @@ import { getPipelineLeads, getActiveReps } from "@/lib/queries";
 import { LEAD_STATUSES, LEAD_STATUS_LABELS, type LeadStatus } from "@/lib/supabase/types";
 import { StatStrip, Stat } from "@/components/stat-strip";
 import { KanbanBoard, type KanbanLead } from "@/components/kanban-board";
-import { regionOf } from "@/lib/utils";
+import { daysBetween, regionOf } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -75,6 +75,7 @@ export default async function PipelinePage() {
       location: l.location,
       rep_name: l.rep_name,
       days_in_stage: l.days_in_stage,
+      days_since_created: daysBetween(l.created_at),
     }));
   }
 
