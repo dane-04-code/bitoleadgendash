@@ -1,37 +1,55 @@
 # BITO LeadIntelligence — v2 Plan
 
-Status: **draft for approval** · Written 2026-08-13 · Verified against live
-Supabase project `BITOLEADGEN` (`epyumxjezftahosvegmn`) on 2026-08-13.
+Status: **draft for approval** · Written 2026-08-13 · Numbers re-measured against
+live Supabase project `BITOLEADGEN` (`epyumxjezftahosvegmn`) on **2026-08-16**.
+
+> `HANDOVER.md` is the current position — what shipped in v1.0.1, today's data,
+> and the open asks for the upstream Hermes agent. This file remains the plan.
 
 ---
 
 ## 1. Where we actually are
 
-Lead discovery is validated. The upstream agents have moved to v2 and are
-writing richer records than the dashboard knows how to read. This repo is still
-the v1 frontend.
+The upstream agents have moved to v2 and are writing richer records than the
+dashboard knows how to read. This repo is still the v1 frontend. Lead discovery
+was validated on 2026-08-13 at 100% contact coverage; as of 2026-08-16 that has
+slipped to 94% and ingestion has been quiet for three days.
 
-Live numbers, measured 2026-08-13:
+Live numbers. The 2026-08-13 column is the original measurement; the 2026-08-16
+column is current.
 
-| | |
-|---|---|
-| Leads | 110 (oldest 2026-05-07, newest 2026-08-13, 8 in the last 7 days) |
-| Leads with at least one contact | **110 / 110** |
-| Contacts | 183, across 104 leads · 120 with an email · 80 with LinkedIn |
-| Contacts with a verified email | 36 |
-| **Contacts with a phone number** | **1** |
-| Leads with `why_is_this_a_lead` | 14 (the newest cohort) |
-| Leads with `score_breakdown` | 0 — the column does not exist in production |
-| Outreach drafts | 275 |
-| Active reps | 9, all holding leads · 65 assignments |
-| Open leads scoring 80+ | 21 |
-| Archived | 37 |
-| Assigned leads untouched 21+ days | **17** |
+| | 2026-08-13 | **2026-08-16** |
+|---|---|---|
+| Leads | 110 | **101** (oldest 2026-05-07, newest 2026-08-13, 4 in the last 7 days) |
+| Leads with at least one contact | **110 / 110** | **95 / 101** |
+| Contacts | 183 | **172** · 110 with an email · 73 with LinkedIn |
+| Contacts with a verified email | 36 | 34 |
+| **Contacts with a phone number** | **1** | **1** |
+| Leads with `why_is_this_a_lead` | 14 | 13 |
+| Leads with `score_breakdown` | 0 — column absent | **0** — column exists, never written |
+| Outreach drafts | 275 | 255 |
+| Active reps | 9 · 65 assignments | 10 · **61 assignments** |
+| Open leads scoring 80+ | 21 | 12 |
+| Archived | 37 | 32 |
+| Assigned leads untouched 21+ days | **17** | **24** |
+| Leads won, ever | — | **0** |
 
-Two things stand out. **Contact discovery works** — 100% lead coverage, which is
-what "the leads can be found" means in the data. And **17 assigned leads have
-gone quiet for three weeks**, which is the product principle "nothing falls
-through" failing in production. Nothing in the current UI makes that visible.
+Four things stand out.
+
+**Contact discovery has regressed.** 100% lead coverage was the evidence that
+"the leads can be found"; it is now 94%, with six leads carrying no contact at
+all.
+
+**Nine leads were hard-deleted upstream** between the two measurements — leads
+110 → 101, contacts 183 → 172, assignments 65 → 61, with zero orphaned rows.
+Nothing in this repo deletes a lead. See `HANDOVER.md` §3.
+
+**24 assigned leads have gone quiet for three weeks**, up from 17. This is the
+product principle "nothing falls through" failing in production, and it is
+getting worse. Nothing in the current UI makes it visible — workstream C9.
+
+**Ingestion appears to have stalled.** The newest lead is still 2026-08-13, and
+the admin's unowned triage queue is down to a single lead.
 
 ## 2. Schema drift — live vs. this repo
 
@@ -43,11 +61,13 @@ drift fails silently.
 
 | Drift | Direction | Impact |
 |---|---|---|
-| ~~`leads.score_breakdown`~~ | **column added 2026-08-13, feature still dark** | Migration `0010` had never been applied. Column now live and verified. It is `NULL` on all 110 production leads — **and on all 8 mock leads too**, so the rubric has never rendered for anyone, in any environment, since it was built. Nothing in this repo writes it; it is an upstream field. See §4 A1 for the writer spec the agents need. |
+| ~~`leads.score_breakdown`~~ | **column added 2026-08-13, feature still dark** | Migration `0010` had never been applied. Column now live and verified. It is `NULL` on all 101 production leads — **and on all 8 mock leads too**, so the rubric has never rendered for anyone, in any environment, since it was built. Nothing in this repo writes it; it is an upstream field. See §4 A1 for the writer spec the agents need. |
 | `leads.why_is_this_a_lead` | **in production, absent from repo** | The agents' flagship v2 field. Sourced narrative — named company, dated event, contract value, facility size. Not typed, not queried, not rendered. |
 | `contacts.email_verified` · `role_fit` · `enrichment_method` · `note` | in production **and** typed in `types.ts` | Types know them; the UI does not surface them. Contact-quality evidence going to waste. |
 | `assignment_pings` | **in production, absent from repo** | Assignment-notification send log (recipient, subject, lead count, status, error). 0 rows, unreferenced in this codebase. Suggests upstream intends to notify reps by email. Needs an owner decision. |
-| RLS | disabled on 9 tables | See §6. |
+| ~~`outreach.used`~~ | **verified 2026-08-16** | Flagged unverified in `bb89ff5` because the Supabase tools were unavailable at the time. Confirmed present: `boolean`, defaults to `false`. `markOutreachUsed` is safe to rely on. |
+| ~~RLS~~ | ~~disabled on 9 tables~~ | **RESOLVED 2026-08-16** — deny-by-default on all 13. See §6. |
+| **Lead deletion** | **upstream behaviour, no repo equivalent** | Hermes hard-deletes leads, cascading contacts and assignments. The console has no way to represent this and a rep loses an assigned lead without trace. Ask filed in `HANDOVER.md` §3: archive instead. |
 
 **Fix the direction of truth first.** Before feature work, generate types from
 the live database rather than hand-maintaining `types.ts`, and add a check that
@@ -88,7 +108,7 @@ the commitment**. v2 extends that system; it does not reopen it.
    `expansion_signal`, `industry_match`, `verified_contact`, `gcc_location`,
    `company_scale`, `product_fit`. `passed` is a boolean. `note` is a short
    evidence string or `null`. Omitted keys render as a greyed, unevaluated row,
-   so a partial array is safe. Backfilling the 110 existing leads is optional.
+   so a partial array is safe. Backfilling the existing leads is optional.
 
    Also populate `score_breakdown` on a few fixtures in `src/lib/mock-data.ts` —
    all 8 are `null`, which is why this went unnoticed through design and review.
@@ -96,7 +116,7 @@ the commitment**. v2 extends that system; it does not reopen it.
 3. Reconcile `supabase/migrations/` with production: record what actually ran,
    write the missing migrations for `why_is_this_a_lead` and `assignment_pings`
    so the repo describes reality.
-4. Decide on RLS (§6).
+4. ~~Decide on RLS (§6).~~ **Done 2026-08-16** — deny-by-default applied.
 
 ### B — Surface the v2 intelligence *(the highest-value user-visible work)*
 
@@ -106,28 +126,33 @@ the commitment**. v2 extends that system; it does not reopen it.
    `/leads/[id]` and a two-line clamp in the inbox row. This is the single
    biggest triage-speed win available.
 6. **Contact quality made visible.** `email_verified`, `role_fit`,
-   `enrichment_method`, and `note` already exist on 183 contacts. Rank the
+   `enrichment_method`, and `note` already exist on 172 contacts. Rank the
    contact list by role fit, mark verified emails, show provenance. A rep should
    see who to call first without reading every row.
-7. **Own the phone gap.** 1 contact in 183 has a phone number. Either the UI
+7. **Own the phone gap.** 1 contact in 172 has a phone number. Either the UI
    stops implying phone is a channel, or phone sourcing becomes an upstream
    request. Do not leave an empty field pretending to be a capability.
-8. Graceful degradation everywhere: 14 of 110 leads have `why_is_this_a_lead`,
-   36 of 183 contacts have a verified email. Every v2 field needs a designed
+8. Graceful degradation everywhere: 13 of 101 leads have `why_is_this_a_lead`,
+   34 of 172 contacts have a verified email. Every v2 field needs a designed
    empty state, not a blank.
 
 ### C — Experience *(the "nothing falls through" principle, enforced)*
 
 9. **Staleness surfaced.** 17 assigned leads are 21+ days untouched and the
-   dashboard is silent. Add an age/last-touch column and a "going cold" view for
-   the admin, plus the same signal on a rep's own board. Use an icon plus text —
-   the palette is a single hue and status must never rest on colour alone.
+   dashboard is silent (re-measured 2026-08-16: **24**). Add an age/last-touch
+   column and a "going cold" view for the admin, plus the same signal on a rep's
+   own board. Use an icon plus text — the palette is a single hue and status must
+   never rest on colour alone. *Partly started:* `/my?view=inbox` prints days-in-
+   stage per row, but it is plain text with no threshold and the admin side has
+   nothing.
 10. **Triage in one keystroke.** Assign / list / kill from the inbox row and from
     the command palette, without opening the lead. Judgement speed over data
     entry.
 11. **Mobile parity is a stated commitment** and both roles work away from a
     desk. Audit `/dashboard`, `/leads/[id]`, and `/my` at small widths — dense
-    tables and a nine-column kanban are where this breaks.
+    tables and a nine-column kanban are where this breaks. `/my?view=inbox`
+    (2026-08-16) already drops to the card list below `sm`; the board and
+    `/leads/[id]` still need the pass.
 12. Rep notification: `assignment_pings` exists but nothing sends. Either wire it
     or drop it. Reps currently learn about an assignment by looking.
 
@@ -255,10 +280,19 @@ hashes and is currently readable by anyone with the public key.
 
 ## 7. Open questions for the operator
 
-1. Apply migration `0010` to production, or drop the score-breakdown feature?
-2. Which RLS path from §6?
+1. ~~Apply migration `0010` to production, or drop the score-breakdown feature?~~
+   **Answered 2026-08-13** — applied. The column is live; the ask now sits with
+   Hermes to populate it.
+2. ~~Which RLS path from §6?~~ **Answered and executed 2026-08-16** — service-role
+   key, deny-by-default on all 13 tables.
 3. Is phone sourcing coming from upstream, or does the UI drop phone as a channel?
+   Still 1 contact in 172. This has been open since 2026-08-13 and blocks B7.
 4. Does the dashboard adopt `assignment_pings` and send rep notifications, or is
    that upstream's job?
 5. Is `why_is_this_a_lead` replacing `score_reason` / `signal_summary`, or
    sitting alongside them? Three overlapping justification fields is one too many.
+6. **New — should the Inbox's "Leads" tab go back to meaning all live leads?** It
+   currently shows 1 of 101 and reads as data loss. Three options and a
+   recommendation in `HANDOVER.md` §4.
+7. **New — is the upstream lead deletion intentional?** If it is a quality sweep,
+   it should archive rather than delete. If it is not, it is a bug losing records.

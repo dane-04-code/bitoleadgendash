@@ -330,6 +330,11 @@ Iconography is Lucide line icons at 14–16px, stroke weight 1.75, always paired
 - **Brand block:** a reserved, empty 28px logo slot beside the "LeadIntelligence" wordmark and a mono "BITO UAE · GCC" line. The mark itself is never placed.
 - **Mobile:** the rail becomes a sticky teal top bar of 32px icon targets that scrolls horizontally.
 
+### View switchers
+Two shapes, chosen by what is being switched, and both are `<Link>`s carrying the choice in the URL — never component state, so a record opened and closed returns the user to the surface they were on.
+- **Underline tabs** filter one surface down to a subset: the Inbox's New / Leads / Assigned / Returned / Archived / Killed. A 13.5px label with its mono count beside it over a 2px bottom border — teal and bold when current, transparent and Ink Faint otherwise. Use these when the options are many and the counts matter.
+- **Segmented control** swaps one surface for a different rendering of the same records: Board / Inbox on `/my`. A Surface-filled 11px-cornered track with 2px of padding holding 7px-cornered 12.5px items, each with a 14px line icon; the current item fills Surface 3 and goes semibold Teal Deep. Use these for two or three options with no counts.
+
 ### Score Badge (signature)
 The console's most-repeated component and the carrier of the score ramp. Small and default sizes render a 6px round dot in the vivid heat tone, the score in condensed tabular figures at 13.5–16px in full Ink, then the tier word in 9–10px uppercase mono in the matching `-ink` tone. The large size drops the dot and sets the score itself at 52px in the tier's ink tone beside the word. The word ships at every size.
 
