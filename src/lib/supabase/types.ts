@@ -129,6 +129,12 @@ export type Lead = {
   score_reason: string | null;
   /** Structured 8-criteria breakdown from Hermes. NULL for leads ingested before this field was added. */
   score_breakdown: ScoreBreakdownItem[] | null;
+  /**
+   * Sourced narrative justifying the lead — named buyer, dated event, contract
+   * value, facility detail. Hermes' v2 field, populated on new leads only
+   * (16 of 104 live leads), so every reader needs a `score_reason` fallback.
+   */
+  why_is_this_a_lead: string | null;
   bito_products: string[] | null;
   /** Link to the source article. The field Hermes populates — 99 of 103 live leads. */
   signal_url: string | null;

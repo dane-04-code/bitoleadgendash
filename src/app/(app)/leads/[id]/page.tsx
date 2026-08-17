@@ -261,9 +261,14 @@ export default async function LeadDetailPage({
         {/* MAIN COLUMN */}
         <div className="flex min-w-0 flex-col gap-4">
           <Section title="Why this is a lead">
-            {/* An empty array is truthy — length-check it, or the rubric
+            {/* Hermes' sourced narrative leads when present (new leads only).
+                An empty array is truthy — length-check the rubric, or it
                 renders nothing and swallows the score_reason fallback. */}
-            {lead.score_breakdown?.length ? (
+            {lead.why_is_this_a_lead ? (
+              <p className="text-[13.5px] leading-relaxed text-ink-2">
+                {lead.why_is_this_a_lead}
+              </p>
+            ) : lead.score_breakdown?.length ? (
               <ScoreBreakdown breakdown={lead.score_breakdown} />
             ) : lead.score_reason ? (
               <p className="text-[13.5px] leading-relaxed text-ink-2">
