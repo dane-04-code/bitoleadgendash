@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn, daysBetween, formatRelative } from "@/lib/utils";
+import { cn, daysBetween, formatRelative, regionOf } from "@/lib/utils";
 
 /** The two ways a rep can work their book. Board is the default. */
 export type RepView = "board" | "inbox";
@@ -56,10 +56,23 @@ export function RepLeadsView({
         location: lead.location,
         rep_name: null,
         days_in_stage: daysBetween(lead.updated_at || lead.assigned_at),
+        days_since_created: daysBetween(lead.created_at),
       });
     }
     return map;
   }, [leads]);
+
+  // Only the countries the rep actually holds. A picker offering regions with
+  // nothing behind them would be a list of dead ends.
+  const regions = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          leads.map((l) => regionOf(l.location)).filter((r): r is string => Boolean(r))
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    [leads]
+  );
 
   if (leads.length === 0) {
     return (
@@ -90,6 +103,8 @@ export function RepLeadsView({
           droppable={REP_SETTABLE_STATUSES}
           showRep={false}
           emptyHint="No leads"
+          filters
+          regions={regions}
         />
       )}
     </section>

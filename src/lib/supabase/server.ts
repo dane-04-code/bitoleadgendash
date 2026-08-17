@@ -16,7 +16,7 @@ import { createClient } from "@supabase/supabase-js";
  * Falls back to the anon key when the service-role key is absent, so local and
  * existing deployments keep working — but once RLS is enabled with
  * deny-anon-by-default policies, that fallback will fail to read anything. See
- * V2_PLAN.md §6.
+ * context/DECISIONS.md (2026-08-15) and context/ARCHITECTURE.md §5.
  */
 export function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,7 +34,7 @@ export function getSupabaseServerClient() {
   if (!serviceRoleKey) {
     console.warn(
       "[supabase] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to the " +
-        "anon key. Reads will break once RLS is enabled. See V2_PLAN.md §6."
+        "anon key. Reads will break once RLS is enabled. See context/ARCHITECTURE.md §5."
     );
   }
 

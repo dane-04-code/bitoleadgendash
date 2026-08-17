@@ -54,7 +54,16 @@ export type KanbanLead = {
   location: string | null;
   rep_name: string | null;
   days_in_stage: number;
+  /**
+   * Age of the lead itself, not of its current stage. Computed on the server
+   * beside `days_in_stage` so the board never reads the clock during render —
+   * a `Date.now()` here would differ between the server pass and hydration.
+   */
+  days_since_created: number;
 };
+
+/** What "new this week" means, in days since the lead first landed. */
+const NEW_WINDOW_DAYS = 7;
 
 /** Filter sentinels. Real values are names or numbers, which cannot collide. */
 const ANY = "__any__";
@@ -119,6 +128,7 @@ export function KanbanBoard({
   emptyHint = "Nothing here",
   reps,
   regions,
+  filters,
 }: {
   columns: LeadStatus[];
   buckets: Record<string, KanbanLead[]>;
@@ -127,12 +137,18 @@ export function KanbanBoard({
   showRep?: boolean;
   emptyHint?: string;
   /**
-   * Salesmen who may own a lead. Supplying this turns on the board filters;
-   * a rep-scoped board (every card already theirs) omits it.
+   * Salesmen who may own a lead. Supplying this shows the salesman picker; a
+   * rep-scoped board (every card already theirs) omits it and keeps the rest.
    */
   reps?: string[];
   /** Countries present on the board, for the region filter. */
   regions?: string[];
+  /**
+   * Whether to show the filter bar at all. Defaults to "yes if this board has
+   * a salesman picker", which is how the pipeline has always turned it on —
+   * a rep board opts in explicitly, since it has no `reps` to key off.
+   */
+  filters?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -144,6 +160,7 @@ export function KanbanBoard({
   const [regionFilter, setRegionFilter] = useState<string>(ANY);
   const [scoreFilter, setScoreFilter] = useState<string>(ANY);
   const [ageFilter, setAgeFilter] = useState<string>(ANY);
+  const [newOnly, setNewOnly] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Server data wins whenever it changes underneath us (revalidate, nav back).
@@ -187,7 +204,8 @@ export function KanbanBoard({
     repFilter !== ANY ||
     regionFilter !== ANY ||
     scoreFilter !== ANY ||
-    ageFilter !== ANY;
+    ageFilter !== ANY ||
+    newOnly;
 
   /**
    * Filtering is a view over `local`, never a mutation of it — a drag still
@@ -207,12 +225,36 @@ export function KanbanBoard({
       if (ageFilter === "8-30" && (lead.days_in_stage < 8 || lead.days_in_stage > 30))
         return false;
       if (ageFilter === "30" && lead.days_in_stage <= 30) return false;
+      if (newOnly && lead.days_since_created > NEW_WINDOW_DAYS) return false;
       return true;
     };
     const out: Record<string, KanbanLead[]> = {};
     for (const col of columns) out[col] = (local[col] ?? []).filter(matches);
     return out;
-  }, [local, columns, filtering, repFilter, regionFilter, scoreFilter, ageFilter]);
+  }, [
+    local,
+    columns,
+    filtering,
+    repFilter,
+    regionFilter,
+    scoreFilter,
+    ageFilter,
+    newOnly,
+  ]);
+
+  /**
+   * How much of the board arrived this week. Stated on the pill so the filter
+   * answers the question ("anything new?") before it is even switched on.
+   */
+  const newCount = useMemo(() => {
+    let n = 0;
+    for (const col of columns) {
+      for (const lead of local[col] ?? []) {
+        if (lead.days_since_created <= NEW_WINDOW_DAYS) n += 1;
+      }
+    }
+    return n;
+  }, [local, columns]);
 
   /** Lead count per salesman, so the picker states the size of each book. */
   const repCounts = useMemo(() => {
@@ -242,6 +284,7 @@ export function KanbanBoard({
     setRegionFilter(ANY);
     setScoreFilter(ANY);
     setAgeFilter(ANY);
+    setNewOnly(false);
   }
 
   function onDragStart(e: DragStartEvent) {
@@ -288,31 +331,71 @@ export function KanbanBoard({
     });
   }
 
-  const showFilters = Boolean(reps && reps.length > 0);
+  const showRepPicker = Boolean(reps && reps.length > 0);
+  const showFilters = filters ?? showRepPicker;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {showFilters && (
         <div className="mb-4 flex items-center gap-4">
           <div className="flex min-w-0 flex-1 flex-wrap gap-2.5">
-            <Select value={repFilter} onValueChange={setRepFilter}>
-              <SelectTrigger className={PILL_CONTROL} aria-label="Filter by salesman">
-                <SelectValue placeholder="All reps" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>All reps · {repCounts.total}</SelectItem>
-                {repCounts.unassigned > 0 && (
-                  <SelectItem value={UNASSIGNED}>
-                    Unassigned · {repCounts.unassigned}
-                  </SelectItem>
+            {/* First in the row: the question a manager opens the board with.
+                A toggle rather than another select — it is one state, and
+                burying it in the age picker would conflate the age of a lead
+                with how long it has sat in its current stage. */}
+            <button
+              type="button"
+              onClick={() => setNewOnly((on) => !on)}
+              aria-pressed={newOnly}
+              disabled={newCount === 0 && !newOnly}
+              className={cn(
+                PILL_CONTROL,
+                "flex items-center disabled:pointer-events-none disabled:opacity-45",
+                newOnly &&
+                  "bg-brand-bg text-brand-deep hover:bg-brand-bg hover:text-brand-deep"
+              )}
+            >
+              <span
+                className={cn(
+                  "dot shrink-0",
+                  newCount > 0 ? "bg-flare" : "bg-line-strong"
                 )}
-                {reps!.map((name) => (
-                  <SelectItem key={name} value={name}>
-                    {name} · {repCounts.counts.get(name) ?? 0}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                aria-hidden
+              />
+              New this week
+              <span
+                className={cn(
+                  "mono text-[11px] tabular",
+                  newOnly ? "text-brand-deep" : "text-ink-faint"
+                )}
+              >
+                {newCount}
+              </span>
+            </button>
+
+            {/* Owner picker only where ownership varies. On a rep's own board
+                every card is already theirs, so the control would offer one
+                answer. */}
+            {showRepPicker && (
+              <Select value={repFilter} onValueChange={setRepFilter}>
+                <SelectTrigger className={PILL_CONTROL} aria-label="Filter by salesman">
+                  <SelectValue placeholder="All reps" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ANY}>All reps · {repCounts.total}</SelectItem>
+                  {repCounts.unassigned > 0 && (
+                    <SelectItem value={UNASSIGNED}>
+                      Unassigned · {repCounts.unassigned}
+                    </SelectItem>
+                  )}
+                  {reps!.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name} · {repCounts.counts.get(name) ?? 0}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {regions && regions.length > 0 && (
               <Select value={regionFilter} onValueChange={setRegionFilter}>

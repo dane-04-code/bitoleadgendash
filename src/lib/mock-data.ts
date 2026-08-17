@@ -85,7 +85,10 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Confirmed build, public tender timeline, BITO product fit on pallet racking, mezzanine and conveyor lines.",
     score_breakdown: null,
+    why_is_this_a_lead:
+      "Aramex confirmed a AED 210m, 45,000 sqm sortation hub at Dubai South on 4 March, with the facility due operational in Q3. Procurement has said the racking and conveyor tender opens within three weeks, and the published spec calls for multi-tier mezzanine and pallet racking across a 12m clear height — all three of which BITO supplies in the UAE. The named contact is the group's head of logistics engineering, who ran the 2023 Riyadh fit-out.",
     bito_products: ["PRO pallet racking", "Conveyor systems", "Mezzanine"],
+    signal_url: "https://gulfnews.com/business/aramex-dubai-south",
     source_url: "https://gulfnews.com/business/aramex-dubai-south",
     status: "new",
     last_contacted_at: null,
@@ -112,7 +115,10 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Active RFP with 14-day window, cold chain spec matches BITO shuttle and drive-in racking.",
     score_breakdown: null,
+    why_is_this_a_lead:
+      "Almarai issued RFP 2026-CS-114 on 11 August for a 30% cold storage capacity expansion across its Riyadh and Jeddah sites, with submissions closing in 14 days. The scope names refrigerated drive-in racking and a shuttle system rated to -25C, which matches BITO's cold-spec line directly. Almarai bought BITO mezzanine in 2021 through the same procurement team.",
     bito_products: ["Drive-in racking", "Shuttle system", "Cold-spec coatings"],
+    signal_url: "https://arabnews.com/almarai-coldchain",
     source_url: "https://arabnews.com/almarai-coldchain",
     status: "assigned",
     last_contacted_at: null,
@@ -139,7 +145,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Tender language explicitly mentions mezzanine and pick-to-light — strong BITO fit.",
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: ["Mezzanine", "Pick modules", "Carton flow"],
+    signal_url: "https://linkedin.com/feed/lulu-rfp",
     source_url: "https://linkedin.com/feed/lulu-rfp",
     status: "contacted",
     last_contacted_at: hoursAgo(6),
@@ -166,7 +174,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Funded with explicit warehouse capex earmark. Spec not yet public — engagement now positions BITO ahead of formal RFP.",
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: ["Selective racking", "VNA systems"],
+    signal_url: "https://reuters.com/qatar-logistics-hub-c",
     source_url: "https://reuters.com/qatar-logistics-hub-c",
     status: "meeting",
     last_contacted_at: hoursAgo(10),
@@ -193,7 +203,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Hiring pattern consistent with new build but no public announcement yet.",
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: ["Conveyor", "Sortation"],
+    signal_url: "https://noon.com/careers",
     source_url: "https://noon.com/careers",
     status: "listed",
     last_contacted_at: null,
@@ -223,7 +235,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score_reason:
       "Signal never firmed up; source article predates the 60-day freshness window.",
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: ["Selective racking"],
+    signal_url: "https://tradearabia.com/gwc-logistics-village",
     source_url: "https://tradearabia.com/gwc-logistics-village",
     status: "new",
     last_contacted_at: null,
@@ -249,7 +263,9 @@ export const MOCK_LEADS: LeadInboxRow[] = [
     score: 49,
     score_reason: "Stale press signal; archived on freshness re-check.",
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: ["Mezzanine"],
+    signal_url: "https://zawya.com/agility-kuwait-dc",
     source_url: "https://zawya.com/agility-kuwait-dc",
     status: "new",
     last_contacted_at: null,
@@ -1156,7 +1172,9 @@ for (const s of SEED) {
     score: s.score,
     score_reason: s.reason,
     score_breakdown: null,
+    why_is_this_a_lead: null,
     bito_products: s.products,
+    signal_url: null,
     source_url: null,
     status: s.status,
     last_contacted_at: ["contacted", "meeting", "quote", "won", "dead"].includes(s.status)

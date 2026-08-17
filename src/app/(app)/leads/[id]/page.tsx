@@ -169,9 +169,9 @@ export default async function LeadDetailPage({
             </p>
           )}
 
-          {lead.source_url && (
+          {lead.signal_url && (
             <a
-              href={lead.source_url}
+              href={lead.signal_url}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex max-w-full items-center gap-2.5 rounded-md bg-surface-2 px-3.5 py-2.5 transition-colors hover:bg-surface-3"
@@ -269,9 +269,14 @@ export default async function LeadDetailPage({
         {/* MAIN COLUMN */}
         <div className="flex min-w-0 flex-col gap-4">
           <Section title="Why this is a lead">
-            {/* An empty array is truthy — length-check it, or the rubric
+            {/* Hermes' sourced narrative leads when present (new leads only).
+                An empty array is truthy — length-check the rubric, or it
                 renders nothing and swallows the score_reason fallback. */}
-            {lead.score_breakdown?.length ? (
+            {lead.why_is_this_a_lead ? (
+              <p className="text-[13.5px] leading-relaxed text-ink-2">
+                {lead.why_is_this_a_lead}
+              </p>
+            ) : lead.score_breakdown?.length ? (
               <ScoreBreakdown breakdown={lead.score_breakdown} />
             ) : lead.score_reason ? (
               <p className="text-[13.5px] leading-relaxed text-ink-2">

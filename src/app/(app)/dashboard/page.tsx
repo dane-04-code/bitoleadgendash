@@ -353,7 +353,7 @@ export default async function DashboardPage({
                       ) : (
                         <>
                           <TableCell className="hidden xl:table-cell">
-                            <SourceLink source={lead.signal_source} url={lead.source_url} />
+                            <SourceLink source={lead.signal_source} url={lead.signal_url} />
                           </TableCell>
                           <TableCell className="hidden lg:table-cell max-w-[150px] truncate text-[12.5px] text-ink-2">
                             {lead.location || <span className="text-ink-ghost">—</span>}
