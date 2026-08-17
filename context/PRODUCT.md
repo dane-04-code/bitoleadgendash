@@ -25,6 +25,10 @@ Success = no qualified lead sits unactioned, every rep knows what to work next, 
 
 Not a general CRM. It is the last mile of an automated signal pipeline — leads arrive pre-scored with a reasoned score breakdown, suggested BITO products, and drafted outreach. The product's job is fast human judgement on machine-supplied leads, not contact management from scratch.
 
+**What that means for the screens (clarified 2026-08-16).** Because the machine supplies the leads, the admin's home screen is a *decision queue*, not a database index. The Inbox's default "Leads" tab shows only leads nobody owns yet (`new` / `listed` / `returned`, not archived); everything a rep is working lives under Assigned and on the Pipeline board. An empty queue is the intended success state — it means nothing is waiting on a human — but the product must **say so**, because an empty first screen otherwise reads as lost data. That has already caused one false alarm. Every count-based view owes the user an explanation of where the rest of the records went. See `HANDOVER.md` §4 for the open decision on this tab.
+
+The corollary: **this console is not the system of record for lead existence.** Hermes creates and can remove leads independently of anything a human does here. The product's honest claim is over *decisions* — who owns what, what stage it reached, what was said — not over the completeness of the lead set.
+
 ## Operating Context
 
 - **Lead lifecycle:** `new → listed → assigned → contacted → meeting → quote → won | dead | returned`. `returned` = a rep handed a lead back. `listed` = published to the internal marketplace for reps to claim.
@@ -38,8 +42,9 @@ Not a general CRM. It is the last mile of an automated signal pipeline — leads
 Confirmed functionality that must survive any redesign — routes: `/dashboard`, `/pipeline`, `/leads/[id]`, `/reps`, `/marketplace`, `/my`, `/my/account`, `/settings`, `/feedback`, `/login`, `/signup`.
 
 - Admin-only: `/dashboard`, `/pipeline`, `/reps`, `/settings` (enforced in `src/middleware.ts`). `/my` is rep-only.
-- Dashboard tabs: New / Leads / Assigned / Returned / Archived / Killed, with filters (search, status, industry, score) and stat tiles.
+- Dashboard tabs: New / Leads / Assigned / Returned / Archived / Killed, with filters (search, status, industry, score) and stat tiles. **"Leads" is the unowned triage queue, not all leads** — `archived = false AND status IN ('new','listed','returned')`, narrowed to this in `aa82dc9` (2026-06-22) when the marketplace shipped.
 - Kanban across all nine stages (admin), and a rep-scoped board on `/my`.
+- **Reps get both surfaces on `/my`** — the kanban board (default) and a dense inbox list at `/my?view=inbox`, with an inline stage dropdown per row. The list existed from 2026-06-16, was dropped as a side effect of `aa82dc9`, and was restored 2026-08-16 on the shipped design language. The choice is a URL param so it survives opening a lead and coming back. Neither surface may be removed without asking: a rep triaging their whole book scans a list, a rep advancing deals drags cards.
 - Rep admin: add rep, set/reset password, delete rep, per-rep lead counts.
 - Rep self-signup gated by a shared `REP_SIGNUP_CODE`; forced password reset flow.
 - Light and dark themes both supported, with a toggle — confirmed keep, 2026-08-12.

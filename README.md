@@ -47,9 +47,15 @@ Environment variables:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key. **Grants no data access** — RLS denies it by default. Kept only so mock-mode detection and the fallback path still work. |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Required against the live database.** Server-only; bypasses RLS. Never prefix `NEXT_PUBLIC_` and never let it reach the browser. |
+
 | `DASHBOARD_PASSWORD` | Shared admin password |
 | `DASHBOARD_SESSION_SECRET` | Long random string signing session cookies |
 | `REP_SIGNUP_CODE` | Shared code gating rep self-signup |
+
+Since migration `0015` (2026-08-16) row-level security is enabled with no
+policies on all 13 tables, so **without `SUPABASE_SERVICE_ROLE_KEY` every query
+returns an empty result set rather than an error.** An app that renders but shows
+no data is the signature of a missing service-role key.
 
 ### Mock mode
 
@@ -61,6 +67,7 @@ This is the offline demo path, and any change must keep working in both modes.
 > so `npm run dev` reads and writes **production data**. Restore the placeholder
 > Supabase values — they are kept in a comment at the top of that file — to go
 > back to mock mode. There is no staging environment.
+
 
 ## Roles
 
@@ -77,13 +84,13 @@ themselves — see `context/ARCHITECTURE.md` §5. Auth is *not* Supabase Auth.
 | Route | Access | What it is |
 |---|---|---|
 | `/login`, `/signup` | public | Password gate; rep self-signup behind a shared code |
-| `/dashboard` | admin | Stat tiles + lead inbox, tabbed New / Leads / Assigned / Returned / Archived / Killed, with search, status, industry and score filters |
+| `/dashboard` | admin | Stat tiles + lead inbox, tabbed New / Leads / Assigned / Returned / Archived / Killed, with search, status, industry and score filters. **"Leads" is the unowned triage queue** (`new`/`listed`/`returned`, not archived) — not an index of every lead; owned leads live under Assigned and on the Pipeline board |
 | `/pipeline` | admin | Kanban across all stages, filtered by salesman, region, score and time in stage (archived leads excluded) |
 | `/reps`, `/reps/[id]` | admin | Rep management: add, set/reset password, delete, per-rep counts |
 | `/settings` | admin | Settings |
 | `/leads/[id]` | both | Full lead detail: score breakdown, contacts, outreach, notes, review, deal profile |
 | `/marketplace` | both | Unassigned leads reps can claim / unclaim |
-| `/my`, `/my/account` | rep | Rep-scoped board (same filters, no salesman picker) and profile |
+| `/my`, `/my/account` | rep | The rep's book of work, two ways: kanban board (default, same filters as `/pipeline` minus the salesman picker) or dense inbox list at `/my?view=inbox`. Plus their profile |
 | `/feedback` | both | In-app suggestions box with admin-set status |
 
 ## Lead lifecycle
@@ -119,6 +126,7 @@ orange `#e06c00` for tiny accents only, no logo anywhere, light and dark themes.
 `context/DESIGN.md` was regenerated from the shipped build on 2026-08-15 and is
 current. `src/app/globals.css` and `tailwind.config.ts` are the literal tokens.
 
+
 ## Status — 2026-08-17
 
 The UI overhaul is merged and the database lockout is done. Three things are open
@@ -135,3 +143,4 @@ and current:
 
 `context/ROADMAP.md` is the plan of record; `context/DATA.md` carries the live
 figures and when they were last measured.
+

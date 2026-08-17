@@ -133,6 +133,14 @@ own discipline is the rest of it.
     could be 50, rewrite it before handing it back.
 11. **Clean up only your own mess.** Remove the imports, variables and helpers
     *your* change orphaned. Leave pre-existing dead code alone unless asked.
+12. **Never hard-delete a lead.** Archive it (`archived` + `archived_reason`);
+    the Archived tab exists for this and it keeps the audit trail.
+13. **The mock branch and the live branch of a query must apply the same
+    filters.** `getPipelineLeads` dropped the `archived` filter on the live
+    branch only (`a0ba67a`) and put 32 dismissed leads back on the board in
+    production; the sign-up route had no mock branch at all (`f580bd4`). No
+    fixture is archived, so mock mode cannot catch these — read both branches
+    side by side.
 
 ## 5. Commands
 

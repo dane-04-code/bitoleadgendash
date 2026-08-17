@@ -57,6 +57,14 @@ function dashboardHref(view: InboxView): string {
   return view === "active" ? "/dashboard" : `/dashboard?view=${view}`;
 }
 
+/**
+ * Reps have two surfaces on /my. Send them back to the one they came from —
+ * `from=inbox` is the rep list, anything else is the board.
+ */
+function repHref(from: string | undefined): string {
+  return from === "inbox" ? "/my?view=inbox" : "/my";
+}
+
 export default async function LeadDetailPage({
   params,
   searchParams,
@@ -107,7 +115,7 @@ export default async function LeadDetailPage({
   return (
     <div className="animate-fade-in pb-12">
       <Link
-        href={isAdmin ? dashboardHref(inboxView) : "/my"}
+        href={isAdmin ? dashboardHref(inboxView) : repHref(searchParams?.from)}
         className="eyebrow mb-4 inline-flex items-center gap-1.5 transition-colors hover:text-ink"
       >
         <ArrowLeft className="h-3 w-3" strokeWidth={2} />
