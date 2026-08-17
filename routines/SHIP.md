@@ -61,7 +61,35 @@ One spec, one branch, one concern. Never work on `main`.
 
 ## 5. Build
 
-Work in small steps against the house patterns in `context/ARCHITECTURE.md` §6.
+**First, turn the task into something you can verify.** A weak criterion ("make it
+work") means you cannot tell when you are done and will need a human to say so. A
+strong one lets you loop on your own. This repo has **no test suite**, so the
+instruments are the build, mock mode, and `routines/REVIEW.md` — not tests. Do not
+stand up a test framework to satisfy this step; that is scope nobody asked for.
+
+Restate the task as a plan of steps, each with the check that proves it:
+
+```
+1. Add field to types + fixtures    → verify: build passes, one populated
+                                              and one null fixture render
+2. Read path in queries.ts          → verify: field reaches the page in mock mode
+3. Guard + mutate in actions.ts     → verify: denied for the wrong role,
+                                              works for the right one
+4. UI + empty states               → verify: every row of the spec's
+                                              empty-state table is reachable
+5. REVIEW.md                        → verify: report block, all blocking PASS
+```
+
+Translations that work here:
+
+| Vague | Verifiable in this repo |
+|---|---|
+| "Add validation" | Exercise each invalid input in mock mode; the action returns `{ ok: false, error }` and the caller shows it |
+| "Fix the bug" | Reproduce it in mock mode first, with the fixture that triggers it, then confirm the same path is clean |
+| "Surface field X" | All four empty-state cases reachable in mock mode, not just the happy one |
+| "Refactor X" | Build passes before and after, and the diff removes no capability |
+
+Then work in small steps against the house patterns in `context/ARCHITECTURE.md` §6.
 
 The order that avoids rework:
 

@@ -121,6 +121,18 @@ own discipline is the rest of it.
    offline path back, restore the placeholder Supabase values kept in the comment
    at the top of `.env.local`; `isMockMode()` flips true and the app renders
    entirely from fixtures.
+9. **Every changed line traces to the request.** Do not improve adjacent code,
+   comments or formatting. Do not refactor what is not broken. Match the existing
+   style even where you would do it differently. Notice unrelated dead code —
+   mention it, do not delete it. `actions.ts` and `queries.ts` are ~930 and ~1000
+   lines with no test coverage; tidying while you work is how a regression ships
+   unnoticed.
+10. **Minimum code that solves the problem.** No features beyond what was asked.
+    No abstraction for single-use code. No configurability nobody requested. No
+    error handling for states that cannot occur. If you wrote 200 lines and it
+    could be 50, rewrite it before handing it back.
+11. **Clean up only your own mess.** Remove the imports, variables and helpers
+    *your* change orphaned. Leave pre-existing dead code alone unless asked.
 
 ## 5. Commands
 
@@ -162,7 +174,13 @@ through the CLI, and there may be nobody watching the turn. In that mode:
 - **Escalate rather than guess** on: production DDL, removing a capability,
   anything touching auth, anything requiring a decision listed as open in
   `context/ROADMAP.md`. Do the preparatory work, then stop and state the decision
-  needed.
+  needed. Off that list, do not stall waiting for a human who may not be there —
+  take the most reasonable reading, **state the assumption at the top of your
+  report**, and proceed.
+- **Never hide confusion.** If the request has two plausible readings, say both
+  and name which you took — do not pick silently. If a simpler approach exists,
+  say so before building the complicated one; push back when the request looks
+  wrong. An unstated assumption is the expensive kind.
 - **Update the ledger.** If you change what is true — ship an item, discover
   drift, close a question — update `context/ROADMAP.md` and `context/DATA.md` in
   the same change. Stale context is how this project loses time.
