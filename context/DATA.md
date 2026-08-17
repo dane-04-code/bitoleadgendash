@@ -121,7 +121,8 @@ Re-verified 2026-08-17. This table is the reason `select("*")` is dangerous here
 |---|---|---|
 | `leads.why_is_this_a_lead` | **live, absent from repo entirely** | The agents' flagship v2 field — sourced narrative with a named buyer, dated event, contract value, facility detail. Not typed, not queried, not rendered. 16 of 104 leads. Highest-value gap in the product. |
 | `leads.signal_date` | **live, not typed** | 91 of 104 populated. Directly useful for triage freshness. Unread. |
-| `leads.signal_url` | **live, not typed** | Unread. |
+| `leads.signal_url` | live, typed, in use | 99 of 103 populated — the article link the agents actually write. Typed and read 2026-08-18; the UI previously read `source_url` and showed no link on most leads. Resolved. |
+| `leads.source_url` | live and typed, no longer read | Partial mirror of `signal_url`, 36 of 103, and never populated on its own. Left in `types.ts` and `mock-data.ts`; no UI reads it. |
 | `leads.contacts_count` | **live, not typed** | 104 of 104 populated. A free triage signal, unread. |
 | `leads.last_contacts_attempt` | **live, not typed** | 67 of 104 populated. Upstream's enrichment-attempt clock, not a human-touch clock. |
 | `leads.last_contacted_at` | **live and typed, 0 rows populated, 0 refs in `src/`** | The obvious staleness clock, and nothing writes it. Decision needed. |
@@ -132,7 +133,7 @@ Re-verified 2026-08-17. This table is the reason `select("*")` is dangerous here
 | `outreach.used` | live, typed, in use | Flagged unverified when `OutreachUsedToggle` shipped (`bb89ff5`); confirmed `boolean` and present. Resolved. |
 | `assignment_pings` | **live, absent from repo** | Assignment-notification send log (recipient, subject, lead count, status, error). 0 rows, 0 references. **Decision made 2026-08-17: upstream owns sending.** See `DECISIONS.md`. This repo does not adopt it. |
 
-Five live `leads` columns are missing from `types.ts`. The count grew between two
+Four live `leads` columns are missing from `types.ts`. The count grew between two
 consecutive audits four days apart, which is the whole argument for
 `specs/0002-generated-types-and-drift-check.md`.
 

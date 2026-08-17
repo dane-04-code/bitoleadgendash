@@ -130,6 +130,9 @@ export type Lead = {
   /** Structured 8-criteria breakdown from Hermes. NULL for leads ingested before this field was added. */
   score_breakdown: ScoreBreakdownItem[] | null;
   bito_products: string[] | null;
+  /** Link to the source article. The field Hermes populates — 99 of 103 live leads. */
+  signal_url: string | null;
+  /** Partial mirror of `signal_url` (36 of 103 live leads); never set on its own. Not read by the UI. */
   source_url: string | null;
   status: LeadStatus;
   /** Set when a rep records an outreach; null until first contact. */

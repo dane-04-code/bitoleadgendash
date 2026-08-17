@@ -161,9 +161,9 @@ export default async function LeadDetailPage({
             </p>
           )}
 
-          {lead.source_url && (
+          {lead.signal_url && (
             <a
-              href={lead.source_url}
+              href={lead.signal_url}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex max-w-full items-center gap-2.5 rounded-md bg-surface-2 px-3.5 py-2.5 transition-colors hover:bg-surface-3"
