@@ -44,11 +44,14 @@ Confirmed functionality that must survive any redesign — routes: `/dashboard`,
 - Rep self-signup gated by a shared `REP_SIGNUP_CODE`; forced password reset flow.
 - Light and dark themes both supported, with a toggle — confirmed keep, 2026-08-12.
 
+- Kanban filtering (shipped 2026-08-16): salesman, region, score and time in stage on `/pipeline`; the same set minus the salesman picker on the rep board at `/my`, plus a "New this week" toggle. Archived leads never appear on the board.
+
 **Constraints:**
-- Next.js 14 App Router + Supabase (anon key, RLS disabled on some tables), Tailwind. Server actions in `src/app/actions.ts`, queries in `src/lib/queries.ts`.
+- Next.js 14 App Router + Supabase, Tailwind. Server actions in `src/app/actions.ts`, queries in `src/lib/queries.ts`.
+- **The database is RLS-locked, deny-by-default, on all 13 tables (since 2026-08-15).** The app connects server-side with `SUPABASE_SERVICE_ROLE_KEY`; the anon key grants no access. All authorization therefore lives in application code, in every server action as well as in middleware. No client-side query path may exist.
 - Auth is *not* Supabase Auth: a single shared `DASHBOARD_PASSWORD` env var for admin, PBKDF2 hashes in a `reps` table for reps, HMAC-signed `li_session` cookie.
-- `src/lib/mock-data.ts` + `isMockMode()` serve the entire app without Supabase when env vars are absent or placeholder. This is the local demo path.
-- The base `leads`/`contacts`/`reps` schema predates the repo's migrations and lives only in the live Supabase project. **The upstream agents alter that schema without a commit here** — `supabase/migrations/` is not a reliable record of production, and only one migration is registered remotely. Any production DDL requires explicit approval.
+- `src/lib/mock-data.ts` + `isMockMode()` serve the entire app without Supabase when env vars are absent or placeholder. This is the offline demo path, and both modes must keep working. Note the checked-in `.env.local` now points at the live project, so local dev touches production data.
+- The base `leads`/`contacts`/`reps` schema predates the repo's migrations and lives only in the live Supabase project. **The upstream agents alter that schema without a commit here** — `supabase/migrations/` is not a reliable record of production — only three migrations are registered remotely (`0014`, `0010`, `0015`), and `0001`–`0013` are not. Reconciliation is specced in `specs/0003-migration-reconciliation.md`. Any production DDL requires explicit approval.
 - Apollo enrichment and phone-number sourcing happen upstream in Hermes, not in this codebase.
 - **No email sending exists in this app.** Only `mailto:` links and drafted copy a human sends. An `assignment_pings` table (assignment-notification send log: recipient, subject, lead count, status, error) exists in the live database — created upstream, currently 0 rows, and unreferenced anywhere in this codebase. Whether the dashboard adopts it is a v2 decision.
 
@@ -56,16 +59,16 @@ Confirmed functionality that must survive any redesign — routes: `/dashboard`,
 
 ## v2 (in flight, from 2026-08-13)
 
-The upstream agents have moved to v2 and lead discovery is **validated** — every one of the 110 live leads carries contacts. The frontend has not caught up. v2 for this repo means closing that gap and improving the working experience on top of it; the plan of record is `V2_PLAN.md`, which also tracks live-vs-repo schema drift.
+The upstream agents have moved to v2 and lead discovery is **validated** — contact coverage stands at 98 of 104 live leads (measured 2026-08-17; it was 110/110 on 2026-08-13, before ten archived leads were deleted upstream). The frontend still has not caught up: as of 2026-08-17 no v2 field is rendered anywhere in the UI. v2 for this repo means closing that gap and improving the working experience on top of it; the plan of record is `context/ROADMAP.md`, and `context/DATA.md` carries the live figures and the live-vs-repo schema drift.
 
 Newly confirmed upstream output the UI does not yet surface:
 
 - `leads.why_is_this_a_lead` — a sourced narrative justifying the lead (named company, dated event, contract value, facility detail). The strongest signal the pipeline now produces. Present on the newest leads only.
 - `contacts.email_verified`, `contacts.role_fit`, `contacts.enrichment_method`, `contacts.note` — contact-quality evidence, populated across the contact set.
 
-Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but did not exist in the production table — migration `0010` had been written and never applied. The column is now live, but it is `NULL` on all 110 production leads *and* all 8 mock fixtures, so the score-breakdown rubric has never actually rendered for anyone. Nothing in this codebase writes it — it is upstream output. The feature stays dark until the agents populate it; spec in `V2_PLAN.md` §4 A1.
+Partly resolved 2026-08-13: `leads.score_breakdown` is read by `/leads/[id]` but did not exist in the production table — migration `0010` had been written and never applied. The column is now live, but it is still `NULL` on all 104 production leads *and* all 8 mock fixtures (re-checked 2026-08-17), so the score-breakdown rubric has never actually rendered for anyone. Nothing in this codebase writes it — it is upstream output. The feature stays dark until the agents populate it; writer spec in `specs/0004-lead-narrative-headline.md` §Appendix.
 
-**Security posture is changing (decided 2026-08-13).** The app currently reaches Supabase with the anon key against tables with row-level security disabled. Dane has directed a move to a properly secured, RLS-enforced database. See `V2_PLAN.md` §6.
+**Security posture — resolved 2026-08-15.** The move Dane directed is done: row-level security is enabled deny-by-default on all 13 tables, the upstream Hermes pipeline was migrated to the service-role key first and is confirmed still writing, and this app connects with the service-role key from the server only. One hygiene item remains — rotating the anon key, which no longer grants data access. See `context/DECISIONS.md` (2026-08-15) and `context/ARCHITECTURE.md` §5.
 
 ## Brand Commitments
 
