@@ -41,7 +41,7 @@ agent pointed at the same target.
 
 | # | Spec | Roadmap | Status |
 |---|---|---|---|
-| 0001 | [Guard every server action](0001-server-action-authorization.md) | N1 | ready |
+| 0001 | [Guard every server action](0001-server-action-authorization.md) | N1 | blocked (mock-mode scope decision) |
 | 0002 | [Generated types + drift check](0002-generated-types-and-drift-check.md) | N2 | ready |
 | 0003 | [Migration reconciliation](0003-migration-reconciliation.md) | N3 | ready |
 | 0004 | [`why_is_this_a_lead` as the lead headline](0004-lead-narrative-headline.md) | N4 | ready |
